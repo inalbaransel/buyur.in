@@ -7,6 +7,8 @@ import type {
   SelectHTMLAttributes,
   TextareaHTMLAttributes,
 } from "react";
+import Link from "next/link";
+import { LockIcon } from "@/components/icons";
 
 export function Label(props: LabelHTMLAttributes<HTMLLabelElement>) {
   const { className = "", ...rest } = props;
@@ -242,6 +244,25 @@ export function EmptyState({ title, description, action }: { title: string; desc
       <p className="font-display text-lg font-bold">{title}</p>
       {description && <p className="max-w-sm text-sm text-ink-soft">{description}</p>}
       {action}
+    </div>
+  );
+}
+
+// Bir özellik mevcut planda kapalıysa (PlanLimits) gösterilen kilitli-özellik kartı.
+// EmptyState'ten farkı: "boş" değil "erişimin yok" mesajı verir, planını yükseltmesi
+// için destek sayfasına yönlendirir (self-servis faturalandırma henüz yok).
+export function UpgradeNotice({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-paprika/40 bg-paprika/5 py-16 text-center">
+      <LockIcon size={22} className="text-paprika" />
+      <p className="font-display text-lg font-bold">{title}</p>
+      <p className="max-w-sm text-sm text-ink-soft">{description}</p>
+      <Link
+        href="/panel/support"
+        className="mt-1 inline-flex items-center gap-2 rounded-md bg-ink px-5 py-2.5 font-mono text-[13px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
+      >
+        Planımı yükselt
+      </Link>
     </div>
   );
 }

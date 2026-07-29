@@ -5,7 +5,8 @@ import Link from "next/link";
 import { pb } from "@/lib/pocketbase";
 import { useBusiness } from "@/components/panel/business-context";
 import { useToast } from "@/components/panel/toast";
-import { Button, Card, EmptyState, PageHeader } from "@/components/panel/ui";
+import { Button, Card, EmptyState, PageHeader, UpgradeNotice } from "@/components/panel/ui";
+import { fetchPlanLimits } from "@/lib/plan-limits";
 import type { Popup } from "@/lib/types";
 
 export default function AnnouncementsPage() {
@@ -13,10 +14,22 @@ export default function AnnouncementsPage() {
   const { toast } = useToast();
   const [popups, setPopups] = useState<Popup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [campaignsAllowed, setCampaignsAllowed] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!business) return;
     load();
+  }, [business]);
+
+  useEffect(() => {
+    if (!business) return;
+    let cancelled = false;
+    fetchPlanLimits(business.plan).then((limits) => {
+      if (!cancelled) setCampaignsAllowed(limits.campaigns);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [business]);
 
   async function load() {
@@ -47,13 +60,22 @@ export default function AnnouncementsPage() {
         title="Kampanyalar"
         description="Müşteri menüyü açtığında gösterilecek kampanya ya da duyuru."
         action={
-          <Link href="/panel/popups/new">
-            <Button>+ Yeni kampanya</Button>
-          </Link>
+          campaignsAllowed && (
+            <Link href="/panel/popups/new">
+              <Button>+ Yeni kampanya</Button>
+            </Link>
+          )
         }
       />
 
-      {popups.length === 0 && (
+      {campaignsAllowed === false && (
+        <UpgradeNotice
+          title="Kampanyalar mevcut planında kapalı"
+          description="Menü açıldığında gösterilecek kampanya/duyuru oluşturmak için planını yükseltmen gerekiyor."
+        />
+      )}
+
+      {campaignsAllowed && popups.length === 0 && (
         <EmptyState
           title="Henüz duyuru yok"
           description="Menü açıldığında gösterilecek bir kampanya duyurusu oluştur."

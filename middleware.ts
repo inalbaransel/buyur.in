@@ -3,9 +3,8 @@ import { RESERVED_SLUGS } from "@/lib/slug";
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "menuva.app";
 
-// lib/admin/session.ts'teki ADMIN_COOKIE ile aynı isim olmalı. Burada string
-// olarak tekrarlanıyor çünkü o modül next/headers cookies() kullanıyor —
-// middleware (Edge) bağlamına o API yerine NextRequest.cookies ile bakıyoruz.
+// Admin paneli kaldırıldı (artık DB üzerinden yönetiliyor); bu cookie adı
+// admin.menuva.app altındaki eski login yönlendirmesi için hâlâ kullanılıyor.
 const ADMIN_COOKIE_NAME = "menuva_admin_auth";
 
 // Subdomain tabanlı menü adresleri: vezirhan.menuva.app -> içeride /vezirhan/... rotaları.

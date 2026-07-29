@@ -6,7 +6,8 @@ import Link from "next/link";
 import { pb } from "@/lib/pocketbase";
 import { useBusiness } from "@/components/panel/business-context";
 import { ProductForm } from "@/components/panel/product-form";
-import { Button, EmptyState, PageHeader } from "@/components/panel/ui";
+import { Button, EmptyState, PageHeader, UpgradeNotice } from "@/components/panel/ui";
+import { fetchPlanLimits } from "@/lib/plan-limits";
 import type { Category } from "@/lib/types";
 
 export default function NewProductPage() {
@@ -14,6 +15,8 @@ export default function NewProductPage() {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCats, setLoadingCats] = useState(true);
+  const [limitReached, setLimitReached] = useState(false);
+  const [checkingLimit, setCheckingLimit] = useState(true);
 
   useEffect(() => {
     if (!business) return;
@@ -25,8 +28,35 @@ export default function NewProductPage() {
       });
   }, [business]);
 
-  if (isLoading || loadingCats || !business) {
+  useEffect(() => {
+    if (!business) return;
+    let cancelled = false;
+    async function checkLimit() {
+      const [limits, existing] = await Promise.all([
+        fetchPlanLimits(business!.plan),
+        pb.collection("menuva_products").getList(1, 1, { filter: pb.filter("business = {:id}", { id: business!.id }) }),
+      ]);
+      if (cancelled) return;
+      setLimitReached(limits.max_products !== null && existing.totalItems >= limits.max_products);
+      setCheckingLimit(false);
+    }
+    checkLimit();
+    return () => {
+      cancelled = true;
+    };
+  }, [business]);
+
+  if (isLoading || loadingCats || checkingLimit || !business) {
     return <p className="text-ink-soft">Yükleniyor…</p>;
+  }
+
+  if (limitReached) {
+    return (
+      <UpgradeNotice
+        title="Ürün limitine ulaştın"
+        description="Mevcut planının ürün limitini doldurdun. Daha fazla ürün eklemek için planını yükseltmen gerekiyor."
+      />
+    );
   }
 
   if (categories.length === 0) {

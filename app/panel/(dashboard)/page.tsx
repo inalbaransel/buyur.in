@@ -7,9 +7,10 @@ import { pb } from "@/lib/pocketbase";
 import { useAuth } from "@/lib/use-auth";
 import { useBusiness } from "@/components/panel/business-context";
 import { isReservedSlug, slugify } from "@/lib/slug";
-import { Button, Card, ErrorText, Input, Label, PageHeader } from "@/components/panel/ui";
+import { Button, Card, ErrorText, Input, Label, PageHeader, UpgradeNotice } from "@/components/panel/ui";
 import { QrShare } from "@/components/panel/qr-share";
 import { planLabels } from "@/lib/labels";
+import { fetchPlanLimits } from "@/lib/plan-limits";
 import { ROOT_DOMAIN, menuHost } from "@/lib/site";
 import type { Business, MenuEvent, Plan, PlanRecord } from "@/lib/types";
 
@@ -243,6 +244,7 @@ function StatsSection({ business }: { business: Business }) {
 
 function Overview({ business }: { business: Business }) {
   const [counts, setCounts] = useState<{ categories: number; products: number } | null>(null);
+  const [analyticsAllowed, setAnalyticsAllowed] = useState<boolean | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -260,6 +262,16 @@ function Overview({ business }: { business: Business }) {
       cancelled = true;
     };
   }, [business.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchPlanLimits(business.plan).then((limits) => {
+      if (!cancelled) setAnalyticsAllowed(limits.analytics);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [business.plan]);
 
   return (
     <div>
@@ -279,7 +291,16 @@ function Overview({ business }: { business: Business }) {
         </Card>
       </div>
       <QrShare business={business} />
-      <StatsSection business={business} />
+      {analyticsAllowed === false ? (
+        <div className="mt-10">
+          <UpgradeNotice
+            title="Ziyaretçi istatistikleri kilitli"
+            description="Sayfa görüntülenme, en çok bakılan ürün/kategori gibi istatistikler mevcut planında yok. Görmek için planını yükselt."
+          />
+        </div>
+      ) : (
+        analyticsAllowed && <StatsSection business={business} />
+      )}
     </div>
   );
 }
