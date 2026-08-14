@@ -45,7 +45,7 @@ http://localhost:3000 adresinde açılır. (`.env.local` zaten hazır — Pocket
 
 ## Sıradaki adımlar
 
-- [ ] Canlıya alma (Coolify/Vercel) + `menuva.app` domain'i
+- [ ] Canlıya alma (Coolify/Vercel) + `menuvaapp.com` domain'i
 - [ ] Drag & drop sıralama (şimdilik ▲▼ ok butonları var)
 - [ ] Analitik paneli (görüntülenme, QR tarama sayısı)
 - [ ] Çoklu dil desteği (TR/EN/AR/RU)

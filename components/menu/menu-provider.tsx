@@ -35,7 +35,7 @@ import { ArrowLeftIcon, MenuIcon, SearchIcon, ShoppingBagIcon } from "@/componen
 
 interface MenuContextValue {
   business: Business;
-  /** Link tabanı: subdomain'de "" (vezirhan.menuva.app/menu), path erişiminde "/vezirhan". */
+  /** Link tabanı: subdomain'de "" (vezirhan.menuvaapp.com), path erişiminde "/vezirhan". */
   base: string;
   cartLines: CartLine[];
   addProduct: (product: Product) => void;
@@ -67,7 +67,7 @@ export function useMenu() {
 function sendEvent(businessId: string, type: MenuEventType, target: string, label: string) {
   pb.collection("menuva_events")
     .create({ business: businessId, type, target, label }, { requestKey: null })
-    .catch(() => {});
+    .catch(() => { });
 }
 
 const PAGE_LABELS: Record<string, string> = {

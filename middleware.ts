@@ -1,15 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { RESERVED_SLUGS } from "@/lib/slug";
 
-const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "menuva.app";
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "menuvaapp.com";
 
-// Admin paneli kaldırıldı (artık DB üzerinden yönetiliyor); bu cookie adı
-// admin.menuva.app altındaki eski login yönlendirmesi için hâlâ kullanılıyor.
 const ADMIN_COOKIE_NAME = "menuva_admin_auth";
 
-// Subdomain tabanlı menü adresleri: vezirhan.menuva.app -> içeride /vezirhan/... rotaları.
-// Kök alan adı (menuva.app, www, localhost, vercel preview) olduğu gibi geçer;
-// landing sayfası ve /panel oralarda yaşamaya devam eder.
 function getSubdomain(hostname: string): string | null {
   if (hostname === "localhost" || hostname === "127.0.0.1") return null;
   if (hostname.endsWith(".localhost")) {
@@ -50,7 +45,7 @@ export function middleware(req: NextRequest) {
   const port = host.includes(":") ? `:${host.split(":")[1]}` : "";
   const rootHost = `${hostname.endsWith(".localhost") ? "localhost" : ROOT_DOMAIN}${port}`;
 
-  // admin.menuva.app kendi başına bir uygulama: panel/menü gibi kök alan adına
+  // admin.menuvaapp.com kendi başına bir uygulama: panel/menü gibi kök alan adına
   // yönlendirilmez. Uygulamanın tüm Link/redirect'leri zaten /admin önekiyle
   // yazıldığı için (menü sisteminin slug rewrite'ının aksine burada değişken
   // bir segment yok) subdomain'de de path olduğu gibi bırakılıyor — sadece kök

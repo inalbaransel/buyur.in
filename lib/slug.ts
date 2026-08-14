@@ -27,9 +27,6 @@ function stripDiacritics(value: string): string {
     .join("");
 }
 
-// Subdomain olarak kullanılamayacak, sisteme ayrılmış adresler.
-// (İşletme adresi = subdomain olduğu için bunlar alınabilseydi biri
-// panel.menuva.app ya da api.menuva.app'i sahiplenebilirdi.)
 export const RESERVED_SLUGS = new Set([
   "www",
   "panel",

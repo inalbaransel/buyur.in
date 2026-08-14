@@ -1,15 +1,25 @@
+import Image from "next/image";
 import Link from "next/link";
 import { whatsappLink } from "@/lib/site";
 import { WhatsappIcon } from "@/components/icons";
 
 export function Logo({ light = false }: { light?: boolean }) {
   return (
-    <span
-      className={`font-display text-2xl font-extrabold tracking-tight ${
-        light ? "text-paper" : "text-ink"
-      }`}
-    >
-      menuva<span className="text-paprika">.</span>app
+    <span className="inline-flex items-center gap-2">
+      <Image
+        src="/menuva-icon.png"
+        alt=""
+        width={32}
+        height={32}
+        className="h-7 w-7 sm:h-8 sm:w-8"
+        priority={!light}
+      />
+      <span
+        className={`font-display text-2xl font-extrabold tracking-tight ${light ? "text-paper" : "text-ink"
+          }`}
+      >
+        menuva<span className="text-paprika">.</span>app
+      </span>
     </span>
   );
 }
@@ -106,7 +116,7 @@ export function Footer() {
 
       <div className="border-t border-paper/10">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-5 py-6 text-center font-mono text-xs text-paper/45 sm:flex-row sm:justify-between sm:text-left">
-          <p>© {year} menuva.app · Tüm hakları saklıdır.</p>
+          <p>© {year} menuva· Tüm hakları saklıdır.</p>
           <p className="flex items-center gap-1.5">
             <span className="text-paprika" aria-hidden>
               ❤

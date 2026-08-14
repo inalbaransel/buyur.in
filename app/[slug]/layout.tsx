@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { createServerPB } from "@/lib/pocketbase";
 import { MenuProvider } from "@/components/menu/menu-provider";
+import { menuUrl } from "@/lib/site";
 import type { Business, Popup } from "@/lib/types";
 
 const getBusiness = cache(async (slug: string): Promise<Business | null> => {
@@ -31,9 +32,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     openGraph: {
       title,
       description,
+      url: menuUrl(business.slug),
+      siteName: "menuva",
       images: business.cover_url ? [business.cover_url] : undefined,
       locale: "tr_TR",
       type: "website",
+    },
+    twitter: {
+      card: business.cover_url ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: business.cover_url ? [business.cover_url] : undefined,
     },
     icons: business.logo_url ? { icon: business.logo_url } : undefined,
   };
@@ -50,7 +59,7 @@ export default async function MenuLayout({
   const business = await getBusiness(slug);
   if (!business) notFound();
 
-  // Subdomain üzerinden gelindiyse (vezirhan.menuva.app) linklerde slug öneki
+  // Subdomain üzerinden gelindiyse (vezirhan.menuvaapp.com) linklerde slug öneki
   // kullanılmaz; path üzerinden gelindiyse (/vezirhan) eski davranış korunur.
   const hdrs = await headers();
   const basePath = hdrs.get("x-menuva-rewrite") === "subdomain" ? "" : `/${business.slug}`;

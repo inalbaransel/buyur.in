@@ -58,7 +58,7 @@ function PhoneMock() {
         {/* menü başlığı */}
         <div className="px-4 pb-3">
           <p className="font-mono text-[9px] uppercase tracking-widest text-paprika">
-            alpha.menuva.app
+            alpha.menuvaapp.com
           </p>
           <p className="font-display text-lg font-bold text-paper">
             Alpha Cafe

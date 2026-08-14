@@ -13,7 +13,7 @@ const menuFeatures = [
   },
   {
     name: "QR Kod & Özel URL",
-    desc: "mekan-adiniz.menuva.app — size özel adres ve QR kod. Masaya, vitrine, Instagram bio'suna; nereye isterseniz.",
+    desc: "mekan-adiniz.menuvaapp.com — size özel adres ve QR kod. Masaya, vitrine, Instagram bio'suna; nereye isterseniz.",
     tag: "dahil",
   },
   {

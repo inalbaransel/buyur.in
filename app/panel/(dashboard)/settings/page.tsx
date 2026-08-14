@@ -41,9 +41,6 @@ const SETTINGS_TABS: { key: SettingsTab; label: string }[] = [
   { key: "sosyal", label: "Sosyal medya" },
 ];
 
-// Kapak + yuvarlak logo başlığı (sosyal profil düzeni). Logo kapağın sol altına
-// yarısı binecek şekilde oturur; ikisi de yerinde değiştirilebilir, yükleme
-// sırasında loader gösterilir.
 function ProfileImages({
   businessId,
   logoUrl,
@@ -272,396 +269,388 @@ function SettingsForm({ business, onSaved }: { business: Business; onSaved: (b: 
 
         {tab === "genel" && (
           <div className="space-y-8">
-        {/* Kapak + logo başlığı */}
-        <Card className="space-y-4">
-          <ProfileImages
-            businessId={business.id}
-            logoUrl={logoUrl}
-            coverUrl={coverUrl}
-            onLogo={setLogoUrl}
-            onCover={setCoverUrl}
-          />
-        </Card>
-
-        {/* Genel bilgiler */}
-        <Card className="space-y-4">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Kayıt tarihi: {registeredAt}</p>
-          <div>
-            <Label htmlFor="b-name">İşletme adı</Label>
-            <Input id="b-name" required value={name} onChange={(e) => setName(e.target.value)} />
-            <p className="mt-1.5 text-xs text-ink-soft">İşletme adı tekildir, tüm dillerde aynı görünür.</p>
-          </div>
-          <div>
-            <Label htmlFor="b-slug">Menü adresi</Label>
-            <div className="flex items-center gap-1 rounded-2xl border border-line bg-crema/40 px-4 py-2.5 text-sm">
-              <input
-                id="b-slug"
-                required
-                value={slug}
-                onChange={(e) => setSlug(e.target.value)}
-                className="min-w-0 flex-1 bg-transparent text-right text-ink outline-none"
+            {/* Kapak + logo başlığı */}
+            <Card className="space-y-4">
+              <ProfileImages
+                businessId={business.id}
+                logoUrl={logoUrl}
+                coverUrl={coverUrl}
+                onLogo={setLogoUrl}
+                onCover={setCoverUrl}
               />
-              <span className="shrink-0 text-ink-soft">.{ROOT_DOMAIN}</span>
-            </div>
-            <p className="mt-1.5 text-xs text-ink-soft">Adresi değiştirirsen eski QR kodların çalışmaz, yeniden bastırman gerekir.</p>
-          </div>
-          <MultiLangFields
-            locales={[mainLang, ...languages]}
-            mainLocale={mainLang}
-            base={{ description }}
-            onBaseChange={(_, v) => setDescription(v)}
-            translations={translations}
-            onTranslationsChange={setTranslations}
-            fields={[{ key: "description", label: "Açıklama", multiline: true }]}
-          />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="b-email">E-posta</Label>
-              <Input id="b-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="merhaba@isletme.com" />
-            </div>
-            <div>
-              <Label htmlFor="b-phone">Telefon</Label>
-              <Input id="b-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0555 123 45 67" />
-            </div>
-          </div>
-        </Card>
+            </Card>
+
+            {/* Genel bilgiler */}
+            <Card className="space-y-4">
+              <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Kayıt tarihi: {registeredAt}</p>
+              <div>
+                <Label htmlFor="b-name">İşletme adı</Label>
+                <Input id="b-name" required value={name} onChange={(e) => setName(e.target.value)} />
+                <p className="mt-1.5 text-xs text-ink-soft">İşletme adı tekildir, tüm dillerde aynı görünür.</p>
+              </div>
+              <div>
+                <Label htmlFor="b-slug">Menü adresi</Label>
+                <div className="flex items-center gap-1 rounded-2xl border border-line bg-crema/40 px-4 py-2.5 text-sm">
+                  <input
+                    id="b-slug"
+                    required
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value)}
+                    className="min-w-0 flex-1 bg-transparent text-right text-ink outline-none"
+                  />
+                  <span className="shrink-0 text-ink-soft">.{ROOT_DOMAIN}</span>
+                </div>
+                <p className="mt-1.5 text-xs text-ink-soft">Adresi değiştirirsen eski QR kodların çalışmaz, yeniden bastırman gerekir.</p>
+              </div>
+              <MultiLangFields
+                locales={[mainLang, ...languages]}
+                mainLocale={mainLang}
+                base={{ description }}
+                onBaseChange={(_, v) => setDescription(v)}
+                translations={translations}
+                onTranslationsChange={setTranslations}
+                fields={[{ key: "description", label: "Açıklama", multiline: true }]}
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="b-email">E-posta</Label>
+                  <Input id="b-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="merhaba@isletme.com" />
+                </div>
+                <div>
+                  <Label htmlFor="b-phone">Telefon</Label>
+                  <Input id="b-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0555 123 45 67" />
+                </div>
+              </div>
+            </Card>
           </div>
         )}
 
         {tab === "diller" && (
-        <Card className="space-y-4">
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Menü dilleri</p>
-            <p className="mt-1 text-xs text-ink-soft">
-              Yıldız o dili ana dil yapar (metinlerin girildiği baz dildir); switch dili menüde aktif/pasif eder.
-              Ana dil her zaman aktiftir.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {SUPPORTED_LOCALES.map((l) => {
-              const isMain = l === mainLang;
-              const isActive = isMain || languages.includes(l);
-              return (
-                <div
-                  key={l}
-                  className={`rounded-2xl border p-4 transition-colors ${isMain ? "border-paprika bg-paprika/5" : "border-line"}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => changeMainLang(l)}
-                      disabled={isMain || !isActive}
-                      title="Ana dil yap"
-                      aria-label={`${localeLabels[l]} dilini ana dil yap`}
-                      className={`transition-colors ${
-                        isMain
-                          ? "text-paprika"
-                          : isActive
-                            ? "text-ink-soft/50 hover:text-paprika"
-                            : "cursor-not-allowed text-ink-soft/20"
-                      }`}
-                    >
-                      <StarIcon filled={isMain} size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={isActive}
-                      aria-label={`${localeLabels[l]} aktif`}
-                      disabled={isMain}
-                      onClick={() => toggleLanguage(l)}
-                      className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                        isActive ? "bg-herb" : "bg-ink/20"
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-paper shadow transition-transform ${
-                          isActive ? "translate-x-[1.125rem]" : "translate-x-0.5"
-                        }`}
-                      />
-                    </button>
+          <Card className="space-y-4">
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Menü dilleri</p>
+              <p className="mt-1 text-xs text-ink-soft">
+                Yıldız o dili ana dil yapar (metinlerin girildiği baz dildir); switch dili menüde aktif/pasif eder.
+                Ana dil her zaman aktiftir.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {SUPPORTED_LOCALES.map((l) => {
+                const isMain = l === mainLang;
+                const isActive = isMain || languages.includes(l);
+                return (
+                  <div
+                    key={l}
+                    className={`rounded-2xl border p-4 transition-colors ${isMain ? "border-paprika bg-paprika/5" : "border-line"}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() => changeMainLang(l)}
+                        disabled={isMain || !isActive}
+                        title="Ana dil yap"
+                        aria-label={`${localeLabels[l]} dilini ana dil yap`}
+                        className={`transition-colors ${isMain
+                            ? "text-paprika"
+                            : isActive
+                              ? "text-ink-soft/50 hover:text-paprika"
+                              : "cursor-not-allowed text-ink-soft/20"
+                          }`}
+                      >
+                        <StarIcon filled={isMain} size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={isActive}
+                        aria-label={`${localeLabels[l]} aktif`}
+                        disabled={isMain}
+                        onClick={() => toggleLanguage(l)}
+                        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${isActive ? "bg-herb" : "bg-ink/20"
+                          }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-paper shadow transition-transform ${isActive ? "translate-x-[1.125rem]" : "translate-x-0.5"
+                            }`}
+                        />
+                      </button>
+                    </div>
+                    <p className="mt-3 font-mono text-[11px] font-bold uppercase tracking-wider text-ink-soft">{localeCodes[l]}</p>
+                    <p className="text-sm font-semibold text-ink">{localeLabels[l]}</p>
                   </div>
-                  <p className="mt-3 font-mono text-[11px] font-bold uppercase tracking-wider text-ink-soft">{localeCodes[l]}</p>
-                  <p className="text-sm font-semibold text-ink">{localeLabels[l]}</p>
-                </div>
-              );
-            })}
-          </div>
-          <p className="text-xs text-ink-soft">
-            Açıklama çevirilerini &ldquo;Genel bilgiler&rdquo; sekmesindeki dil sekmelerinden girebilirsin.
-          </p>
-        </Card>
+                );
+              })}
+            </div>
+            <p className="text-xs text-ink-soft">
+              Açıklama çevirilerini &ldquo;Genel bilgiler&rdquo; sekmesindeki dil sekmelerinden girebilirsin.
+            </p>
+          </Card>
         )}
 
         {tab === "tema" && (
-        <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
-          <div className="space-y-6">
-            {/* Marka rengi */}
-            <Card className="space-y-3">
-              <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Marka rengi</p>
-              <div className="flex flex-wrap gap-2.5">
-                {Object.entries(themes).map(([key, { name, color }]) => {
-                  const active = !brandIsCustom && theme === key;
-                  return (
+          <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+            <div className="space-y-6">
+              {/* Marka rengi */}
+              <Card className="space-y-3">
+                <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Marka rengi</p>
+                <div className="flex flex-wrap gap-2.5">
+                  {Object.entries(themes).map(([key, { name, color }]) => {
+                    const active = !brandIsCustom && theme === key;
+                    return (
+                      <button
+                        type="button"
+                        key={key}
+                        title={name}
+                        aria-label={name}
+                        onClick={() => {
+                          setTheme(key);
+                          setThemeColor("");
+                        }}
+                        className={`h-9 w-9 rounded-full border-2 shadow-sm transition-transform hover:scale-110 ${active ? "border-ink ring-2 ring-ink/20" : "border-white"
+                          }`}
+                        style={{ backgroundColor: color }}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="mt-1 flex flex-wrap items-center gap-3 rounded-2xl border border-line p-3">
+                  <label
+                    className={`relative h-9 w-9 shrink-0 overflow-hidden rounded-full border-2 shadow-sm ${brandIsCustom ? "border-ink ring-2 ring-ink/20" : "border-white"
+                      }`}
+                    style={{ backgroundColor: brandIsCustom ? themeColor : "#ffffff" }}
+                    title="Özel renk seç"
+                  >
+                    <input
+                      type="color"
+                      value={brandIsCustom ? themeColor : brandPreview}
+                      onChange={(e) => setThemeColor(e.target.value)}
+                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                    />
+                    {!brandIsCustom && <span className="absolute inset-0 flex items-center justify-center text-lg text-ink-soft">+</span>}
+                  </label>
+                  <div className="min-w-0 flex-1">
+                    <Label htmlFor="b-theme-hex" className="mb-1">Özel renk (hex)</Label>
+                    <Input
+                      id="b-theme-hex"
+                      value={themeColor}
+                      onChange={(e) => setThemeColor(e.target.value)}
+                      placeholder="#e8491f"
+                      className="font-mono"
+                    />
+                  </div>
+                  {brandIsCustom && (
                     <button
                       type="button"
-                      key={key}
-                      title={name}
-                      aria-label={name}
-                      onClick={() => {
-                        setTheme(key);
-                        setThemeColor("");
-                      }}
-                      className={`h-9 w-9 rounded-full border-2 shadow-sm transition-transform hover:scale-110 ${
-                        active ? "border-ink ring-2 ring-ink/20" : "border-white"
-                      }`}
-                      style={{ backgroundColor: color }}
-                    />
-                  );
-                })}
-              </div>
-              <div className="mt-1 flex flex-wrap items-center gap-3 rounded-2xl border border-line p-3">
-                <label
-                  className={`relative h-9 w-9 shrink-0 overflow-hidden rounded-full border-2 shadow-sm ${
-                    brandIsCustom ? "border-ink ring-2 ring-ink/20" : "border-white"
-                  }`}
-                  style={{ backgroundColor: brandIsCustom ? themeColor : "#ffffff" }}
-                  title="Özel renk seç"
-                >
-                  <input
-                    type="color"
-                    value={brandIsCustom ? themeColor : brandPreview}
-                    onChange={(e) => setThemeColor(e.target.value)}
-                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                  />
-                  {!brandIsCustom && <span className="absolute inset-0 flex items-center justify-center text-lg text-ink-soft">+</span>}
-                </label>
-                <div className="min-w-0 flex-1">
-                  <Label htmlFor="b-theme-hex" className="mb-1">Özel renk (hex)</Label>
-                  <Input
-                    id="b-theme-hex"
-                    value={themeColor}
-                    onChange={(e) => setThemeColor(e.target.value)}
-                    placeholder="#e8491f"
-                    className="font-mono"
-                  />
+                      onClick={() => setThemeColor("")}
+                      className="font-mono text-[11px] uppercase tracking-wider text-ink-soft transition-colors hover:text-paprika"
+                    >
+                      Sıfırla
+                    </button>
+                  )}
                 </div>
-                {brandIsCustom && (
+              </Card>
+
+              {/* Arka plan */}
+              <Card className="space-y-3">
+                <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Menü arka planı</p>
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                  {Object.entries(surfaces).map(([key, s]) => {
+                    const active = menuBg === key;
+                    return (
+                      <button
+                        type="button"
+                        key={key}
+                        onClick={() => setMenuBg(key)}
+                        className={`flex items-center gap-2.5 rounded-xl border-2 p-2.5 text-left transition-colors ${active ? "border-paprika" : "border-line hover:border-paprika/50"
+                          }`}
+                      >
+                        <span
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-black/10"
+                          style={{ background: s.swatch[0] }}
+                        >
+                          <span className="h-3.5 w-3.5 rounded-full" style={{ background: s.swatch[2] }} />
+                        </span>
+                        <span className="text-sm font-medium">{s.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </Card>
+
+              {/* Yazı tipi */}
+              <Card className="space-y-3">
+                <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Yazı tipi</p>
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                  {Object.entries(fonts).map(([key, f]) => {
+                    const active = font === key;
+                    return (
+                      <button
+                        type="button"
+                        key={key}
+                        onClick={() => setFont(key)}
+                        style={{ fontFamily: f.stack }}
+                        className={`rounded-xl border-2 p-3 text-left transition-colors ${active ? "border-paprika" : "border-line hover:border-paprika/50"
+                          }`}
+                      >
+                        <span className="block text-lg font-bold leading-tight">Ag</span>
+                        <span className="mt-0.5 block truncate text-xs text-ink-soft">{f.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </Card>
+            </div>
+
+            {/* Canlı önizleme */}
+            <div className="lg:sticky lg:top-24 lg:self-start">
+              <p className="mb-2 font-mono text-[11px] uppercase tracking-wider text-ink-soft">Önizleme</p>
+              <div
+                className="overflow-hidden rounded-3xl border shadow-lg"
+                style={{
+                  background: surfacePreview.vars.paper,
+                  color: surfacePreview.vars.ink,
+                  borderColor: surfacePreview.vars.line,
+                  fontFamily: getFontStack(font),
+                }}
+              >
+                <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: `1px solid ${surfacePreview.vars.line}` }}>
+                  <span className="text-sm font-bold">{name || "İşletmen"}</span>
+                  <span
+                    className="flex h-7 w-7 items-center justify-center rounded-full font-mono text-[10px] font-bold"
+                    style={{ background: brandPreview, color: "#fff" }}
+                  >
+                    TR
+                  </span>
+                </div>
+                <div className="space-y-3 p-4">
+                  <div>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="font-bold">Izgara Köfte</span>
+                      <span className="font-mono text-sm font-bold" style={{ color: brandPreview }}>285₺</span>
+                    </div>
+                    <p className="mt-0.5 text-xs" style={{ color: surfacePreview.vars.inkSoft }}>
+                      El yapımı, közlenmiş biber ve pilav ile
+                    </p>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="font-bold">Sezar Salata</span>
+                    <span className="font-mono text-sm font-bold" style={{ color: brandPreview }}>190₺</span>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => setThemeColor("")}
-                    className="font-mono text-[11px] uppercase tracking-wider text-ink-soft transition-colors hover:text-paprika"
+                    className="mt-1 w-full rounded-full py-2.5 text-center font-mono text-[12px] uppercase tracking-wider"
+                    style={{ background: brandPreview, color: "#fff" }}
                   >
-                    Sıfırla
+                    + Sepete ekle
                   </button>
-                )}
-              </div>
-            </Card>
-
-            {/* Arka plan */}
-            <Card className="space-y-3">
-              <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Menü arka planı</p>
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                {Object.entries(surfaces).map(([key, s]) => {
-                  const active = menuBg === key;
-                  return (
-                    <button
-                      type="button"
-                      key={key}
-                      onClick={() => setMenuBg(key)}
-                      className={`flex items-center gap-2.5 rounded-xl border-2 p-2.5 text-left transition-colors ${
-                        active ? "border-paprika" : "border-line hover:border-paprika/50"
-                      }`}
-                    >
-                      <span
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-black/10"
-                        style={{ background: s.swatch[0] }}
-                      >
-                        <span className="h-3.5 w-3.5 rounded-full" style={{ background: s.swatch[2] }} />
-                      </span>
-                      <span className="text-sm font-medium">{s.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </Card>
-
-            {/* Yazı tipi */}
-            <Card className="space-y-3">
-              <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Yazı tipi</p>
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                {Object.entries(fonts).map(([key, f]) => {
-                  const active = font === key;
-                  return (
-                    <button
-                      type="button"
-                      key={key}
-                      onClick={() => setFont(key)}
-                      style={{ fontFamily: f.stack }}
-                      className={`rounded-xl border-2 p-3 text-left transition-colors ${
-                        active ? "border-paprika" : "border-line hover:border-paprika/50"
-                      }`}
-                    >
-                      <span className="block text-lg font-bold leading-tight">Ag</span>
-                      <span className="mt-0.5 block truncate text-xs text-ink-soft">{f.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </Card>
-          </div>
-
-          {/* Canlı önizleme */}
-          <div className="lg:sticky lg:top-24 lg:self-start">
-            <p className="mb-2 font-mono text-[11px] uppercase tracking-wider text-ink-soft">Önizleme</p>
-            <div
-              className="overflow-hidden rounded-3xl border shadow-lg"
-              style={{
-                background: surfacePreview.vars.paper,
-                color: surfacePreview.vars.ink,
-                borderColor: surfacePreview.vars.line,
-                fontFamily: getFontStack(font),
-              }}
-            >
-              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: `1px solid ${surfacePreview.vars.line}` }}>
-                <span className="text-sm font-bold">{name || "İşletmen"}</span>
-                <span
-                  className="flex h-7 w-7 items-center justify-center rounded-full font-mono text-[10px] font-bold"
-                  style={{ background: brandPreview, color: "#fff" }}
-                >
-                  TR
-                </span>
-              </div>
-              <div className="space-y-3 p-4">
-                <div>
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="font-bold">Izgara Köfte</span>
-                    <span className="font-mono text-sm font-bold" style={{ color: brandPreview }}>285₺</span>
-                  </div>
-                  <p className="mt-0.5 text-xs" style={{ color: surfacePreview.vars.inkSoft }}>
-                    El yapımı, közlenmiş biber ve pilav ile
-                  </p>
                 </div>
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="font-bold">Sezar Salata</span>
-                  <span className="font-mono text-sm font-bold" style={{ color: brandPreview }}>190₺</span>
-                </div>
-                <button
-                  type="button"
-                  className="mt-1 w-full rounded-full py-2.5 text-center font-mono text-[12px] uppercase tracking-wider"
-                  style={{ background: brandPreview, color: "#fff" }}
-                >
-                  + Sepete ekle
-                </button>
               </div>
             </div>
           </div>
-        </div>
         )}
 
         {tab === "ozellik" && (
-        <Card className="space-y-3">
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Öne çıkan özellikler</p>
-            <p className="mt-1 text-xs text-ink-soft">En fazla {MAX_HIGHLIGHTS} tane seç — menünde rozet olarak görünür.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {ALL_HIGHLIGHTS.map((h) => {
-              const selected = highlights.includes(h);
-              const disabled = !selected && highlights.length >= MAX_HIGHLIGHTS;
-              return (
-                <button
-                  type="button"
-                  key={h}
-                  disabled={disabled}
-                  onClick={() => toggleHighlight(h)}
-                  className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                    selected
-                      ? "border-paprika bg-paprika text-paper"
-                      : "border-line text-ink-soft hover:border-paprika hover:text-paprika disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-line disabled:hover:text-ink-soft"
-                  }`}
-                >
-                  <HighlightIcon highlight={h} size={15} strokeWidth={2} />
-                  {highlightLabels.tr[h]}
-                </button>
-              );
-            })}
-          </div>
-        </Card>
+          <Card className="space-y-3">
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Öne çıkan özellikler</p>
+              <p className="mt-1 text-xs text-ink-soft">En fazla {MAX_HIGHLIGHTS} tane seç — menünde rozet olarak görünür.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {ALL_HIGHLIGHTS.map((h) => {
+                const selected = highlights.includes(h);
+                const disabled = !selected && highlights.length >= MAX_HIGHLIGHTS;
+                return (
+                  <button
+                    type="button"
+                    key={h}
+                    disabled={disabled}
+                    onClick={() => toggleHighlight(h)}
+                    className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors ${selected
+                        ? "border-paprika bg-paprika text-paper"
+                        : "border-line text-ink-soft hover:border-paprika hover:text-paprika disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-line disabled:hover:text-ink-soft"
+                      }`}
+                  >
+                    <HighlightIcon highlight={h} size={15} strokeWidth={2} />
+                    {highlightLabels.tr[h]}
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
         )}
 
         {tab === "iletisim" && (
-        <Card className="space-y-4">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Adres & iletişim</p>
-          <div>
-            <Label htmlFor="b-address">Adres</Label>
-            <Input id="b-address" value={address} onChange={(e) => setAddress(e.target.value)} />
-          </div>
-          <div>
-            <Label htmlFor="b-hours">Çalışma saatleri</Label>
-            <Textarea
-              id="b-hours"
-              rows={3}
-              value={workingHours}
-              onChange={(e) => setWorkingHours(e.target.value)}
-              placeholder={"Pazartesi - Cuma: 09:00 - 22:00\nHafta sonu: 10:00 - 23:00"}
-            />
-          </div>
-          <div>
-            <Label htmlFor="b-maps">Google Maps linki</Label>
-            <Input
-              id="b-maps"
-              value={googleMapsUrl}
-              onChange={(e) => setGoogleMapsUrl(e.target.value)}
-              placeholder="https://maps.google.com/..."
-            />
-          </div>
-          <div>
-            <Label htmlFor="b-greview">Google yorum linki</Label>
-            <Input
-              id="b-greview"
-              value={googleReviewUrl}
-              onChange={(e) => setGoogleReviewUrl(e.target.value)}
-              placeholder="https://g.page/r/... veya https://search.google.com/local/writereview?placeid=..."
-            />
-            <p className="mt-1.5 text-xs text-ink-soft">
-              Doluysa değerlendirme gönderen müşteriye &ldquo;Google&apos;da da değerlendir&rdquo; butonu gösterilir.
-            </p>
-          </div>
-          <div>
-            <Label htmlFor="b-wifi">WiFi şifresi</Label>
-            <Input id="b-wifi" value={wifiPassword} onChange={(e) => setWifiPassword(e.target.value)} placeholder="kafe-wifi-2026" />
-            <p className="mt-1.5 text-xs text-ink-soft">Doluysa menünün karşılama sayfasında müşteriye gösterilir.</p>
-          </div>
-        </Card>
+          <Card className="space-y-4">
+            <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Adres & iletişim</p>
+            <div>
+              <Label htmlFor="b-address">Adres</Label>
+              <Input id="b-address" value={address} onChange={(e) => setAddress(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="b-hours">Çalışma saatleri</Label>
+              <Textarea
+                id="b-hours"
+                rows={3}
+                value={workingHours}
+                onChange={(e) => setWorkingHours(e.target.value)}
+                placeholder={"Pazartesi - Cuma: 09:00 - 22:00\nHafta sonu: 10:00 - 23:00"}
+              />
+            </div>
+            <div>
+              <Label htmlFor="b-maps">Google Maps linki</Label>
+              <Input
+                id="b-maps"
+                value={googleMapsUrl}
+                onChange={(e) => setGoogleMapsUrl(e.target.value)}
+                placeholder="https://maps.google.com/..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="b-greview">Google yorum linki</Label>
+              <Input
+                id="b-greview"
+                value={googleReviewUrl}
+                onChange={(e) => setGoogleReviewUrl(e.target.value)}
+                placeholder="https://g.page/r/... veya https://search.google.com/local/writereview?placeid=..."
+              />
+              <p className="mt-1.5 text-xs text-ink-soft">
+                Doluysa değerlendirme gönderen müşteriye &ldquo;Google&apos;da da değerlendir&rdquo; butonu gösterilir.
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="b-wifi">WiFi şifresi</Label>
+              <Input id="b-wifi" value={wifiPassword} onChange={(e) => setWifiPassword(e.target.value)} placeholder="kafe-wifi-2026" />
+              <p className="mt-1.5 text-xs text-ink-soft">Doluysa menünün karşılama sayfasında müşteriye gösterilir.</p>
+            </div>
+          </Card>
         )}
 
         {tab === "sosyal" && (
-        <Card className="space-y-4">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Sosyal medya</p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="b-whatsapp">WhatsApp</Label>
-              <Input id="b-whatsapp" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+90 555 123 45 67" />
+          <Card className="space-y-4">
+            <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Sosyal medya</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="b-whatsapp">WhatsApp</Label>
+                <Input id="b-whatsapp" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+90 555 123 45 67" />
+              </div>
+              <div>
+                <Label htmlFor="b-instagram">Instagram</Label>
+                <Input id="b-instagram" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="kullaniciadi" />
+              </div>
+              <div>
+                <Label htmlFor="b-tiktok">TikTok</Label>
+                <Input id="b-tiktok" value={tiktok} onChange={(e) => setTiktok(e.target.value)} placeholder="kullaniciadi" />
+              </div>
+              <div>
+                <Label htmlFor="b-youtube">YouTube</Label>
+                <Input id="b-youtube" value={youtube} onChange={(e) => setYoutube(e.target.value)} placeholder="@kanaladi" />
+              </div>
+              <div>
+                <Label htmlFor="b-facebook">Facebook</Label>
+                <Input id="b-facebook" value={facebook} onChange={(e) => setFacebook(e.target.value)} placeholder="kullaniciadi" />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="b-instagram">Instagram</Label>
-              <Input id="b-instagram" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="kullaniciadi" />
-            </div>
-            <div>
-              <Label htmlFor="b-tiktok">TikTok</Label>
-              <Input id="b-tiktok" value={tiktok} onChange={(e) => setTiktok(e.target.value)} placeholder="kullaniciadi" />
-            </div>
-            <div>
-              <Label htmlFor="b-youtube">YouTube</Label>
-              <Input id="b-youtube" value={youtube} onChange={(e) => setYoutube(e.target.value)} placeholder="@kanaladi" />
-            </div>
-            <div>
-              <Label htmlFor="b-facebook">Facebook</Label>
-              <Input id="b-facebook" value={facebook} onChange={(e) => setFacebook(e.target.value)} placeholder="kullaniciadi" />
-            </div>
-          </div>
-        </Card>
+          </Card>
         )}
 
         <ErrorText>{error}</ErrorText>

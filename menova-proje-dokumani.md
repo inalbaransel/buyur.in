@@ -34,7 +34,7 @@ Değişiklikleriniz anında yayınlanır. Müşteriler her zaman güncel menüy�
 Benzersiz QR kodunuz ve özel URL'nizle menünüzü anında paylaşın.
 
 - Her işletmeye özel QR kod otomatik oluşturulur.
-- Özel URL formatı: `menuva.app/isletme-adi` (veya özel domain desteği).
+- Özel URL formatı: `menuvaapp.com/isletme-adi` (veya özel domain desteği).
 - QR kod masalara, vitrine, paket servis poşetlerine, sosyal medyaya konabilir.
 - **Kullanım senaryosu:** Instagram bio'suna menü linki, masalara QR sticker.
 
