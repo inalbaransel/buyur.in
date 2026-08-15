@@ -49,3 +49,4 @@ http://localhost:3000 adresinde açılır. (`.env.local` zaten hazır — Pocket
 - [ ] Drag & drop sıralama (şimdilik ▲▼ ok butonları var)
 - [ ] Analitik paneli (görüntülenme, QR tarama sayısı)
 - [ ] Çoklu dil desteği (TR/EN/AR/RU)
+xx
