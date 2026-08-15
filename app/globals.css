@@ -335,3 +335,51 @@ body {
   background: var(--color-paprika);
   color: var(--color-paper);
 }
+
+/* ─── Rapor yazdırma ───────────────────────────────────────────────
+   Rapor sayfası aynı zamanda PDF çıktısıdır: tarayıcının "PDF olarak kaydet"
+   akışı kullanılıyor, ayrı bir PDF üretim hattı/bağımlılığı yok. Burada panel
+   kabuğu gizlenir, kartlar sayfa sonlarında ortadan bölünmez. */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  /* Panel kabuğu: üst bar, sidebar, mobil menü ve aksiyon butonları basılmaz. */
+  header.sticky,
+  aside,
+  nav,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  .report-sheet section,
+  .report-sheet header,
+  .report-block {
+    break-inside: avoid;
+    box-shadow: none !important;
+  }
+
+  .report-sheet section,
+  .report-sheet header {
+    border-color: #d8cbb6 !important;
+  }
+
+  /* Tablolar sayfa aşarsa başlık her sayfada tekrar etsin. */
+  thead {
+    display: table-header-group;
+  }
+
+  a[href]::after {
+    content: "";
+  }
+}

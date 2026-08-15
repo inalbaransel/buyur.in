@@ -10,9 +10,11 @@ import { isReservedSlug, slugify } from "@/lib/slug";
 import { Button, Card, ErrorText, Input, Label, PageHeader, UpgradeNotice } from "@/components/panel/ui";
 import { QrShare } from "@/components/panel/qr-share";
 import { planLabels } from "@/lib/labels";
-import { fetchPlanLimits } from "@/lib/plan-limits";
+import { fetchPlan, fetchPlanLimits } from "@/lib/plan-limits";
+import { addMonths, trialStatus } from "@/lib/plan-period";
 import { ROOT_DOMAIN, menuHost } from "@/lib/site";
-import type { Business, MenuEvent, Plan, PlanRecord } from "@/lib/types";
+import { AnalyticsError, fetchAnalytics } from "@/lib/analytics/panel-client";
+import type { Business, Plan, PlanRecord } from "@/lib/types";
 
 function Onboarding() {
   const { user } = useAuth();
@@ -46,12 +48,16 @@ function Onboarding() {
       // Varsayılan kayıt paketi admin panelinden değiştirilebilir (plans.is_default) —
       // burada sabit bir plan anahtarı gömmek yerine canlı değeri okuyoruz.
       let defaultPlan: Plan = "freemium";
+      let trialMonths = 0;
       try {
         const plan = await pb.collection("menuva_plans").getFirstListItem<PlanRecord>("is_default = true");
         defaultPlan = plan.key;
+        trialMonths = plan.trial_months ?? 0;
       } catch {
         // plans koleksiyonu boşsa (ör. migrate-plans.mjs henüz çalıştırılmadıysa) sessizce
-        // "freemium"a düşer — kayıt akışını bu yüzden kilitlemiyoruz.
+        // "freemium"a düşer — kayıt akışını bu yüzden kilitlemiyoruz. Süre de
+        // yazılmaz: yanlış bir tarihle işletmeyi "süresi dolmuş" göstermektense
+        // süresiz kabul etmek daha az zararlı.
       }
 
       const business = await pb.collection("menuva_businesses").create<Business>({
@@ -60,6 +66,9 @@ function Onboarding() {
         slug,
         template: "liste",
         plan: defaultPlan,
+        // Deneme bitişi kayıt anında sabitleniyor: plan kaydındaki süre sonradan
+        // değişse bile mevcut işletmenin hakkı değişmesin.
+        plan_expires_at: trialMonths > 0 ? addMonths(new Date(), trialMonths).toISOString() : "",
         is_active: true,
       });
       setBusiness(business);
@@ -116,25 +125,9 @@ const PAGE_VIEW_LABELS: Record<string, string> = {
   category: "Kategori sayfaları",
   product: "Ürün sayfaları",
   search: "Arama",
+  cart: "Sepet",
   degerlendir: "Değerlendirme",
 };
-
-function countBy(events: MenuEvent[], key: (e: MenuEvent) => string): Map<string, { count: number; label: string }> {
-  const map = new Map<string, { count: number; label: string }>();
-  for (const e of events) {
-    const k = key(e);
-    const entry = map.get(k) ?? { count: 0, label: e.label || k };
-    entry.count += 1;
-    map.set(k, entry);
-  }
-  return map;
-}
-
-function topOf(map: Map<string, { count: number; label: string }>, limit: number) {
-  return Array.from(map.values())
-    .sort((a, b) => b.count - a.count)
-    .slice(0, limit);
-}
 
 function BarList({ title, items }: { title: string; items: { label: string; count: number }[] }) {
   const max = Math.max(...items.map((i) => i.count), 1);
@@ -162,82 +155,96 @@ function BarList({ title, items }: { title: string; items: { label: string; coun
   );
 }
 
+interface OverviewSummary {
+  totals: { page_views?: number; sessions?: number; visitors?: number; qr_scans?: number; cart_adds?: number };
+  series: { page_views?: { date: string; value: number }[] };
+  topProducts?: { key: string; label: string; metrics: Record<string, number> }[];
+  topCategories?: { key: string; label: string; metrics: Record<string, number> }[];
+}
+
+/** Panel ana sayfasındaki özet. Daha önce burası son 30 günün TÜM ham
+ *  event'lerini tarayıcıya çekiyordu (getFullList, sayfa sayfa) — veri
+ *  büyüyünce onlarca megabayt ve düzinelerce istek anlamına geliyordu.
+ *  Artık tek bir agregat isteği: /api/analytics/overview. */
 function StatsSection({ business }: { business: Business }) {
-  const [events, setEvents] = useState<MenuEvent[] | null>(null);
-  const [unavailable, setUnavailable] = useState(false);
+  const [data, setData] = useState<OverviewSummary | null>(null);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    const from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .replace("T", " ")
-      .slice(0, 19);
-    pb.collection("menuva_events")
-      .getFullList<MenuEvent>({
-        filter: pb.filter("business = {:id} && created >= {:from}", { id: business.id, from }),
-        requestKey: null,
-        sort: "-created",
-      })
-      .then(setEvents)
-      .catch(() => setUnavailable(true));
+    const controller = new AbortController();
+    setData(null);
+    setFailed(false);
+
+    fetchAnalytics<OverviewSummary>("overview", { preset: "last_30", compare: "none" }, controller.signal)
+      .then((response) => setData(response.data))
+      .catch((err) => {
+        // Sayfadan çıkınca istek iptal edilir; bu bir hata değil.
+        if (controller.signal.aborted) return;
+        if (err instanceof AnalyticsError && err.isPlanLocked) return;
+        setFailed(true);
+      });
+
+    return () => controller.abort();
   }, [business.id]);
 
-  if (unavailable) {
+  if (failed) {
     return (
       <Card className="mt-8">
         <p className="text-sm text-ink-soft">
-          İstatistikler henüz aktif değil — sunucuda <span className="font-mono">events</span> koleksiyonu bekleniyor
-          (setup-pocketbase.mjs migration&apos;ını çalıştır).
+          İstatistikler şu anda yüklenemiyor. Birkaç dakika sonra tekrar deneyin.
         </p>
       </Card>
     );
   }
 
-  if (!events) {
-    return <p className="mt-8 text-sm text-ink-soft">İstatistikler yükleniyor…</p>;
-  }
+  if (!data) return <p className="mt-8 text-sm text-ink-soft">İstatistikler yükleniyor…</p>;
 
-  const pageViews = events.filter((e) => e.type === "page_view");
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const todayViews = pageViews.filter((e) => new Date(e.created) >= todayStart);
-  const cartAdds = events.filter((e) => e.type === "add_to_cart");
-
-  const pageItems = Array.from(countBy(pageViews, (e) => e.target).entries())
-    .map(([target, { count }]) => ({ label: PAGE_VIEW_LABELS[target] ?? target, count }))
-    .sort((a, b) => b.count - a.count);
-
-  const topProducts = topOf(countBy(events.filter((e) => e.type === "product_view"), (e) => e.target), 8);
-  const topCategories = topOf(countBy(events.filter((e) => e.type === "category_view"), (e) => e.target), 8);
-  const topCartProducts = topOf(countBy(cartAdds, (e) => e.target), 8);
+  const totals = data.totals ?? {};
+  const series = data.series?.page_views ?? [];
+  const todayViews = series.length > 0 ? (series[series.length - 1]?.value ?? 0) : 0;
 
   return (
     <div className="mt-10">
       <div className="mb-4 flex items-baseline justify-between">
         <h2 className="font-display text-xl font-bold">Ziyaretçi istatistikleri</h2>
-        <span className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Son 30 gün</span>
+        <div className="flex items-baseline gap-3">
+          <span className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Son 30 gün</span>
+          <Link
+            href="/panel/analytics"
+            className="font-mono text-[11px] uppercase tracking-wider text-paprika transition-colors hover:text-paprika-deep"
+          >
+            Detaylı analiz →
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Sayfa görüntülenme</p>
-          <p className="mt-2 font-display text-3xl font-extrabold">{pageViews.length}</p>
+          <p className="mt-2 font-display text-3xl font-extrabold">{totals.page_views ?? 0}</p>
         </Card>
         <Card>
           <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Bugün</p>
-          <p className="mt-2 font-display text-3xl font-extrabold">{todayViews.length}</p>
+          <p className="mt-2 font-display text-3xl font-extrabold">{todayViews}</p>
         </Card>
         <Card>
           <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Sepete ekleme</p>
-          <p className="mt-2 font-display text-3xl font-extrabold">{cartAdds.length}</p>
+          <p className="mt-2 font-display text-3xl font-extrabold">{totals.cart_adds ?? 0}</p>
         </Card>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <BarList title="Sayfa kırılımı" items={pageItems} />
-        <BarList title="En çok görüntülenen ürünler" items={topProducts} />
-        <BarList title="En çok görüntülenen kategoriler" items={topCategories} />
-        <BarList title="En çok sepete eklenenler" items={topCartProducts} />
-      </div>
+      {(data.topProducts || data.topCategories) && (
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <BarList
+            title="En çok görüntülenen ürünler"
+            items={(data.topProducts ?? []).map((item) => ({ label: item.label, count: item.metrics.views ?? 0 }))}
+          />
+          <BarList
+            title="En çok görüntülenen kategoriler"
+            items={(data.topCategories ?? []).map((item) => ({ label: item.label, count: item.metrics.views ?? 0 }))}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -245,6 +252,10 @@ function StatsSection({ business }: { business: Business }) {
 function Overview({ business }: { business: Business }) {
   const [counts, setCounts] = useState<{ categories: number; products: number } | null>(null);
   const [analyticsAllowed, setAnalyticsAllowed] = useState<boolean | null>(null);
+  const [isTrialPlan, setIsTrialPlan] = useState(false);
+  // Süre sayacı yalnızca süreli planlarda anlamlı (ücretli plana geçince
+  // kayıttaki eski bitiş tarihi sayaç göstermemeli).
+  const trial = isTrialPlan ? trialStatus(business) : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -268,6 +279,9 @@ function Overview({ business }: { business: Business }) {
     fetchPlanLimits(business.plan).then((limits) => {
       if (!cancelled) setAnalyticsAllowed(limits.analytics);
     });
+    fetchPlan(business.plan).then((plan) => {
+      if (!cancelled) setIsTrialPlan((plan?.trial_months ?? 0) > 0);
+    });
     return () => {
       cancelled = true;
     };
@@ -288,6 +302,11 @@ function Overview({ business }: { business: Business }) {
         <Card>
           <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Plan</p>
           <p className="mt-2 font-display text-3xl font-extrabold">{planLabels[business.plan]}</p>
+          {trial && (
+            <p className={`mt-1 text-xs ${trial.expired ? "text-paprika" : "text-ink-soft"}`}>
+              {trial.expired ? "Deneme süresi doldu" : `${trial.daysLeft} gün kaldı`}
+            </p>
+          )}
         </Card>
       </div>
       <QrShare business={business} />

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { pb } from "@/lib/pocketbase";
 import { useMenu } from "@/components/menu/menu-provider";
+import { trackEvent } from "@/lib/analytics/track-client";
 import { ProductCard } from "@/components/menu/product-card";
 import type { Locale } from "@/lib/i18n";
 import type { Product } from "@/lib/types";
@@ -45,6 +46,26 @@ export default function SearchPage() {
       return name.includes(q) || description.includes(q);
     });
   }, [products, query, locale, tf]);
+
+  // Arama analitiği: her tuş vuruşu değil, kullanıcı yazmayı bıraktıktan sonra
+  // tek event. Sonuçsuz aramalar (results = 0) eksik ürün talebini gösterdiği
+  // için ayrıca meta'da işaretleniyor.
+  useEffect(() => {
+    const term = query.trim();
+    if (loading || term.length < 2) return;
+
+    const timer = setTimeout(() => {
+      trackEvent(business.slug, {
+        type: "search",
+        target: term.slice(0, 60).toLocaleLowerCase(LOCALE_TAG[locale]),
+        label: term.slice(0, 60),
+        locale,
+        meta: { results: results.length, no_result: results.length === 0 },
+      });
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [query, results.length, loading, locale, business.slug]);
 
   return (
     <div className="px-4 pb-6 pt-5">

@@ -34,7 +34,13 @@ export default function ProductDetailPage() {
         setProduct(prod);
         setOptions(opts);
         setLoading(false);
-        track("product_view", prod.id, prod.name);
+        track({
+          type: "product_detail_view",
+          target: prod.id,
+          label: prod.name,
+          productId: prod.id,
+          categoryId: prod.category,
+        });
       })
       .catch(() => {
         if (!cancelled) router.replace(`${base}/menu`);

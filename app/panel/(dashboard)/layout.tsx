@@ -9,25 +9,34 @@ import { pb } from "@/lib/pocketbase";
 import { BusinessProvider, useBusiness } from "@/components/panel/business-context";
 import { NotificationBell } from "@/components/panel/notification-bell";
 import { ToastProvider } from "@/components/panel/toast";
+import { TrialBanner } from "@/components/panel/trial-banner";
 import { menuUrl } from "@/lib/site";
 import {
   ExternalLinkIcon,
+  FileTextIcon,
   FolderIcon,
   LayoutIcon,
   LifeBuoyIcon,
   LogoutIcon,
   MegaphoneIcon,
   PackageIcon,
+  QrCodeIcon,
   SettingsIcon,
   StarIcon,
+  TrendingUpIcon,
+  UsersIcon,
 } from "@/components/icons";
 
 const navItems = [
   { href: "/panel", label: "Genel bakış", Icon: LayoutIcon, prefixes: ["/panel"] },
+  { href: "/panel/analytics", label: "Analiz", Icon: TrendingUpIcon, prefixes: ["/panel/analytics"] },
   { href: "/panel/categories", label: "Kategoriler", Icon: FolderIcon, prefixes: ["/panel/categories", "/panel/category/"] },
   { href: "/panel/products", label: "Ürünler", Icon: PackageIcon, prefixes: ["/panel/products", "/panel/product/"] },
   { href: "/panel/popups", label: "Kampanyalar", Icon: MegaphoneIcon, prefixes: ["/panel/popups", "/panel/popup/"] },
+  { href: "/panel/qr", label: "QR kodlar", Icon: QrCodeIcon, prefixes: ["/panel/qr"] },
+  { href: "/panel/reports", label: "Raporlar", Icon: FileTextIcon, prefixes: ["/panel/reports"] },
   { href: "/panel/reviews", label: "Değerlendirmeler", Icon: StarIcon, prefixes: ["/panel/reviews"] },
+  { href: "/panel/team", label: "Ekip", Icon: UsersIcon, prefixes: ["/panel/team"] },
   { href: "/panel/support", label: "Destek", Icon: LifeBuoyIcon, prefixes: ["/panel/support"] },
   { href: "/panel/settings", label: "Ayarlar", Icon: SettingsIcon, prefixes: ["/panel/settings"] },
 ];
@@ -122,7 +131,10 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
             </nav>
           </aside>
         )}
-        <main className="min-w-0 flex-1 py-10">{children}</main>
+        <main className="min-w-0 flex-1 py-10">
+          <TrialBanner />
+          {children}
+        </main>
       </div>
     </div>
   );

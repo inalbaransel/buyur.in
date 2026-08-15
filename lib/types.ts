@@ -1,4 +1,6 @@
 import type { Locale, Translations } from "@/lib/i18n";
+import type { AnalyticsEventType } from "@/lib/analytics/events";
+import type { DeviceType, TrafficSource } from "@/lib/analytics/attribution";
 
 export type Plan = "freemium" | "premium" | "elite";
 export type Template = "liste" | "grid";
@@ -70,6 +72,12 @@ export interface Business {
   google_review_url: string;
   wifi_password: string;
   plan: Plan;
+  /** Süreli planın (Freemium denemesi) bitiş anı. Boşsa süre takibi yok —
+   *  ücretli planlar ve göç öncesi eski kayıtlar bu durumda. */
+  plan_expires_at?: string;
+  /** IANA saat dilimi (ör. "Europe/Istanbul"). Günlük/saatlik analitik
+   *  kırılımları bu saat dilimine göre hesaplanır. Boşsa varsayılan kullanılır. */
+  timezone?: string;
   is_active: boolean;
   /** İşletmenin ana (baz) dili — ana metinler (name/description) bu dilde tutulur.
    *  Seçilmemişse Türkçe kabul edilir (bkz. lib/i18n.ts mainLocale). */
@@ -82,16 +90,135 @@ export interface Business {
   updated: string;
 }
 
-export type MenuEventType = "page_view" | "category_view" | "product_view" | "add_to_cart";
+/** @deprecated Sözlük lib/analytics/events.ts'e taşındı; eski adı kırmamak için alias. */
+export type MenuEventType = AnalyticsEventType;
 
 export interface MenuEvent {
   id: string;
   business: string;
-  type: MenuEventType;
+  type: AnalyticsEventType;
   target: string;
   label: string;
+  /** Oturum anahtarı — unique ziyaretçi/funnel hesapları buna dayanır. */
+  session: string;
+  /** Birinci taraf rastgele ziyaretçi kimliği (PII değil). */
+  visitor: string;
+  product?: string;
+  category?: string;
+  popup?: string;
+  qr?: string;
+  source: TrafficSource | "";
+  medium: string;
+  campaign: string;
+  referrer_host: string;
+  device: DeviceType | "";
+  country: string;
+  city: string;
+  locale: string;
+  meta?: Record<string, unknown>;
+  /** Event'in sunucuda kaydedildiği an (backfill'e izin verir; `created` PB damgası). */
+  occurred_at: string;
   created: string;
   updated: string;
+  expand?: {
+    product?: Product;
+    category?: Category;
+    popup?: Popup;
+    qr?: QrCode;
+  };
+}
+
+/** Oturum özeti — unique ziyaretçi, süre, bounce ve yeni/dönen oranı buradan gelir. */
+export interface MenuSession {
+  id: string;
+  business: string;
+  /** Oturum anahtarı (cookie'deki değer); işletme başına tekil. */
+  key: string;
+  visitor: string;
+  started_at: string;
+  last_seen_at: string;
+  duration_sec: number;
+  events_count: number;
+  page_views: number;
+  product_views: number;
+  cart_adds: number;
+  source: TrafficSource | "";
+  medium: string;
+  campaign: string;
+  referrer_host: string;
+  device: DeviceType | "";
+  country: string;
+  city: string;
+  locale: string;
+  entry_path: string;
+  exit_path: string;
+  qr?: string;
+  /** Ziyaretçinin daha önce bu işletmede oturumu var mıydı. */
+  is_returning: boolean;
+  created: string;
+  updated: string;
+}
+
+export type QrPlacement = "table" | "counter" | "window" | "instagram" | "campaign" | "other";
+
+/** Etiketli QR kodu — menü linkine `?qr=<code>` olarak eklenir. */
+export interface QrCode {
+  id: string;
+  business: string;
+  name: string;
+  code: string;
+  placement: QrPlacement;
+  is_active: boolean;
+  created: string;
+  updated: string;
+}
+
+/** Rollup çıktısı: gün × boyut × anahtar → metrikler (bkz. docs/analytics-architecture.md §3). */
+export type StatDimension =
+  | "total"
+  | "hour"
+  | "weekday"
+  | "page"
+  | "product"
+  | "category"
+  | "source"
+  | "device"
+  | "country"
+  | "city"
+  | "qr"
+  | "campaign"
+  | "search"
+  | "funnel"
+  | "navigation";
+
+export interface DailyStat {
+  id: string;
+  business: string;
+  /** İşletmenin saat dilimine göre YYYY-MM-DD. */
+  date: string;
+  dimension: StatDimension;
+  key: string;
+  label: string;
+  metrics: Record<string, number>;
+  created: string;
+  updated: string;
+}
+
+export type MemberRole = "owner" | "admin" | "manager" | "staff";
+export type MemberStatus = "active" | "invited";
+
+export interface BusinessMember {
+  id: string;
+  business: string;
+  user?: string;
+  invited_email: string;
+  role: MemberRole;
+  status: MemberStatus;
+  created: string;
+  updated: string;
+  expand?: {
+    user?: { id: string; name: string; email: string };
+  };
 }
 
 export interface Review {
@@ -176,7 +303,20 @@ export interface PlanLimits {
   max_businesses: number | null;
   max_menus: number | null;
   max_products: number | null;
+  /** Temel analitik: özet metrikler + son 7 gün grafiği (Freemium dahil). */
   analytics: boolean;
+  /** Gelişmiş analitik: karşılaştırma, funnel, kaynak/cihaz/saat kırılımı, drill-down. */
+  analytics_advanced?: boolean;
+  /** Otomatik içgörüler + menü performans skoru. */
+  insights?: boolean;
+  /** Rapor Merkezi (Elite). */
+  reports?: boolean;
+  /** Rapor dışa aktarma — PDF/Excel/CSV (Elite). */
+  reports_export?: boolean;
+  /** Zamanlanmış rapor gönderimi (şimdilik hiçbir planda açık değil: e-posta altyapısı yok). */
+  scheduled_reports?: boolean;
+  /** Ham event saklama süresi (gün). Plan düşse de geçmiş silinmez, erişim kapanır. */
+  analytics_retention_days?: number;
   custom_domain: boolean;
   branding_removal: boolean;
   campaigns: boolean;
@@ -190,8 +330,12 @@ export interface PlanRecord {
   key: Plan;
   name: string;
   description: string;
-  price_6m: number;
-  price_12m: number;
+  /** Aylık ödemede aylık ücret (₺). Ücretsiz planda 0. */
+  price_monthly: number;
+  /** Yıllık ödemede aylık eşdeğer ücret (₺); yıllık toplam = bunun 12 katı. */
+  price_yearly_monthly: number;
+  /** Süreli (deneme) planın kaç ay sürdüğü. 0 = süresiz, ücretli planlar 0. */
+  trial_months: number;
   features: string[];
   limits: PlanLimits;
   is_active: boolean;

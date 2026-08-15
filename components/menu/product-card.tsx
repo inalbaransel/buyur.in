@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { trackEvent, trackOnce } from "@/lib/analytics/track-client";
 import type { Product, Template } from "@/lib/types";
 import { allergenLabels, badgeLabels } from "@/lib/labels";
 import { formatPrice } from "@/lib/format";
@@ -18,10 +19,40 @@ export function ProductCard({
   onAdd: (product: Product) => void;
   onOpen?: () => void;
 }) {
-  const { locale, t, tf } = useMenu();
+  const { business, locale, t, tf } = useMenu();
   const [added, setAdded] = useState(false);
   const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cardRef = useRef<HTMLDivElement | null>(null);
   const hasDiscount = product.discount_percent > 0;
+
+  // Ürün listede gerçekten görüldüğünde bir "product_view" — oturum başına ürün
+  // başına bir kez. Detay açılışı ayrı event (product_detail_view), böylece
+  // funnel'da "gördü → detaya girdi" adımı ölçülebiliyor.
+  useEffect(() => {
+    const element = cardRef.current;
+    if (!element || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        trackOnce(`product_view:${product.id}`, () => {
+          trackEvent(business.slug, {
+            type: "product_view",
+            target: product.id,
+            label: product.name,
+            productId: product.id,
+            categoryId: product.category,
+            locale,
+          });
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [product.id, product.name, product.category, business.slug, locale]);
 
   function handleAdd(e: React.MouseEvent) {
     e.stopPropagation();
@@ -38,6 +69,7 @@ export function ProductCard({
 
   return (
     <div
+      ref={cardRef}
       onClick={onOpen}
       data-reveal
       className={`group rounded-xl border border-line bg-paper p-4 transition-colors hover:border-[var(--brand)] ${

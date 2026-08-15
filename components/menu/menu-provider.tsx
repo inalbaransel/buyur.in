@@ -25,7 +25,9 @@ import {
   type TranslatableField,
   type UIKey,
 } from "@/lib/i18n";
-import type { Business, Category, MenuEventType, Popup, Product, ProductOption } from "@/lib/types";
+import type { TrackPayload } from "@/lib/analytics/events";
+import { trackEvent, trackOnce } from "@/lib/analytics/track-client";
+import type { Business, Category, Popup, Product, ProductOption } from "@/lib/types";
 import { OptionPicker } from "@/components/menu/option-picker";
 import { CartBar } from "@/components/menu/cart";
 import { PopupModal } from "@/components/menu/popup-modal";
@@ -41,7 +43,8 @@ interface MenuContextValue {
   addProduct: (product: Product) => void;
   updateQuantity: (key: string, quantity: number) => void;
   removeLine: (key: string) => void;
-  track: (type: MenuEventType, target: string, label: string) => void;
+  /** Analitik event gönderir; oturum/kaynak/cihaz sunucuda eklenir. */
+  track: (payload: TrackPayload) => void;
   locale: Locale;
   setLocale: (locale: Locale) => void;
   /** İşletmenin aktif dilleri (Türkçe dahil). Dil seçici yalnızca bunları gösterir. */
@@ -63,24 +66,18 @@ export function useMenu() {
   return ctx;
 }
 
-// Ziyaretçi istatistiği: hata olursa (ör. koleksiyon henüz yok) menüyü asla bozmasın.
-function sendEvent(businessId: string, type: MenuEventType, target: string, label: string) {
-  pb.collection("menuva_events")
-    .create({ business: businessId, type, target, label }, { requestKey: null })
-    .catch(() => { });
-}
-
 const PAGE_LABELS: Record<string, string> = {
   welcome: "Karşılama",
   menu: "Menü (kategoriler)",
   category: "Kategori sayfası",
   product: "Ürün sayfası",
   search: "Arama",
+  cart: "Sepet",
   degerlendir: "Değerlendirme",
 };
 
 // Her rota değişiminde bir page_view kaydeder (aynı path'e art arda tekrar yazmaz).
-function TrackPageViews({ business, base }: { business: Business; base: string }) {
+function TrackPageViews({ business, base, locale }: { business: Business; base: string; locale: Locale }) {
   const pathname = usePathname();
   const lastTracked = useRef<string | null>(null);
 
@@ -93,10 +90,15 @@ function TrackPageViews({ business, base }: { business: Business; base: string }
     else if (pathname.startsWith(`${base}/products/`)) kind = "product";
     else if (pathname.startsWith(`${base}/menu`)) kind = "menu";
     else if (pathname.startsWith(`${base}/search`)) kind = "search";
+    else if (pathname.startsWith(`${base}/cart`)) kind = "cart";
     else if (pathname.startsWith(`${base}/review`)) kind = "degerlendir";
 
-    sendEvent(business.id, "page_view", kind, PAGE_LABELS[kind] ?? kind);
-  }, [pathname, business.id, base]);
+    trackEvent(business.slug, { type: "page_view", target: kind, label: PAGE_LABELS[kind] ?? kind, locale });
+    // Sepet sayfası funnel'ın son adımı — ayrıca kendi event'iyle sayılır.
+    if (kind === "cart") {
+      trackEvent(business.slug, { type: "cart_view", target: "cart", label: PAGE_LABELS.cart, locale });
+    }
+  }, [pathname, business.slug, base, locale]);
 
   return null;
 }
@@ -338,6 +340,15 @@ export function MenuProvider({
   }, [locales, baseLocale]);
 
   function setLocale(next: Locale) {
+    if (next !== locale) {
+      trackEvent(business.slug, {
+        type: "language_change",
+        target: next,
+        label: `${locale} → ${next}`,
+        locale: next,
+        meta: { from: locale, to: next },
+      });
+    }
     setLocaleState(next);
     storeLocale(next);
   }
@@ -364,9 +375,35 @@ export function MenuProvider({
   }, [popup, business.slug]);
 
   function dismissPopup() {
-    if (popup) sessionStorage.setItem(`menuva-popup-${business.slug}-${popup.id}`, "1");
+    if (popup) {
+      sessionStorage.setItem(`menuva-popup-${business.slug}-${popup.id}`, "1");
+      // Kampanya modalındaki tek aksiyon "menüyü gör" — kapatma bu yüzden
+      // tıklama sayılıyor (gösterim campaign_view ile ayrı kaydediliyor).
+      trackEvent(business.slug, {
+        type: "campaign_click",
+        target: popup.id,
+        label: popup.title,
+        popupId: popup.id,
+        locale,
+      });
+    }
     setPopupDismissed(true);
   }
+
+  // Kampanya gösterimi: modal gerçekten ekrana geldiğinde, oturum başına bir kez.
+  const popupVisible = Boolean(popup) && !popupDismissed && !needsLangChoice;
+  useEffect(() => {
+    if (!popup || !popupVisible) return;
+    trackOnce(`campaign_view:${popup.id}`, () => {
+      trackEvent(business.slug, {
+        type: "campaign_view",
+        target: popup.id,
+        label: popup.title,
+        popupId: popup.id,
+        locale,
+      });
+    });
+  }, [popup, popupVisible, business.slug, locale]);
 
   function persistCart(next: CartLine[]) {
     setCart(next);
@@ -381,11 +418,18 @@ export function MenuProvider({
       ? cart.map((l) => (l.key === key ? { ...l, quantity: l.quantity + quantity } : l))
       : [...cart, { key, productId: product.id, name: tf(product, "name"), unitPrice, quantity, selections }];
     persistCart(next);
-    sendEvent(business.id, "add_to_cart", product.id, product.name);
+    trackEvent(business.slug, {
+      type: "add_to_cart",
+      target: product.id,
+      label: product.name,
+      productId: product.id,
+      locale,
+      meta: { quantity },
+    });
   }
 
-  function track(type: MenuEventType, target: string, label: string) {
-    sendEvent(business.id, type, target, label);
+  function track(payload: TrackPayload) {
+    trackEvent(business.slug, { locale, ...payload });
   }
 
   async function addProduct(product: Product) {
@@ -402,13 +446,27 @@ export function MenuProvider({
     }
   }
 
+  function trackRemoval(key: string) {
+    const line = cart.find((l) => l.key === key);
+    if (!line) return;
+    trackEvent(business.slug, {
+      type: "remove_from_cart",
+      target: line.productId,
+      label: line.name,
+      productId: line.productId,
+      locale,
+    });
+  }
+
   function updateQuantity(key: string, quantity: number) {
+    if (quantity <= 0) trackRemoval(key);
     const next =
       quantity <= 0 ? cart.filter((l) => l.key !== key) : cart.map((l) => (l.key === key ? { ...l, quantity } : l));
     persistCart(next);
   }
 
   function removeLine(key: string) {
+    trackRemoval(key);
     persistCart(cart.filter((l) => l.key !== key));
   }
 
@@ -464,10 +522,10 @@ export function MenuProvider({
         style={brandStyle}
         className="min-h-screen bg-paper pb-24"
       >
-        <TrackPageViews business={business} base={basePath} />
+        <TrackPageViews business={business} base={basePath} locale={locale} />
         {/* İlk açılışta önce dil seçimi; dil modalı kapanınca kampanya popup'ı gösterilir. */}
         {needsLangChoice && <LanguageModal onPick={chooseLanguage} />}
-        {popup && !popupDismissed && !needsLangChoice && <PopupModal popup={popup} onClose={dismissPopup} />}
+        {popup && popupVisible && <PopupModal popup={popup} onClose={dismissPopup} />}
         {pickerProduct && (
           <OptionPicker
             product={pickerProduct}

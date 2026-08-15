@@ -18,6 +18,17 @@ const UNRESTRICTED_LIMITS: PlanLimits = {
   api_access: true,
 };
 
+/** Plan kaydının tamamı (limitler + deneme süresi). Bulunamazsa null. */
+export async function fetchPlan(planKey: Plan): Promise<PlanRecord | null> {
+  try {
+    return await pb
+      .collection("menuva_plans")
+      .getFirstListItem<PlanRecord>(pb.filter("key = {:key}", { key: planKey }), { requestKey: null });
+  } catch {
+    return null;
+  }
+}
+
 /** İşletmenin planına ait koşul/kısıtlama setini `menuva_plans` koleksiyonundan getirir. */
 export async function fetchPlanLimits(planKey: Plan): Promise<PlanLimits> {
   try {

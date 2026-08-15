@@ -42,6 +42,56 @@ http://localhost:3000 adresinde açılır. (`.env.local` zaten hazır — Pocket
 
 - `NEXT_PUBLIC_PB_URL` — Pocketbase adresi
 - `MINIO_ENDPOINT`, `MINIO_BUCKET`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_PUBLIC_URL`
+- `PB_SERVICE_EMAIL`, `PB_SERVICE_PASSWORD` — analitik servis hesabı (yalnızca sunucu tarafı;
+  `node scripts/create-service-account.mjs` üretir). Tanımlı değilse `/api/track` sessizce
+  devre dışı kalır, menü çalışmaya devam eder.
+- `ANALYTICS_CRON_SECRET` — toplu rollup ucunu koruyan gizli anahtar (aşağıya bkz.)
+- `ANALYTICS_TIMING=1` — (opsiyonel) analiz uçlarının faz sürelerini ve PocketBase
+  tur sayısını loglar; performans incelerken açılır.
+
+## Analitik
+
+Menü event'leri tarayıcıdan doğrudan Pocketbase'e değil, `/api/track` üzerinden
+toplanır: oturum, trafik kaynağı, cihaz ve konum sunucuda üretilir. Şema, event
+sözlüğü, plan bazlı yetki matrisi ve API sözleşmesi için:
+[`docs/analytics-architecture.md`](docs/analytics-architecture.md).
+
+Kurulum sırası (mevcut bir ortamda):
+
+```bash
+node scripts/setup-pocketbase.mjs        # yeni koleksiyonlar/alanlar
+node scripts/migrate-analytics.mjs       # event sözlüğü, indeksler, plan yetkileri
+node scripts/create-service-account.mjs  # PB_SERVICE_* bilgilerini üretir
+```
+
+Agregasyon panel açıldığında tembel olarak çalışır; hiç ziyaret edilmeyen
+panellerin de güncel kalması ve saklama süresi dolan ham verinin temizlenmesi
+için günde bir kez şu uç tetiklenmeli:
+
+```bash
+curl -H "x-analytics-secret: $ANALYTICS_CRON_SECRET" https://<domain>/api/analytics/rollup
+```
+
+### Demo veri
+
+Panelin dolu görünmesi gereken durumlar (demo, sunum, ekran görüntüsü) için
+gerçek menüye bağlı, işaretli demo verisi üretilebilir:
+
+```bash
+node scripts/seed-analytics-demo.mjs --slug=vezirhan --months=6 --dry  # önce hacmi gör
+node scripts/seed-analytics-demo.mjs --slug=vezirhan --months=6        # yaz
+node scripts/seed-analytics-demo.mjs --slug=vezirhan --clean           # geri al
+```
+
+Üretilen kayıtlar işaretlidir (oturum/ziyaretçi kimliği `5eed5eed…`, event'lerde
+`meta.seed = true`), böylece gerçek veriye dokunmadan temizlenebilir. Yazdıktan
+sonra rollup çalıştırılmalı.
+
+## Testler
+
+```bash
+npm test        # vitest (agregasyon, atıf, tarih/saat dilimi, tenant izolasyonu, gating)
+```
 
 ## Sıradaki adımlar
 

@@ -81,6 +81,44 @@ const autodate = (name, onCreate, onUpdate) => ({
 
 const stamps = () => [autodate("created", true, false), autodate("updated", true, true)];
 
+// Analitik sözlükleri — lib/analytics/events.ts ve lib/types.ts (StatDimension)
+// ile birebir aynı kalmalı. Mevcut kurulumlarda select değerlerini genişletmek
+// için scripts/migrate-analytics.mjs kullanılır (getOrCreate değer listesini güncellemez).
+const EVENT_TYPES = [
+  "page_view",
+  "qr_scan",
+  "session_start",
+  "session_end",
+  "category_view",
+  "product_view",
+  "product_detail_view",
+  "add_to_cart",
+  "remove_from_cart",
+  "cart_view",
+  "search",
+  "campaign_view",
+  "campaign_click",
+  "language_change",
+];
+
+const STAT_DIMENSIONS = [
+  "total",
+  "hour",
+  "weekday",
+  "page",
+  "product",
+  "category",
+  "source",
+  "device",
+  "country",
+  "city",
+  "qr",
+  "campaign",
+  "search",
+  "funnel",
+  "navigation",
+];
+
 // manageRule sadece auth tipi koleksiyonlarda anlamlı (users/admins) — diğerlerinde
 // spec'te tanımlanmadığı için undefined ?? null === existing undefined ?? null olur,
 // yani base koleksiyonlar için no-op kalır.
@@ -238,6 +276,12 @@ async function main() {
       // genişletip veriyi eşleyerek daraltıyor (getOrCreate var olan alanları güncellemez,
       // sadece eksik alan ekler) — burada yalnızca sıfırdan kurulum için nihai değerler.
       select("plan", ["freemium", "premium", "elite"], { maxSelect: 1 }),
+      // Süreli planın (Freemium denemesi) bitiş anı — kayıt sırasında plan
+      // kaydındaki trial_months'a göre yazılır. Boş = süre takibi yok.
+      dateField("plan_expires_at"),
+      // IANA saat dilimi — analitikteki gün/saat kırılımları buna göre hesaplanır.
+      // Boşsa lib/analytics/time.ts'teki varsayılan (Europe/Istanbul) kullanılır.
+      text("timezone", { max: 40 }),
       boolField("is_active"),
       // İşletmenin ana (baz) dili — ana metinler bu dilde tutulur.
       select("main_language", ["tr", "en", "ar", "ru"], { maxSelect: 1 }),
@@ -346,7 +390,7 @@ async function main() {
   });
 
   // 7) popups — menü açılışında duyuru/kampanya
-  await getOrCreate({
+  const popups = await getOrCreate({
     name: "menuva_popups",
     type: "base",
     listRule: "business.is_active = true || business.owner = @request.auth.id",
@@ -390,24 +434,169 @@ async function main() {
     indexes: ["CREATE INDEX `idx_reviews_business` ON `menuva_reviews` (`business`)"],
   });
 
-  // 9) events — menü ziyaretçi istatistikleri (sayfa/ürün görüntülenme, sepete ekleme).
-  // Ziyaretçiler giriş yapmadığı için create herkese açık; okuma sadece işletme sahibine.
+  // 8.5) qr_codes — etiketli QR'lar (masa/vitrin/Instagram…). Menü linkine
+  // `?qr=<code>` olarak eklenir; ingestion bu kodu QR kaydına bağlar.
+  const qrCodes = await getOrCreate({
+    name: "menuva_qr_codes",
+    type: "base",
+    // Ziyaretçi tarafı QR kaydını okumaz (çözümlemeyi sunucu yapar); okuma
+    // işletme sahibine ve admin'e açık.
+    listRule: `business.owner = @request.auth.id || ${adminBypass}`,
+    viewRule: `business.owner = @request.auth.id || ${adminBypass}`,
+    createRule: `business.owner = @request.auth.id || ${adminBypass}`,
+    updateRule: `business.owner = @request.auth.id || ${adminBypass}`,
+    deleteRule: `business.owner = @request.auth.id || ${adminBypass}`,
+    fields: [
+      relation("business", businesses.id, { required: true, cascadeDelete: true, maxSelect: 1 }),
+      text("name", { required: true, max: 60 }),
+      text("code", { required: true, max: 40, pattern: "^[a-z0-9-]+$" }),
+      select("placement", ["table", "counter", "window", "instagram", "campaign", "other"], { maxSelect: 1 }),
+      boolField("is_active"),
+      ...stamps(),
+    ],
+    indexes: ["CREATE UNIQUE INDEX `idx_qr_business_code` ON `menuva_qr_codes` (`business`, `code`)"],
+  });
+
+  // 9) events — ham analitik event akışı. Artık ziyaretçi tarayıcısı değil,
+  // /api/track (servis hesabı) yazar: oturum, kaynak, cihaz ve konum sunucuda
+  // üretilir, böylece event'ler taklit edilemez (bkz. docs/analytics-architecture.md).
+  // Okuma yalnızca işletme sahibine açık.
+  //
+  // NOT: select alanlarının değer listesi getOrCreate tarafından güncellenmez —
+  // mevcut kurulumlarda EVENT_TYPES/QR/cihaz listeleri scripts/migrate-analytics.mjs
+  // ile genişletilir. Buradaki liste lib/analytics/events.ts ile aynı kalmalı.
   await getOrCreate({
     name: "menuva_events",
     type: "base",
     listRule: `business.owner = @request.auth.id || ${adminBypass}`,
     viewRule: `business.owner = @request.auth.id || ${adminBypass}`,
-    createRule: "",
+    createRule: adminBypass,
     updateRule: null,
-    deleteRule: null,
+    deleteRule: adminBypass,
     fields: [
       relation("business", businesses.id, { required: true, cascadeDelete: true, maxSelect: 1 }),
-      select("type", ["page_view", "category_view", "product_view", "add_to_cart"], { required: true, maxSelect: 1 }),
+      select("type", EVENT_TYPES, { required: true, maxSelect: 1 }),
       text("target", { max: 120 }),
       text("label", { max: 200 }),
+      text("session", { max: 40 }),
+      text("visitor", { max: 40 }),
+      relation("product", products.id, { maxSelect: 1 }),
+      relation("category", categories.id, { maxSelect: 1 }),
+      relation("popup", popups.id, { maxSelect: 1 }),
+      relation("qr", qrCodes.id, { maxSelect: 1 }),
+      text("source", { max: 40 }),
+      text("medium", { max: 60 }),
+      text("campaign", { max: 60 }),
+      text("referrer_host", { max: 120 }),
+      select("device", ["mobile", "tablet", "desktop"], { maxSelect: 1 }),
+      text("country", { max: 2 }),
+      text("city", { max: 80 }),
+      text("locale", { max: 5 }),
+      json("meta"),
+      dateField("occurred_at"),
       ...stamps(),
     ],
-    indexes: ["CREATE INDEX `idx_events_business` ON `menuva_events` (`business`)"],
+    indexes: [
+      "CREATE INDEX `idx_events_business` ON `menuva_events` (`business`)",
+      "CREATE INDEX `idx_events_business_time` ON `menuva_events` (`business`, `occurred_at`)",
+      "CREATE INDEX `idx_events_business_type_time` ON `menuva_events` (`business`, `type`, `occurred_at`)",
+      "CREATE INDEX `idx_events_business_session` ON `menuva_events` (`business`, `session`)",
+      "CREATE INDEX `idx_events_business_product` ON `menuva_events` (`business`, `product`, `occurred_at`)",
+    ],
+  });
+
+  // 9.1) sessions — oturum özeti. Unique ziyaretçi, süre, bounce ve yeni/dönen
+  // oranı ham event taramadan buradan hesaplanır. Yalnızca servis hesabı yazar.
+  await getOrCreate({
+    name: "menuva_sessions",
+    type: "base",
+    listRule: `business.owner = @request.auth.id || ${adminBypass}`,
+    viewRule: `business.owner = @request.auth.id || ${adminBypass}`,
+    createRule: adminBypass,
+    updateRule: adminBypass,
+    deleteRule: adminBypass,
+    fields: [
+      relation("business", businesses.id, { required: true, cascadeDelete: true, maxSelect: 1 }),
+      text("key", { required: true, max: 40 }),
+      text("visitor", { max: 40 }),
+      dateField("started_at"),
+      dateField("last_seen_at"),
+      num("duration_sec", { min: 0, onlyInt: true }),
+      num("events_count", { min: 0, onlyInt: true }),
+      num("page_views", { min: 0, onlyInt: true }),
+      num("product_views", { min: 0, onlyInt: true }),
+      num("cart_adds", { min: 0, onlyInt: true }),
+      text("source", { max: 40 }),
+      text("medium", { max: 60 }),
+      text("campaign", { max: 60 }),
+      text("referrer_host", { max: 120 }),
+      select("device", ["mobile", "tablet", "desktop"], { maxSelect: 1 }),
+      text("country", { max: 2 }),
+      text("city", { max: 80 }),
+      text("locale", { max: 5 }),
+      text("entry_path", { max: 200 }),
+      text("exit_path", { max: 200 }),
+      relation("qr", qrCodes.id, { maxSelect: 1 }),
+      boolField("is_returning"),
+      ...stamps(),
+    ],
+    indexes: [
+      "CREATE UNIQUE INDEX `idx_sessions_business_key` ON `menuva_sessions` (`business`, `key`)",
+      "CREATE INDEX `idx_sessions_business_started` ON `menuva_sessions` (`business`, `started_at`)",
+      "CREATE INDEX `idx_sessions_business_visitor` ON `menuva_sessions` (`business`, `visitor`)",
+    ],
+  });
+
+  // 9.2) stats_daily — rollup çıktısı: gün × boyut × anahtar → metrikler.
+  // Panel sorguları ham event yerine buradan beslenir.
+  await getOrCreate({
+    name: "menuva_stats_daily",
+    type: "base",
+    listRule: `business.owner = @request.auth.id || ${adminBypass}`,
+    viewRule: `business.owner = @request.auth.id || ${adminBypass}`,
+    createRule: adminBypass,
+    updateRule: adminBypass,
+    deleteRule: adminBypass,
+    fields: [
+      relation("business", businesses.id, { required: true, cascadeDelete: true, maxSelect: 1 }),
+      // İşletmenin saat dilimine göre YYYY-MM-DD (metin: gün sınırı saat dilimiyle sabitlensin).
+      text("date", { required: true, max: 10 }),
+      select("dimension", STAT_DIMENSIONS, { required: true, maxSelect: 1 }),
+      text("key", { max: 120 }),
+      text("label", { max: 200 }),
+      json("metrics"),
+      ...stamps(),
+    ],
+    indexes: [
+      "CREATE UNIQUE INDEX `idx_stats_unique` ON `menuva_stats_daily` (`business`, `date`, `dimension`, `key`)",
+      "CREATE INDEX `idx_stats_business_date` ON `menuva_stats_daily` (`business`, `date`)",
+      "CREATE INDEX `idx_stats_business_dim_date` ON `menuva_stats_daily` (`business`, `dimension`, `date`)",
+    ],
+  });
+
+  // 9.3) business_members — ekip üyeliği ve rolleri. analytics.view/export gibi
+  // izinler rolden türetilir (bkz. lib/permissions.ts).
+  await getOrCreate({
+    name: "menuva_business_members",
+    type: "base",
+    listRule: `business.owner = @request.auth.id || user = @request.auth.id || ${adminBypass}`,
+    viewRule: `business.owner = @request.auth.id || user = @request.auth.id || ${adminBypass}`,
+    // Üye ekleme/çıkarma yalnızca işletme sahibinde (ve admin'de).
+    createRule: `business.owner = @request.auth.id || ${adminBypass}`,
+    updateRule: `business.owner = @request.auth.id || ${adminBypass}`,
+    deleteRule: `business.owner = @request.auth.id || ${adminBypass}`,
+    fields: [
+      relation("business", businesses.id, { required: true, cascadeDelete: true, maxSelect: 1 }),
+      relation("user", users.id, { maxSelect: 1 }),
+      emailField("invited_email"),
+      select("role", ["owner", "admin", "manager", "staff"], { required: true, maxSelect: 1 }),
+      select("status", ["active", "invited"], { required: true, maxSelect: 1 }),
+      ...stamps(),
+    ],
+    indexes: [
+      "CREATE UNIQUE INDEX `idx_members_business_user` ON `menuva_business_members` (`business`, `user`)",
+      "CREATE INDEX `idx_members_user` ON `menuva_business_members` (`user`)",
+    ],
   });
 
   // 10) plans — abonelik paketleri (fiyat/özellik/limit). Landing sayfası ve
@@ -427,8 +616,13 @@ async function main() {
       text("key", { required: true, max: 40, pattern: "^[a-z0-9_]+$" }),
       text("name", { required: true, max: 60 }),
       text("description", { max: 300 }),
-      num("price_6m", { min: 0 }),
-      num("price_12m", { min: 0 }),
+      // Fiyatlandırma aylık kurgulanıyor: aylık ödemede aylık ücret ve yıllık
+      // ödemedeki aylık eşdeğer (yıllık toplam = 12 katı). Eski price_6m/price_12m
+      // alanları scripts/migrate-plan-pricing.mjs ile bu ikiliye taşındı.
+      num("price_monthly", { min: 0 }),
+      num("price_yearly_monthly", { min: 0 }),
+      // Süreli (deneme) planın kaç ay sürdüğü; ücretli planlarda 0.
+      num("trial_months", { min: 0, onlyInt: true }),
       json("features"),
       json("limits"),
       boolField("is_active"),

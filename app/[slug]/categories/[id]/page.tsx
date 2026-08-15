@@ -18,7 +18,7 @@ export default function CategoryPage() {
   useEffect(() => {
     if (!current || lastTracked.current === current.id) return;
     lastTracked.current = current.id;
-    track("category_view", current.id, current.name);
+    track({ type: "category_view", target: current.id, label: current.name, categoryId: current.id });
   }, [current, track]);
 
   return (
