@@ -261,11 +261,16 @@ export function MenuProvider({
   business,
   popup,
   basePath,
+  initialCategories,
+  initialProducts,
   children,
 }: {
   business: Business;
   popup: Popup | null;
   basePath: string;
+  /** Sunucuda çekilen menü verisi — ilk boyamada hazır (bkz. app/[slug]/layout.tsx). */
+  initialCategories: Category[];
+  initialProducts: Product[];
   children: ReactNode;
 }) {
   const [cart, setCart] = useState<CartLine[]>([]);
@@ -275,41 +280,14 @@ export function MenuProvider({
   // İlk ziyarette (henüz dil seçilmemişken, birden çok dil varsa) dil modalı gösterilir.
   const [needsLangChoice, setNeedsLangChoice] = useState(false);
   const [locale, setLocaleState] = useState<Locale>(() => mainLocale(business));
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categories] = useState<Category[]>(initialCategories);
+  const [products] = useState<Product[]>(initialProducts);
+  const categoriesLoading = false;
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     setCart(loadCart(business.slug));
   }, [business.slug]);
-
-  // Kategori/ürün verisi tek yerden çekilir; drawer, üst sekmeler ve
-  // /menu, /categories/[id] sayfaları aynı veriyi paylaşır.
-  useEffect(() => {
-    let cancelled = false;
-    setCategoriesLoading(true);
-    Promise.all([
-      pb.collection("menuva_categories").getFullList<Category>({
-        filter: pb.filter("business = {:id} && is_active = true", { id: business.id }),
-        requestKey: null,
-        sort: "order,created",
-      }),
-      pb.collection("menuva_products").getFullList<Product>({
-        filter: pb.filter("business = {:id} && is_available = true", { id: business.id }),
-        requestKey: null,
-        sort: "order,created",
-      }),
-    ]).then(([cats, prods]) => {
-      if (cancelled) return;
-      setCategories(cats);
-      setProducts(prods);
-      setCategoriesLoading(false);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [business.id]);
 
   const imageByCategory = useMemo(() => {
     const map = new Map<string, string>();

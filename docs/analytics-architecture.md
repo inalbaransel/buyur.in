@@ -116,20 +116,28 @@ Ekip rolleri: `business, user, role (owner·admin·manager·staff), status
 
 ## 6. Plan bazlı yetki matrisi
 
-Gating üç katmanda birden uygulanır: UI · API route · rapor üretimi.
+**Tek kaynak: `lib/entitlements.ts`.** Panel, analytics API'si, otomatik web
+sitesi, rapor üretimi ve pazarlama sitesi aynı matristen okur; plan kontrolü
+başka hiçbir yerde elle yazılmaz.
 
-| Yetenek (`PlanLimits` alanı) | Freemium | Premium | Elite |
+| Yetenek | Freemium | Premium | Elite |
 |---|---|---|---|
-| `analytics` — temel özet, 7 günlük grafik | ✓ | ✓ | ✓ |
-| `analytics_advanced` — karşılaştırma, funnel, kaynak, cihaz, saat, drill-down | — | ✓ | ✓ |
-| `insights` — otomatik içgörüler & performans skoru | — | ✓ | ✓ |
-| `reports` — Rapor Merkezi | — | — | ✓ |
-| `reports_export` — PDF/Excel/CSV | — | — | ✓ |
-| `scheduled_reports` — otomatik gönderim | — | — | (kapsam dışı) |
-| `analytics_retention_days` | 30 | 365 | 1095 |
+| Menü + temel analiz | ✓ | ✓ | ✓ |
+| Gelişmiş analiz · içgörüler · kampanyalar | — | ✓ | ✓ |
+| Otomatik web sitesi | — | ✓ | ✓ |
+| Gelişmiş web sitesi (animasyon, slider, galeri) | — | — | ✓ |
+| Gelişmiş raporlar + PDF/Excel/CSV | — | — | ✓ |
+| Menü görüntülenme | 10.000 | sınırsız | sınırsız |
+| Süre | 3 ay | sınırsız | sınırsız |
+| Ham event saklama | 90 gün | 365 gün | 1095 gün |
 
-Plan düşerse veri silinmez; yalnızca erişim kapanır. Tekrar yükseltmede
-retention penceresi içindeki geçmiş yeniden görünür.
+**Freemium çift limiti:** 3 ay VEYA 10.000 menü görüntülenme — hangisi önce
+dolarsa Freemium sona erer. Bu limitler ücretli planlara **uygulanmaz**.
+Limit dolduğunda menü yayından kalkar ve gelişmiş özellikler kilitlenir; hiçbir
+veri silinmez, plana geçildiğinde her şey kaldığı yerden devam eder.
+
+Menü görüntülenmesi yalnızca gerçek müşteri sayfa görüntülemelerinden sayılır
+(bot/crawler imzaları ve menü dışı event'ler sayaca girmez, bkz. `/api/track`).
 
 ## 7. API sözleşmesi
 

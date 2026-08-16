@@ -9,7 +9,14 @@ import { AnalyticsErrorState, AnalyticsSkeleton, NoDataYet, PlanLocked } from "@
 import { LineChart } from "@/components/panel/charts/line-chart";
 import { ArrowLeftIcon, FileTextIcon } from "@/components/icons";
 import { buildCsv, downloadCsv } from "@/lib/analytics/export-csv";
-import { formatChange, formatDayLong, formatDuration, formatNumber, formatPercent } from "@/components/panel/charts/chart-utils";
+import {
+  formatChange,
+  formatDateRange,
+  formatDayLong,
+  formatDuration,
+  formatNumber,
+  formatPercent,
+} from "@/components/panel/charts/chart-utils";
 import type { ReportPayload } from "@/lib/analytics/reports";
 
 // Rapor görünümü aynı zamanda yazdırma çıktısıdır: @media print kuralları
@@ -38,7 +45,7 @@ export default function ReportDetailPage() {
       data.tables.map((table) => ({ title: table.title, columns: table.columns, rows: table.rows })),
       [
         `${data.business.name} — ${data.title}`,
-        `Dönem: ${data.range.from} → ${data.range.to}`,
+        `Dönem: ${formatDateRange(data.range.from, data.range.to)}`,
         `Oluşturulma: ${formatDayLong(data.generatedAt.slice(0, 10))}`,
         "menuva analiz raporu",
       ]
@@ -105,13 +112,9 @@ export default function ReportDetailPage() {
                 <p className="mt-1 text-sm text-ink-soft">{data.business.name}</p>
               </div>
               <div className="text-right font-mono text-[11px] uppercase tracking-wider text-ink-soft">
-                <p>
-                  {data.range.from} → {data.range.to}
-                </p>
+                <p>{formatDateRange(data.range.from, data.range.to)}</p>
                 {data.comparison && (
-                  <p className="mt-0.5">
-                    Kıyas: {data.comparison.from} → {data.comparison.to}
-                  </p>
+                  <p className="mt-0.5">Kıyas: {formatDateRange(data.comparison.from, data.comparison.to)}</p>
                 )}
                 <p className="mt-0.5">{formatDayLong(data.generatedAt.slice(0, 10))}</p>
               </div>

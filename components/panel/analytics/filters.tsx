@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { CheckCircleIcon, ClockIcon } from "@/components/icons";
+import { formatDateRange } from "@/components/panel/charts/chart-utils";
 
 // Global analiz filtreleri: tarih aralığı, karşılaştırma dönemi ve kırılım
 // filtreleri. Sayfalar arası gezinirken korunur (URL + sekme oturumu), böylece
@@ -220,7 +221,7 @@ export function AnalyticsFilterBar({ children }: { children?: ReactNode }) {
 
   const rangeLabel =
     filters.preset === "custom" && filters.from && filters.to
-      ? `${filters.from} → ${filters.to}`
+      ? formatDateRange(filters.from, filters.to)
       : (RANGE_OPTIONS.find((option) => option.value === filters.preset)?.label ?? "Son 30 gün");
 
   return (

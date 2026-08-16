@@ -59,6 +59,15 @@ function prune<T extends { expiresAt: number }>(map: Map<string, T>, now: number
   }
 }
 
+/** Bilinen tarayıcı/crawler imzaları — bunların menü açılışı "müşteri
+ *  görüntülemesi" sayılmaz (Freemium limiti bunlara takılmamalı). */
+const BOT_PATTERN =
+  /bot|crawler|spider|crawling|slurp|bingpreview|facebookexternalhit|whatsapp|telegram|preview|monitor|lighthouse|pagespeed|headless|curl|wget|python-requests|axios|node-fetch/i;
+
+function isBotAgent(userAgent: string): boolean {
+  return BOT_PATTERN.test(userAgent);
+}
+
 function clientIp(req: NextRequest): string {
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0]!.trim();
@@ -520,6 +529,16 @@ export async function POST(req: NextRequest) {
     });
 
     await touchSession(pb, session, type, path);
+
+    // Freemium menü görüntülenme sayacı. Yalnızca gerçek müşteri sayfa
+    // görüntülemeleri sayılır: bot/önizleme trafiği ve menü dışı event'ler
+    // (sepete ekleme, arama…) sayaca girmez. Yanıtı bloklamıyoruz.
+    if (type === "page_view" && !isBotAgent(req.headers.get("user-agent") ?? "")) {
+      void pb
+        .collection("menuva_businesses")
+        .update(businessId, { "menu_views+": 1 }, { requestKey: null })
+        .catch(() => undefined);
+    }
 
     const res = noContent({ sid: session.key, secure });
     res.cookies.set(VISITOR_COOKIE, session.visitor, {

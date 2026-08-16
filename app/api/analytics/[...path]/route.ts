@@ -3,6 +3,7 @@ import { AccessError, resolveAnalyticsContext } from "@/lib/analytics/access";
 import { ANALYTICS_ENDPOINTS, productDetail, reportDetail, type EndpointArgs } from "@/lib/analytics/endpoints";
 import { comparisonRange, normalizeCompareMode, resolveRange } from "@/lib/analytics/range";
 import { businessTimezone } from "@/lib/analytics/time";
+import { isFeatureAvailable } from "@/lib/entitlements";
 import { createTimer } from "@/lib/analytics/timing";
 import { pbRequestCount } from "@/lib/pocketbase-server";
 
@@ -25,13 +26,13 @@ const PB_ID_RE = /^[a-z0-9]{15}$/;
 const RESPONSE_TTL_MS = 30_000;
 const responseCache = new Map<string, { body: unknown; expiresAt: number }>();
 
-function cacheKeyFor(businessId: string, role: string, segments: string[], params: URLSearchParams): string {
+function cacheKeyFor(businessId: string, segments: string[], params: URLSearchParams): string {
   const query = Array.from(params.entries())
     .filter(([key]) => key !== "business")
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
-  return `${businessId}\u0000${role}\u0000${segments.join("/")}\u0000${query}`;
+  return `${businessId}\u0000${segments.join("/")}\u0000${query}`;
 }
 
 function pruneResponseCache(now: number): void {
@@ -77,7 +78,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ path: strin
     const compareMode = normalizeCompareMode(params.get("compare"));
     const comparison = comparisonRange(range, compareMode);
 
-    const cacheKey = cacheKeyFor(context.business.id, context.role, segments, params);
+    const cacheKey = cacheKeyFor(context.business.id, segments, params);
     const now = Date.now();
     const cached = responseCache.get(cacheKey);
 
@@ -107,9 +108,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ path: strin
           advanced: context.permissions.has("analytics.advanced"),
           reports: context.permissions.has("reports.view"),
           export: context.permissions.has("reports.export"),
-          insights: context.limits.insights === true,
+          insights: isFeatureAvailable(context.business, "insights"),
         },
-        role: context.role,
         approximate: result.approximate === true,
         generatedAt: new Date().toISOString(),
       },

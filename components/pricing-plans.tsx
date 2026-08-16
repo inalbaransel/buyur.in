@@ -67,7 +67,13 @@ const FALLBACK_CARDS: PlanCard[] = [
     key: "freemium",
     name: "Freemium",
     desc: "Denemek ve küçük menüler için",
-    features: ["3 ay ücretsiz kullanım", "1 menü", "30 ürüne kadar", "QR kod & özel URL", "Anlık güncellemeler"],
+    features: [
+      "3 ay veya 10.000 menü görüntülenme",
+      "Dijital QR menü",
+      "Temel analizler",
+      "QR kod & özel URL",
+      "Anlık güncellemeler",
+    ],
     monthly: 0,
     yearlyMonthly: 0,
     trialMonths: 3,
@@ -78,11 +84,11 @@ const FALLBACK_CARDS: PlanCard[] = [
     name: "Premium",
     desc: "Satışı büyütmek isteyen mekanlar için",
     features: [
-      "Sınırsız ürün & kategori",
-      "Gelişmiş analizler",
-      "Custom Domain",
-      "menuva markasını kaldırma",
-      "Kampanya oluşturma",
+      "Sınırsız menü görüntülenme",
+      "Süre sınırı yok",
+      "Otomatik web sitesi",
+      "Gelişmiş analizler ve içgörüler",
+      "Kampanyalar · özel alan adı · marka kaldırma",
     ],
     monthly: 250,
     yearlyMonthly: 200,
@@ -94,7 +100,13 @@ const FALLBACK_CARDS: PlanCard[] = [
     key: "elite",
     name: "Elite",
     desc: "Zincirler ve çoklu şubeler için",
-    features: ["Premium'daki her şey", "White Label desteği", "API erişimi", "Öncelikli teknik destek"],
+    features: [
+      "Premium'daki her şey",
+      "Gelişmiş web sitesi deneyimi",
+      "Gelişmiş raporlar",
+      "PDF · Excel · CSV dışa aktarma",
+      "Öncelikli teknik destek",
+    ],
     monthly: 500,
     yearlyMonthly: 400,
     trialMonths: 0,
@@ -161,12 +173,12 @@ function PlanPrice({ card, billing }: { card: PlanCard; billing: Billing }) {
         <div className="mt-4 flex items-baseline gap-2">
           <span className="font-display text-5xl font-extrabold">0₺</span>
           <span className={`font-mono text-xs uppercase tracking-wider ${muted}`}>
-            {card.trialMonths > 0 ? `${card.trialMonths} ay` : "ücretsiz"}
+            {card.trialMonths > 0 ? `${card.trialMonths} ay*` : "ücretsiz"}
           </span>
         </div>
         <p className={`mt-1 text-xs ${card.highlight ? "text-paper/50" : "text-ink-soft/80"}`}>
           {card.trialMonths > 0
-            ? `${card.trialMonths} ay boyunca ücretsiz · kredi kartı yok`
+            ? `${card.trialMonths} ay veya 10.000 görüntülenme · kredi kartı yok`
             : "Süre sınırı yok · kredi kartı yok"}
         </p>
       </>

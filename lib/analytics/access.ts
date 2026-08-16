@@ -1,7 +1,8 @@
 import PocketBase from "pocketbase";
 import { PB_URL } from "@/lib/pocketbase";
 import { getServicePB } from "@/lib/pocketbase-server";
-import type { Business, BusinessMember, MemberRole, PlanLimits, PlanRecord } from "@/lib/types";
+import { isFeatureAvailable, type Feature } from "@/lib/entitlements";
+import type { Business, PlanLimits, PlanRecord } from "@/lib/types";
 
 // Analytics API'nin yetki katmanı. İki kural pazarlıksız:
 //   1) İşletme kimliği asla istemciden gelen değere güvenilerek kullanılmaz —
@@ -13,42 +14,26 @@ export type Permission =
   | "analytics.advanced"
   | "analytics.export"
   | "reports.view"
-  | "reports.export"
-  | "reports.schedule"
-  | "team.manage";
+  | "reports.export";
 
-/** Rol → izin haritası. Plan yetkisiyle kesişimi effectivePermissions üretir. */
-const ROLE_PERMISSIONS: Record<MemberRole, Permission[]> = {
-  owner: [
-    "analytics.view",
-    "analytics.advanced",
-    "analytics.export",
-    "reports.view",
-    "reports.export",
-    "reports.schedule",
-    "team.manage",
-  ],
-  admin: [
-    "analytics.view",
-    "analytics.advanced",
-    "analytics.export",
-    "reports.view",
-    "reports.export",
-    "reports.schedule",
-    "team.manage",
-  ],
-  manager: ["analytics.view", "analytics.advanced", "reports.view"],
-  staff: ["analytics.view"],
-};
+/** Menuva'da bir kullanıcı bir işletmeyi yönetir: rol/ekip kavramı yok.
+ *  İzinler yalnızca plana bağlıdır. */
+const ALL_PERMISSIONS: Permission[] = [
+  "analytics.view",
+  "analytics.advanced",
+  "analytics.export",
+  "reports.view",
+  "reports.export",
+];
 
-/** Plan limitlerinin hangi izni açtığı (docs/analytics-architecture.md §6). */
-const PLAN_GATES: Partial<Record<Permission, keyof PlanLimits>> = {
-  "analytics.view": "analytics",
-  "analytics.advanced": "analytics_advanced",
-  "analytics.export": "reports_export",
-  "reports.view": "reports",
-  "reports.export": "reports_export",
-  "reports.schedule": "scheduled_reports",
+/** İzin → özellik eşlemesi. Kararın kendisi lib/entitlements.ts'te; burası
+ *  yalnızca analytics API'sinin izin adlarını o matrise bağlar. */
+const PERMISSION_FEATURES: Record<Permission, Feature> = {
+  "analytics.view": "basic_analytics",
+  "analytics.advanced": "advanced_analytics",
+  "analytics.export": "report_export",
+  "reports.view": "advanced_reports",
+  "reports.export": "report_export",
 };
 
 export const DEFAULT_LIMITS: PlanLimits = {
@@ -65,7 +50,6 @@ export const DEFAULT_LIMITS: PlanLimits = {
   custom_domain: false,
   branding_removal: false,
   campaigns: false,
-  team_management: false,
   white_label: false,
   api_access: false,
 };
@@ -75,7 +59,6 @@ export interface AnalyticsContext {
   business: Business;
   plan: PlanRecord | null;
   limits: PlanLimits;
-  role: MemberRole;
   permissions: Set<Permission>;
   /** Veri okumaları için servis istemcisi (sahiplik yukarıda doğrulandı). */
   service: PocketBase;
@@ -130,8 +113,9 @@ async function authenticate(token: string): Promise<string> {
   }
 }
 
-/** Kullanıcının erişebildiği işletmeyi bulur: önce sahiplik, sonra üyelik.
- *  `requestedId` verilmişse yalnızca doğrulamada kullanılır, sorguya girmez. */
+/** Kullanıcının işletmesini bulur. Menuva'da tek ilişki geçerli: bir kullanıcı,
+ *  sahibi olduğu işletmeyi yönetir. `requestedId` verilmişse yalnızca sahiplik
+ *  doğrulamasında kullanılır — istemciden gelen kimliğe asla güvenilmez. */
 async function resolveBusiness(service: PocketBase, userId: string, requestedId: string | null) {
   const owned = await service.collection("menuva_businesses").getFullList<Business>({
     filter: service.filter("owner = {:owner}", { owner: userId }),
@@ -140,37 +124,19 @@ async function resolveBusiness(service: PocketBase, userId: string, requestedId:
     requestKey: null,
   });
 
-  if (owned.length > 0) {
-    if (!requestedId) return { business: owned[0]!, role: "owner" as MemberRole };
-    const match = owned.find((business) => business.id === requestedId);
-    if (match) return { business: match, role: "owner" as MemberRole };
-  }
+  if (owned.length === 0) throw new AccessError(404, "no_business");
 
-  const memberships = await service.collection("menuva_business_members").getFullList<BusinessMember>({
-    filter: service.filter("user = {:user} && status = {:status}", { user: userId, status: "active" }),
-    expand: "business",
-    batch: 50,
-    requestKey: null,
-  });
+  if (!requestedId) return { business: owned[0]! };
 
-  const usable = requestedId
-    ? memberships.filter((member) => member.business === requestedId)
-    : memberships;
-
-  for (const member of usable) {
-    const business = (member.expand as { business?: Business } | undefined)?.business;
-    if (business) return { business, role: member.role };
-  }
-
-  throw new AccessError(requestedId ? 403 : 404, requestedId ? "forbidden" : "no_business");
+  const match = owned.find((business) => business.id === requestedId);
+  if (!match) throw new AccessError(403, "forbidden");
+  return { business: match };
 }
 
-function effectivePermissions(role: MemberRole, limits: PlanLimits): Set<Permission> {
+function effectivePermissions(business: Business): Set<Permission> {
   const granted = new Set<Permission>();
-  for (const permission of ROLE_PERMISSIONS[role]) {
-    const gate = PLAN_GATES[permission];
-    if (gate && limits[gate] !== true) continue;
-    granted.add(permission);
+  for (const permission of ALL_PERMISSIONS) {
+    if (isFeatureAvailable(business, PERMISSION_FEATURES[permission])) granted.add(permission);
   }
   return granted;
 }
@@ -187,7 +153,7 @@ export async function resolveAnalyticsContext(request: Request, requestedBusines
   const userId = await authenticate(token);
   const service = await getServicePB();
 
-  const { business, role } = await resolveBusiness(service, userId, requestedBusinessId ?? null);
+  const { business } = await resolveBusiness(service, userId, requestedBusinessId ?? null);
 
   let plan: PlanRecord | null = null;
   try {
@@ -205,8 +171,7 @@ export async function resolveAnalyticsContext(request: Request, requestedBusines
     business,
     plan,
     limits,
-    role,
-    permissions: effectivePermissions(role, limits),
+    permissions: effectivePermissions(business),
     service,
   };
 

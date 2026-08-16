@@ -21,6 +21,7 @@ import {
   type OverviewTotals,
 } from "@/lib/analytics/query";
 import { classifyProduct, computeBenchmarks } from "@/lib/analytics/opportunities";
+import { isFeatureAvailable } from "@/lib/entitlements";
 import { REPORT_DEFINITIONS, buildReport, isReportType } from "@/lib/analytics/reports";
 import type { DailyStat, StatDimension } from "@/lib/types";
 
@@ -572,7 +573,7 @@ export const productDetail: Handler = async (args) => {
  *  üstüne ayrıca `insights` bayrağı aranır. */
 const insights: Handler = async (args) => {
   requirePermission(args.context, "analytics.advanced");
-  if (args.context.limits.insights !== true) {
+  if (!isFeatureAvailable(args.context.business, "insights")) {
     throw new AccessError(403, "permission_denied:insights");
   }
 

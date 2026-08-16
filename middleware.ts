@@ -87,6 +87,13 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Otomatik web sitesi ayrı bir rota ağacında yaşar (menü kabuğunu miras
+  // almasın diye): {slug}.menuvaapp.com/site → /site/{slug}
+  if (url.pathname === "/site" || url.pathname.startsWith("/site/")) {
+    url.pathname = `/site/${sub}`;
+    return NextResponse.rewrite(url);
+  }
+
   url.pathname = url.pathname === "/" ? `/${sub}/welcome` : `/${sub}${url.pathname}`;
 
   const requestHeaders = new Headers(req.headers);

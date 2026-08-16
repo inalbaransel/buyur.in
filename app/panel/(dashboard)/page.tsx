@@ -9,9 +9,9 @@ import { useBusiness } from "@/components/panel/business-context";
 import { isReservedSlug, slugify } from "@/lib/slug";
 import { Button, Card, ErrorText, Input, Label, PageHeader, UpgradeNotice } from "@/components/panel/ui";
 import { QrShare } from "@/components/panel/qr-share";
-import { planLabels } from "@/lib/labels";
-import { fetchPlan, fetchPlanLimits } from "@/lib/plan-limits";
-import { addMonths, trialStatus } from "@/lib/plan-period";
+import { PlanUsageCard } from "@/components/panel/plan-usage";
+import { fetchPlanLimits } from "@/lib/plan-limits";
+import { addMonths } from "@/lib/plan-period";
 import { ROOT_DOMAIN, menuHost } from "@/lib/site";
 import { AnalyticsError, fetchAnalytics } from "@/lib/analytics/panel-client";
 import type { Business, Plan, PlanRecord } from "@/lib/types";
@@ -66,9 +66,11 @@ function Onboarding() {
         slug,
         template: "liste",
         plan: defaultPlan,
-        // Deneme bitişi kayıt anında sabitleniyor: plan kaydındaki süre sonradan
-        // değişse bile mevcut işletmenin hakkı değişmesin.
+        // Freemium penceresi kayıt anında sabitleniyor: plan kaydındaki süre
+        // sonradan değişse bile mevcut işletmenin hakkı değişmesin.
+        freemium_started_at: trialMonths > 0 ? new Date().toISOString() : "",
         plan_expires_at: trialMonths > 0 ? addMonths(new Date(), trialMonths).toISOString() : "",
+        menu_views: 0,
         is_active: true,
       });
       setBusiness(business);
@@ -252,10 +254,6 @@ function StatsSection({ business }: { business: Business }) {
 function Overview({ business }: { business: Business }) {
   const [counts, setCounts] = useState<{ categories: number; products: number } | null>(null);
   const [analyticsAllowed, setAnalyticsAllowed] = useState<boolean | null>(null);
-  const [isTrialPlan, setIsTrialPlan] = useState(false);
-  // Süre sayacı yalnızca süreli planlarda anlamlı (ücretli plana geçince
-  // kayıttaki eski bitiş tarihi sayaç göstermemeli).
-  const trial = isTrialPlan ? trialStatus(business) : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -279,9 +277,6 @@ function Overview({ business }: { business: Business }) {
     fetchPlanLimits(business.plan).then((limits) => {
       if (!cancelled) setAnalyticsAllowed(limits.analytics);
     });
-    fetchPlan(business.plan).then((plan) => {
-      if (!cancelled) setIsTrialPlan((plan?.trial_months ?? 0) > 0);
-    });
     return () => {
       cancelled = true;
     };
@@ -299,15 +294,7 @@ function Overview({ business }: { business: Business }) {
           <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Ürün</p>
           <p className="mt-2 font-display text-3xl font-extrabold">{counts?.products ?? "—"}</p>
         </Card>
-        <Card>
-          <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Plan</p>
-          <p className="mt-2 font-display text-3xl font-extrabold">{planLabels[business.plan]}</p>
-          {trial && (
-            <p className={`mt-1 text-xs ${trial.expired ? "text-paprika" : "text-ink-soft"}`}>
-              {trial.expired ? "Deneme süresi doldu" : `${trial.daysLeft} gün kaldı`}
-            </p>
-          )}
-        </Card>
+        <PlanUsageCard business={business} compact />
       </div>
       <QrShare business={business} />
       {analyticsAllowed === false ? (

@@ -255,6 +255,71 @@ const UI_STRINGS = {
     ar: "{count} منتج",
     ru: "{count} товаров",
   },
+
+  // Otomatik web sitesi (app/site/[slug]) — sabit bölüm başlıkları ve etiketler.
+  siteAbout: { tr: "Hakkımızda", en: "About us", ar: "من نحن", ru: "О нас" },
+  siteFeatured: { tr: "Öne çıkanlar", en: "Featured", ar: "الأطباق المميزة", ru: "Рекомендуем" },
+  siteFeaturedSubtitle: {
+    tr: "Menümüzden seçmeler",
+    en: "Picks from our menu",
+    ar: "مختارات من قائمتنا",
+    ru: "Подборка из меню",
+  },
+  siteMenuTitle: { tr: "Menü", en: "Menu", ar: "القائمة", ru: "Меню" },
+  siteMenuSubtitle: {
+    tr: "Kategorilere göz atın",
+    en: "Browse categories",
+    ar: "تصفح الفئات",
+    ru: "Обзор категорий",
+  },
+  siteGallery: { tr: "Galeri", en: "Gallery", ar: "معرض الصور", ru: "Галерея" },
+  siteHighlights: { tr: "Mekân özellikleri", en: "Venue features", ar: "مزايا المكان", ru: "Особенности заведения" },
+  siteContact: { tr: "İletişim", en: "Contact", ar: "تواصل معنا", ru: "Контакты" },
+  siteReservationTitle: {
+    tr: "Masanızı ayırtın",
+    en: "Reserve your table",
+    ar: "احجز طاولتك",
+    ru: "Забронировать столик",
+  },
+  siteReservationSubtitle: {
+    tr: "{name} için yer ayırtmak birkaç saniye sürüyor.",
+    en: "Reserving a table at {name} takes just a few seconds.",
+    ar: "حجز طاولة في {name} يستغرق ثوانٍ فقط.",
+    ru: "Бронирование столика в {name} займёт всего пару секунд.",
+  },
+  reservationViaWhatsapp: {
+    tr: "WhatsApp'tan rezervasyon",
+    en: "Reserve via WhatsApp",
+    ar: "احجز عبر واتساب",
+    ru: "Бронь через WhatsApp",
+  },
+  reservationViaPhone: {
+    tr: "Telefonla rezervasyon",
+    en: "Reserve by phone",
+    ar: "احجز عبر الهاتف",
+    ru: "Бронь по телефону",
+  },
+  reservationViaUrl: { tr: "Rezervasyon yap", en: "Book a table", ar: "احجز طاولة", ru: "Забронировать" },
+  emailLabel: { tr: "E-posta", en: "Email", ar: "البريد الإلكتروني", ru: "Эл. почта" },
+  googleReviewLinkLabel: {
+    tr: "Google'da değerlendirin",
+    en: "Review us on Google",
+    ar: "قيّمنا على جوجل",
+    ru: "Оцените нас в Google",
+  },
+  directionsLabel: { tr: "Yol tarifi al", en: "Get directions", ar: "احصل على الاتجاهات", ru: "Проложить маршрут" },
+  openDigitalMenu: {
+    tr: "Dijital menüyü aç",
+    en: "Open digital menu",
+    ar: "افتح القائمة الرقمية",
+    ru: "Открыть цифровое меню",
+  },
+  poweredByMenuva: {
+    tr: "menuva ile hazırlandı",
+    en: "made with menuva",
+    ar: "صُنع بواسطة menuva",
+    ru: "сделано с menuva",
+  },
 } as const satisfies Record<string, Record<Locale, string>>;
 
 export type UIKey = keyof typeof UI_STRINGS;

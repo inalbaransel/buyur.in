@@ -8,9 +8,7 @@ const CURRENT_USER = "user_a_00000001";
 const OTHER_BUSINESS = "biz_b_000000001";
 
 let authShouldFail = false;
-let ownedBusinesses: { id: string; name: string; plan: string }[] = [];
-let memberships: { business: string; role: string; expand?: unknown }[] = [];
-let planLimits: Record<string, unknown> = {};
+let ownedBusinesses: { id: string; name: string; plan: string; menu_views?: number }[] = [];
 
 vi.mock("pocketbase", () => {
   class FakePocketBase {
@@ -38,11 +36,10 @@ vi.mock("@/lib/pocketbase-server", () => ({
     collection: (name: string) => ({
       getFullList: async () => {
         if (name === "menuva_businesses") return ownedBusinesses;
-        if (name === "menuva_business_members") return memberships;
         return [];
       },
       getFirstListItem: async () => {
-        if (name === "menuva_plans") return { key: "premium", limits: planLimits };
+        if (name === "menuva_plans") return { key: ownedBusinesses[0]?.plan ?? "freemium", limits: {} };
         throw new Error("not found");
       },
     }),
@@ -57,24 +54,12 @@ function request(token = "test-token"): Request {
   });
 }
 
-const PREMIUM_LIMITS = {
-  analytics: true,
-  analytics_advanced: true,
-  insights: true,
-  reports: false,
-  reports_export: false,
-};
-
-const ELITE_LIMITS = { ...PREMIUM_LIMITS, reports: true, reports_export: true };
-
 beforeEach(() => {
   // Bağlam önbelleği süreç ömrü boyunca yaşıyor; testler birbirinin durumunu
   // görmesin diye her senaryodan önce temizliyoruz.
   clearAnalyticsContextCache();
   authShouldFail = false;
   ownedBusinesses = [{ id: "biz_a_000000001", name: "Alpha Cafe", plan: "premium" }];
-  memberships = [];
-  planLimits = PREMIUM_LIMITS;
 });
 
 describe("kimlik doğrulama", () => {
@@ -94,7 +79,6 @@ describe("kiracı izolasyonu", () => {
   it("sahibi olduğu işletmeyi token'dan çözer", async () => {
     const context = await resolveAnalyticsContext(request());
     expect(context.business.id).toBe("biz_a_000000001");
-    expect(context.role).toBe("owner");
   });
 
   it("BAŞKASININ işletme kimliğini isterse 403 — istemciden gelen id'ye asla güvenilmez", async () => {
@@ -109,26 +93,9 @@ describe("kiracı izolasyonu", () => {
     await expect(resolveAnalyticsContext(request())).rejects.toMatchObject({ status: 404, code: "no_business" });
   });
 
-  it("üyelik varsa yalnızca üye olunan işletme çözülür", async () => {
-    ownedBusinesses = [];
-    memberships = [
-      {
-        business: "biz_c_000000001",
-        role: "manager",
-        expand: { business: { id: "biz_c_000000001", name: "Gamma", plan: "premium" } },
-      },
-    ];
-
-    const context = await resolveAnalyticsContext(request());
-    expect(context.business.id).toBe("biz_c_000000001");
-    expect(context.role).toBe("manager");
-
-    // Üye olmadığı bir işletme istenirse yine reddedilir.
-    await expect(resolveAnalyticsContext(request(), OTHER_BUSINESS)).rejects.toMatchObject({ status: 403 });
-  });
 });
 
-describe("plan ve rol yetkileri", () => {
+describe("plan yetkileri", () => {
   it("Premium sahibinde gelişmiş analiz açık, rapor kapalı", async () => {
     const context = await resolveAnalyticsContext(request());
     expect(context.permissions.has("analytics.view")).toBe(true);
@@ -138,50 +105,36 @@ describe("plan ve rol yetkileri", () => {
   });
 
   it("Elite'te rapor ve dışa aktarma açılır", async () => {
-    planLimits = ELITE_LIMITS;
+    ownedBusinesses = [{ id: "biz_a_000000001", name: "Alpha Cafe", plan: "elite" }];
     const context = await resolveAnalyticsContext(request());
     expect(context.permissions.has("reports.view")).toBe(true);
     expect(context.permissions.has("reports.export")).toBe(true);
   });
 
-  it("Freemium'da gelişmiş analiz plan seviyesinde kapalı (rol ne olursa olsun)", async () => {
-    planLimits = { analytics: true, analytics_advanced: false, insights: false };
+  it("Freemium'da gelişmiş analiz plan seviyesinde kapalı", async () => {
+    ownedBusinesses = [{ id: "biz_a_000000001", name: "Alpha Cafe", plan: "freemium" }];
     const context = await resolveAnalyticsContext(request());
     expect(context.permissions.has("analytics.view")).toBe(true);
     expect(context.permissions.has("analytics.advanced")).toBe(false);
   });
 
-  it("personel rolü Elite planda bile yalnızca temel analizi görür", async () => {
-    planLimits = ELITE_LIMITS;
-    ownedBusinesses = [];
-    memberships = [
-      {
-        business: "biz_c_000000001",
-        role: "staff",
-        expand: { business: { id: "biz_c_000000001", name: "Gamma", plan: "elite" } },
-      },
-    ];
+});
 
+describe("Freemium limiti yetkiyi kapatır", () => {
+  it("görüntülenme limiti dolan Freemium işletmede temel analiz de kilitlenir", async () => {
+    ownedBusinesses = [
+      { id: "biz_a_000000001", name: "Alpha Cafe", plan: "freemium", menu_views: 10_000 },
+    ];
     const context = await resolveAnalyticsContext(request());
-    expect(context.permissions.has("analytics.view")).toBe(true);
-    expect(context.permissions.has("analytics.advanced")).toBe(false);
-    expect(context.permissions.has("reports.view")).toBe(false);
+    expect(context.permissions.has("analytics.view")).toBe(false);
   });
 
-  it("müdür raporu görür ama dışa aktaramaz", async () => {
-    planLimits = ELITE_LIMITS;
-    ownedBusinesses = [];
-    memberships = [
-      {
-        business: "biz_c_000000001",
-        role: "manager",
-        expand: { business: { id: "biz_c_000000001", name: "Gamma", plan: "elite" } },
-      },
+  it("ücretli planda yüksek görüntülenme yetkiyi etkilemez", async () => {
+    ownedBusinesses = [
+      { id: "biz_a_000000001", name: "Alpha Cafe", plan: "premium", menu_views: 500_000 },
     ];
-
     const context = await resolveAnalyticsContext(request());
-    expect(context.permissions.has("reports.view")).toBe(true);
-    expect(context.permissions.has("reports.export")).toBe(false);
+    expect(context.permissions.has("analytics.advanced")).toBe(true);
   });
 });
 
@@ -202,29 +155,20 @@ describe("bağlam önbelleği", () => {
   });
 
   it("FARKLI token aynı önbelleği kullanamaz (yetki sızıntısı olmaz)", async () => {
-    const owner = await resolveAnalyticsContext(request("token-a"));
-    expect(owner.business.id).toBe("biz_a_000000001");
+    const first = await resolveAnalyticsContext(request("token-a"));
+    expect(first.business.id).toBe("biz_a_000000001");
 
-    // Başka bir kullanıcının token'ı: kendi verisini çözmeli, öncekini değil.
-    ownedBusinesses = [];
-    memberships = [
-      {
-        business: "biz_c_000000001",
-        role: "staff",
-        expand: { business: { id: "biz_c_000000001", name: "Gamma", plan: "premium" } },
-      },
-    ];
-
+    // Başka bir kullanıcı, başka bir işletme: önceki bağlamı görmemeli.
+    ownedBusinesses = [{ id: "biz_c_000000001", name: "Gamma", plan: "premium" }];
     const other = await resolveAnalyticsContext(request("token-b"));
     expect(other.business.id).toBe("biz_c_000000001");
-    expect(other.role).toBe("staff");
   });
 
   it("önbellek temizlenince yeni plan hemen yansır", async () => {
     const before = await resolveAnalyticsContext(request());
     expect(before.permissions.has("reports.view")).toBe(false);
 
-    planLimits = ELITE_LIMITS;
+    ownedBusinesses = [{ id: "biz_a_000000001", name: "Alpha Cafe", plan: "elite" }];
     clearAnalyticsContextCache();
 
     const after = await resolveAnalyticsContext(request());

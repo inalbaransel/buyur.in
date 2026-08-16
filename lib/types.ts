@@ -72,9 +72,13 @@ export interface Business {
   google_review_url: string;
   wifi_password: string;
   plan: Plan;
-  /** Süreli planın (Freemium denemesi) bitiş anı. Boşsa süre takibi yok —
-   *  ücretli planlar ve göç öncesi eski kayıtlar bu durumda. */
+  /** Freemium'un başladığı an (plan değişince yeniden yazılır). */
+  freemium_started_at?: string;
+  /** Freemium süresinin bitiş anı (başlangıç + 3 ay). Ücretli planlarda boş. */
   plan_expires_at?: string;
+  /** Genel menü görüntülenme sayacı — Freemium 10.000 limiti buna bakar.
+   *  Yalnızca gerçek müşteri sayfa görüntülemeleri sayılır (bkz. /api/track). */
+  menu_views?: number;
   /** IANA saat dilimi (ör. "Europe/Istanbul"). Günlük/saatlik analitik
    *  kırılımları bu saat dilimine göre hesaplanır. Boşsa varsayılan kullanılır. */
   timezone?: string;
@@ -204,23 +208,6 @@ export interface DailyStat {
   updated: string;
 }
 
-export type MemberRole = "owner" | "admin" | "manager" | "staff";
-export type MemberStatus = "active" | "invited";
-
-export interface BusinessMember {
-  id: string;
-  business: string;
-  user?: string;
-  invited_email: string;
-  role: MemberRole;
-  status: MemberStatus;
-  created: string;
-  updated: string;
-  expand?: {
-    user?: { id: string; name: string; email: string };
-  };
-}
-
 export interface Review {
   id: string;
   business: string;
@@ -320,7 +307,6 @@ export interface PlanLimits {
   custom_domain: boolean;
   branding_removal: boolean;
   campaigns: boolean;
-  team_management: boolean;
   white_label: boolean;
   api_access: boolean;
 }

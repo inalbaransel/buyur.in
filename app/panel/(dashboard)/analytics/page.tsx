@@ -17,7 +17,7 @@ import { BarList } from "@/components/panel/charts/bar-chart";
 import { DonutChart } from "@/components/panel/charts/donut-chart";
 import { FunnelChart, type FunnelStep } from "@/components/panel/charts/funnel-chart";
 import { StatTile } from "@/components/panel/charts/stat-tile";
-import { formatCompact, formatDuration, formatNumber, formatPercent } from "@/components/panel/charts/chart-utils";
+import { formatCompact, formatDateRange, formatDuration, formatNumber, formatPercent } from "@/components/panel/charts/chart-utils";
 import { CATEGORICAL } from "@/components/panel/charts/palette";
 
 interface SeriesPoint {
@@ -96,7 +96,7 @@ export default function AnalyticsOverviewPage() {
         title="Analiz"
         description={
           meta
-            ? `${meta.range.from} → ${meta.range.to}${meta.approximate ? " · tekil ziyaretçi yaklaşık" : ""}`
+            ? `${formatDateRange(meta.range.from, meta.range.to)}${meta.approximate ? " · tekil ziyaretçi yaklaşık" : ""}`
             : "Menünüzün performansı"
         }
       />
@@ -112,7 +112,9 @@ export default function AnalyticsOverviewPage() {
             <NoDataYet description="Menünüz yayınlandıktan ve ilk QR taramaları geldikten sonra müşteri davranışları burada görünmeye başlayacak." />
           ) : (
             <div className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {/* Trend'li iki kart kendi ikili satırında — dar 4'lü sütunda sparkline
+                  sıkışıyordu, burada her birine iki katı genişlik var. */}
+              <div className="grid gap-4 sm:grid-cols-2">
                 <StatTile
                   label="Menü görüntülenme"
                   value={formatCompact(data.totals.page_views ?? 0)}
@@ -121,6 +123,17 @@ export default function AnalyticsOverviewPage() {
                   hint="Menünün açıldığı toplam sayfa sayısı — aynı ziyaretçi birden çok sayfa açtıysa her biri sayılır."
                   trend={data.series.page_views?.slice(-12).map((point) => point.value)}
                 />
+                <StatTile
+                  label="Sepete ekleme"
+                  value={formatCompact(data.totals.cart_adds ?? 0)}
+                  change={advanced ? (data.changes?.cart_adds ?? null) : undefined}
+                  comparisonLabel={compareLabel}
+                  hint="Müşterilerin menüden sepete eklediği ürün sayısı — ilgi düzeyinin en güçlü sinyali."
+                  trend={data.series.cart_adds?.slice(-12).map((point) => point.value)}
+                />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
                 <StatTile
                   label="Tekil ziyaretçi"
                   value={formatCompact(data.totals.visitors ?? 0)}
@@ -134,14 +147,6 @@ export default function AnalyticsOverviewPage() {
                   change={advanced ? (data.changes?.qr_scans ?? null) : undefined}
                   comparisonLabel={compareLabel}
                   hint="Menüye QR kod üzerinden başlayan ziyaretler. Linke tıklayarak gelenler bu sayıya girmez."
-                />
-                <StatTile
-                  label="Sepete ekleme"
-                  value={formatCompact(data.totals.cart_adds ?? 0)}
-                  change={advanced ? (data.changes?.cart_adds ?? null) : undefined}
-                  comparisonLabel={compareLabel}
-                  hint="Müşterilerin menüden sepete eklediği ürün sayısı — ilgi düzeyinin en güçlü sinyali."
-                  trend={data.series.cart_adds?.slice(-12).map((point) => point.value)}
                 />
               </div>
 
@@ -180,7 +185,7 @@ export default function AnalyticsOverviewPage() {
 
               <ChartFrame
                 title="Zaman içinde menü performansı"
-                hint={meta ? `${meta.range.from} → ${meta.range.to}` : undefined}
+                hint={meta ? formatDateRange(meta.range.from, meta.range.to) : undefined}
                 legend={
                   advanced
                     ? lineLegend([

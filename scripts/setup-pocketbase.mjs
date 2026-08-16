@@ -276,9 +276,11 @@ async function main() {
       // genişletip veriyi eşleyerek daraltıyor (getOrCreate var olan alanları güncellemez,
       // sadece eksik alan ekler) — burada yalnızca sıfırdan kurulum için nihai değerler.
       select("plan", ["freemium", "premium", "elite"], { maxSelect: 1 }),
-      // Süreli planın (Freemium denemesi) bitiş anı — kayıt sırasında plan
-      // kaydındaki trial_months'a göre yazılır. Boş = süre takibi yok.
+      // Freemium kullanım takibi: başlangıç, bitiş ve menü görüntülenme sayacı.
+      // Ücretli planlarda bu alanlar uygulanmaz (bkz. lib/entitlements.ts).
+      dateField("freemium_started_at"),
       dateField("plan_expires_at"),
+      num("menu_views", { min: 0, onlyInt: true }),
       // IANA saat dilimi — analitikteki gün/saat kırılımları buna göre hesaplanır.
       // Boşsa lib/analytics/time.ts'teki varsayılan (Europe/Istanbul) kullanılır.
       text("timezone", { max: 40 }),
@@ -571,31 +573,6 @@ async function main() {
       "CREATE UNIQUE INDEX `idx_stats_unique` ON `menuva_stats_daily` (`business`, `date`, `dimension`, `key`)",
       "CREATE INDEX `idx_stats_business_date` ON `menuva_stats_daily` (`business`, `date`)",
       "CREATE INDEX `idx_stats_business_dim_date` ON `menuva_stats_daily` (`business`, `dimension`, `date`)",
-    ],
-  });
-
-  // 9.3) business_members — ekip üyeliği ve rolleri. analytics.view/export gibi
-  // izinler rolden türetilir (bkz. lib/permissions.ts).
-  await getOrCreate({
-    name: "menuva_business_members",
-    type: "base",
-    listRule: `business.owner = @request.auth.id || user = @request.auth.id || ${adminBypass}`,
-    viewRule: `business.owner = @request.auth.id || user = @request.auth.id || ${adminBypass}`,
-    // Üye ekleme/çıkarma yalnızca işletme sahibinde (ve admin'de).
-    createRule: `business.owner = @request.auth.id || ${adminBypass}`,
-    updateRule: `business.owner = @request.auth.id || ${adminBypass}`,
-    deleteRule: `business.owner = @request.auth.id || ${adminBypass}`,
-    fields: [
-      relation("business", businesses.id, { required: true, cascadeDelete: true, maxSelect: 1 }),
-      relation("user", users.id, { maxSelect: 1 }),
-      emailField("invited_email"),
-      select("role", ["owner", "admin", "manager", "staff"], { required: true, maxSelect: 1 }),
-      select("status", ["active", "invited"], { required: true, maxSelect: 1 }),
-      ...stamps(),
-    ],
-    indexes: [
-      "CREATE UNIQUE INDEX `idx_members_business_user` ON `menuva_business_members` (`business`, `user`)",
-      "CREATE INDEX `idx_members_user` ON `menuva_business_members` (`user`)",
     ],
   });
 

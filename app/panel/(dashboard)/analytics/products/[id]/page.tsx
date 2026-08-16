@@ -16,7 +16,7 @@ import { ChartFrame } from "@/components/panel/charts/frame";
 import { LineChart, lineLegend } from "@/components/panel/charts/line-chart";
 import { StatTile } from "@/components/panel/charts/stat-tile";
 import { BarList } from "@/components/panel/charts/bar-chart";
-import { formatCompact, formatNumber, formatPercent } from "@/components/panel/charts/chart-utils";
+import { formatCompact, formatDateRange, formatNumber, formatPercent } from "@/components/panel/charts/chart-utils";
 import { ArrowLeftIcon } from "@/components/icons";
 import { CATEGORICAL } from "@/components/panel/charts/palette";
 
@@ -63,7 +63,7 @@ export default function ProductPerformancePage() {
 
       <PageHeader
         title={data?.product.name ?? "Ürün performansı"}
-        description={meta ? `${meta.range.from} → ${meta.range.to}` : undefined}
+        description={meta ? formatDateRange(meta.range.from, meta.range.to) : undefined}
       />
 
       <AnalyticsFilterBar />

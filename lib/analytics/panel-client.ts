@@ -9,7 +9,6 @@ export interface AnalyticsMeta {
   range: { from: string; to: string; preset: string; timezone: string };
   comparison: { from: string; to: string; mode: string } | null;
   plan: { key: string; advanced: boolean; reports: boolean; export: boolean; insights: boolean };
-  role: string;
   approximate: boolean;
   generatedAt: string;
 }

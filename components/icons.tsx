@@ -73,6 +73,22 @@ export function ArrowLeftIcon(p: IconProps) {
   );
 }
 
+export function ChevronLeftIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <polyline points="15 18 9 12 15 6" />
+    </Svg>
+  );
+}
+
+export function ChevronRightIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <polyline points="9 18 15 12 9 6" />
+    </Svg>
+  );
+}
+
 export function InstagramIcon(p: IconProps) {
   return (
     <Svg {...p}>
@@ -590,4 +606,24 @@ export function BadgeIcon({ badge, ...p }: IconProps & { badge: Badge }) {
 export function HighlightIcon({ highlight, ...p }: IconProps & { highlight: Highlight }) {
   const Icon = highlightIconMap[highlight];
   return <Icon {...p} />;
+}
+
+export function GlobeIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18" />
+    </Svg>
+  );
+}
+
+/** Plan/yükseltme bağlamında kullanılan kıvılcım. */
+export function SparkIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M12 3l1.9 4.9L19 9.8l-4.4 2.5L13.4 17 12 12.6 10.6 17 9.4 12.3 5 9.8l5.1-1.9z" />
+      <path d="M18 16.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" />
+    </Svg>
+  );
 }

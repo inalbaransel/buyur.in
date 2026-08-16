@@ -6,6 +6,7 @@ import { AnalyticsFilterBar } from "@/components/panel/analytics/filters";
 import { useAnalyticsQuery } from "@/components/panel/analytics/use-analytics";
 import { AnalyticsErrorState, PlanLocked } from "@/components/panel/analytics/states";
 import { FileTextIcon } from "@/components/icons";
+import { formatDateRange } from "@/components/panel/charts/chart-utils";
 import type { ReportDefinition } from "@/lib/analytics/reports";
 
 export default function ReportsPage() {
@@ -71,7 +72,7 @@ export default function ReportsPage() {
           </div>
 
           <p className="mt-6 font-mono text-[11px] uppercase tracking-wider text-ink-soft">
-            {meta ? `Seçili dönem: ${meta.range.from} → ${meta.range.to}` : ""}
+            {meta ? `Seçili dönem: ${formatDateRange(meta.range.from, meta.range.to)}` : ""}
             {data.canExport ? " · PDF ve CSV dışa aktarma açık" : ""}
           </p>
         </>

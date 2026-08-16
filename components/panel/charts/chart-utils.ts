@@ -65,6 +65,7 @@ export function formatDuration(seconds: number): string {
 
 const dayFormatter = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short" });
 const fullDayFormatter = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", year: "numeric" });
+const shortDateFormatter = new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "2-digit", year: "2-digit" });
 
 export function formatDayShort(day: string): string {
   return dayFormatter.format(new Date(`${day}T00:00:00`));
@@ -72,6 +73,17 @@ export function formatDayShort(day: string): string {
 
 export function formatDayLong(day: string): string {
   return fullDayFormatter.format(new Date(`${day}T00:00:00`));
+}
+
+/** ISO tarihi (2026-08-17) TR kısa biçime çevirir: 17.08.26. Filtre/aralık
+ *  etiketleri için — ham ISO'yu ekranda hiçbir yerde göstermiyoruz. */
+export function formatDateShort(day: string): string {
+  return shortDateFormatter.format(new Date(`${day}T00:00:00`));
+}
+
+/** İki ISO tarihi "17.07.26 → 16.08.26" biçiminde birleştirir. */
+export function formatDateRange(from: string, to: string): string {
+  return `${formatDateShort(from)} → ${formatDateShort(to)}`;
 }
 
 export const WEEKDAY_LABELS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];

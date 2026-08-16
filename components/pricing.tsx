@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { whatsappLink } from "@/lib/site";
-import { WhatsappIcon } from "@/components/icons";
+import { CheckCircleIcon, WhatsappIcon } from "@/components/icons";
 import { PlanGrid } from "@/components/pricing-plans";
+import { FEATURE_MATRIX, PLAN_LABELS, PLAN_ORDER } from "@/lib/entitlements";
 import type { PlanRecord } from "@/lib/types";
 
 export function Pricing({ plans }: { plans: PlanRecord[] }) {
@@ -14,20 +15,97 @@ export function Pricing({ plans }: { plans: PlanRecord[] }) {
         Baskı maliyetinden ucuz
       </h2>
       <p className="mx-auto mt-4 max-w-xl text-center text-ink-soft">
-        Bir kez menü bastırmanın parasıyla aylarca dijital kalın. Üç ay ücretsiz
-        deneyin, işinize yaradığında devam edin.
+        Bir kez menü bastırmanın parasıyla aylarca dijital kalın. Ücretsiz
+        başlayın, işinize yaradığında devam edin.
       </p>
 
       <PlanGrid plans={plans} />
 
+      <p className="mx-auto mt-8 max-w-2xl rounded-2xl border border-line bg-crema/40 px-5 py-4 text-center text-sm text-ink-soft">
+        <span className="font-semibold text-ink">Freemium: 3 ay veya 10.000 menü görüntülenmesine kadar ücretsiz.</span>{" "}
+        İki limitten hangisi önce dolarsa Freemium kullanım süresi sona erer. Premium ve Elite planlarında ne süre
+        sınırı ne de görüntülenme sınırı vardır.
+      </p>
+
+      <PlanComparison />
+
       <p className="mt-8 text-center font-mono text-[11px] uppercase tracking-wider text-ink-soft/70">
-        Ücretsiz denemede kredi kartı istemiyoruz · İstediğiniz an bırakabilirsiniz
+        Ücretsiz planda kredi kartı istemiyoruz · İstediğiniz an bırakabilirsiniz
       </p>
     </section>
   );
 }
 
+/** Plan karşılaştırması — panelle aynı kaynaktan (lib/entitlements.ts). */
+function PlanComparison() {
+  return (
+    <div className="mt-10 overflow-x-auto rounded-2xl border border-line bg-paper">
+      <table className="w-full min-w-[620px] text-sm">
+        <thead>
+          <tr className="border-b border-line bg-crema/50 text-left">
+            <th className="px-5 py-3 font-mono text-[10px] uppercase tracking-wider text-ink-soft">Özellik</th>
+            {PLAN_ORDER.map((plan) => (
+              <th key={plan} className="px-5 py-3 text-center font-display text-base font-bold">
+                {PLAN_LABELS[plan]}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {FEATURE_MATRIX.map((row) => (
+            <tr key={row.label} className="border-b border-line/60 last:border-0">
+              <td className="px-5 py-3">{row.label}</td>
+              {PLAN_ORDER.map((plan) => {
+                const value = row.values[plan];
+                return (
+                  <td key={plan} className="px-5 py-3 text-center">
+                    {typeof value === "string" ? (
+                      <span className="font-mono text-[12px] uppercase tracking-wider">{value}</span>
+                    ) : value ? (
+                      <span className="inline-flex text-herb" aria-label="var">
+                        <CheckCircleIcon size={16} />
+                      </span>
+                    ) : (
+                      <span className="text-ink-soft/40" aria-label="yok">
+                        —
+                      </span>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 const faqs = [
+  {
+    q: "Freemium ne kadar süre ücretsiz?",
+    a: "Freemium plan 3 ay veya 10.000 menü görüntülenmesine kadar ücretsizdir. Bu iki limitten hangisi önce dolarsa Freemium sona erer. Kredi kartı istemiyoruz.",
+  },
+  {
+    q: "Premium'da menü görüntülenme sınırı var mı?",
+    a: "Hayır. Premium plan sınırsız menü görüntülenmesi sunar ve süre sınırı yoktur.",
+  },
+  {
+    q: "Elite'de menü görüntülenme sınırı var mı?",
+    a: "Hayır. Elite planında da menü görüntülenme sınırı ve süre sınırı yoktur.",
+  },
+  {
+    q: "Custom Website hangi planlarda var?",
+    a: "Premium ve Elite planlarında otomatik oluşturulan Custom Website bulunur. Panelde girdiğiniz bilgilerden (menü, görseller, çalışma saatleri, konum, iletişim) site kendiliğinden oluşur; ayrıca içerik girmeniz gerekmez.",
+  },
+  {
+    q: "Premium ve Elite arasındaki fark nedir?",
+    a: "Premium profesyonel bir Custom Website ve gelişmiş analizler sunar. Elite ise daha gelişmiş bir website deneyimi (animasyonlu tanıtım, menü slider'ı, galeri) ile gelişmiş raporlama ve PDF/Excel/CSV dışa aktarma ekler.",
+  },
+  {
+    q: "Freemium süresi dolunca verilerim silinir mi?",
+    a: "Hayır. Menünüz, ürünleriniz, görselleriniz ve analiz geçmişiniz olduğu gibi kalır. Yalnızca menünüzün yayını ve gelişmiş özellikler durur; bir plana geçtiğinizde her şey kaldığı yerden devam eder.",
+  },
   {
     q: "Teknik bilgim yok, kullanabilir miyim?",
     a: "Kesinlikle. menuva, telefon kullanabilen herkes için tasarlandı. Ürün eklemek fotoğraf paylaşmak kadar kolay. Takıldığınız yerde WhatsApp'tan yazın, birlikte kuralım.",
@@ -38,23 +116,15 @@ const faqs = [
   },
   {
     q: "QR kodu nasıl alacağım?",
-    a: "Kayıt olduğunuzda otomatik oluşur. Panelden yüksek çözünürlüklü indirir, dilediğiniz boyutta bastırırsınız.",
-  },
-  {
-    q: "Müşteri uygulama indirmek zorunda mı?",
-    a: "Hayır. QR'ı taradığında menü doğrudan tarayıcıda açılır. İndirme yok, üyelik yok, bekleme yok.",
+    a: "Kayıt olduğunuzda otomatik oluşur. Panelden yüksek çözünürlüklü indirir, dilediğiniz boyutta bastırırsınız. Masa, vitrin ve sosyal medya için ayrı QR'lar oluşturup hangisinin daha çok tarandığını görebilirsiniz.",
   },
   {
     q: "Analizler tam olarak neyi gösteriyor?",
     a: "Menünüzün kaç kez açıldığını, hangi ürünlerin en çok incelendiğini, müşterinin menüde ne kadar kaldığını ve trafiğin nereden geldiğini. Yani neyi öne çıkaracağınıza tahminle değil veriyle karar verirsiniz.",
   },
   {
-    q: "Ücretsiz plan gerçekten ücretsiz mi?",
-    a: "Evet. Freemium üç ay boyunca ücretsiz: kredi kartı istemiyoruz, otomatik ödeme başlamıyor. 30 ürüne kadar menünüzü kurar, QR'ınızı alır, yayına geçersiniz. Üç ay dolduğunda menüniz kaybolmaz — devam etmek isterseniz konuşuruz.",
-  },
-  {
     q: "Aylık mı yıllık mı ödemeliyim?",
-    a: "İkisi de mümkün. Yıllık ödemede aylık maliyet %20 düşüyor: Premium ayda 250₺ yerine 200₺ (yıllık 2.400₺), Elite ayda 500₺ yerine 400₺ (yıllık 4.800₺). Aylık ödemede taahhüt yok, istediğiniz ay bırakabilirsiniz.",
+    a: "İkisi de mümkün. Yıllık ödemede aylık maliyet %20 düşüyor: Premium ayda 250₺ yerine 200₺ (yıllık 2.400₺), Elite ayda 500₺ yerine 400₺ (yıllık 4.800₺). Aylık ödemede taahhüt yok.",
   },
 ];
 

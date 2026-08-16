@@ -189,12 +189,59 @@ async function backfillTimezones() {
   console.log(`~ ${businesses.length} işletmeye saat dilimi yazıldı: ${DEFAULT_TIMEZONE}`);
 }
 
+/** Freemium kullanım alanlarını doldurur:
+ *  - freemium_started_at: Freemium işletmelerde bitişten 3 ay geriye (yoksa kayıt tarihi)
+ *  - menu_views: agregatlardan gerçek sayfa görüntülenme toplamı
+ *  - ücretli plandaki işletmelerde kalmış limit alanlarını temizler
+ *  (bkz. lib/entitlements.ts — limitler yalnızca Freemium'a aittir). */
+async function backfillPlanUsage() {
+  const businesses = await pb.collection("menuva_businesses").getFullList({
+    fields: "id,name,plan,created,plan_expires_at,freemium_started_at,menu_views",
+  });
+
+  let updated = 0;
+
+  for (const business of businesses) {
+    const patch = {};
+
+    if (business.plan === "freemium") {
+      if (!business.freemium_started_at) {
+        const expires = business.plan_expires_at ? new Date(business.plan_expires_at.replace(" ", "T")) : null;
+        const started = expires ? new Date(expires.getTime() - 90 * 86_400_000) : new Date(business.created.replace(" ", "T"));
+        patch.freemium_started_at = started.toISOString();
+      }
+
+      // Gerçek görüntülenme: günlük agregatların "page_views" toplamı.
+      const stats = await pb.collection("menuva_stats_daily").getFullList({
+        filter: pb.filter("business = {:b} && dimension = {:d}", { b: business.id, d: "total" }),
+        fields: "metrics",
+        batch: 500,
+      });
+      const views = stats.reduce((sum, row) => sum + (row.metrics?.page_views ?? 0), 0);
+      if ((business.menu_views ?? 0) !== views) patch.menu_views = views;
+    } else {
+      // Ücretli plan: Freemium alanları uygulanmaz, temiz kalsın.
+      if (business.plan_expires_at) patch.plan_expires_at = "";
+      if (business.freemium_started_at) patch.freemium_started_at = "";
+    }
+
+    if (Object.keys(patch).length > 0) {
+      await pb.collection("menuva_businesses").update(business.id, patch);
+      console.log(`~ ${business.name} (${business.plan}): ${Object.keys(patch).join(", ")}`);
+      updated += 1;
+    }
+  }
+
+  console.log(updated === 0 ? "= plan kullanım alanları zaten güncel." : `~ ${updated} işletme güncellendi.`);
+}
+
 async function main() {
   await widenEventTypes();
   await addEventIndexes();
   await updatePlanLimits();
   await backfillTimezones();
   await backfillOccurredAt();
+  await backfillPlanUsage();
   console.log("\nAnalitik göçü tamamlandı.");
 }
 

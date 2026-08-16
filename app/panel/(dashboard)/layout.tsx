@@ -15,6 +15,7 @@ import {
   ExternalLinkIcon,
   FileTextIcon,
   FolderIcon,
+  GlobeIcon,
   LayoutIcon,
   LifeBuoyIcon,
   LogoutIcon,
@@ -22,9 +23,9 @@ import {
   PackageIcon,
   QrCodeIcon,
   SettingsIcon,
+  SparkIcon,
   StarIcon,
   TrendingUpIcon,
-  UsersIcon,
 } from "@/components/icons";
 
 const navItems = [
@@ -34,9 +35,10 @@ const navItems = [
   { href: "/panel/products", label: "Ürünler", Icon: PackageIcon, prefixes: ["/panel/products", "/panel/product/"] },
   { href: "/panel/popups", label: "Kampanyalar", Icon: MegaphoneIcon, prefixes: ["/panel/popups", "/panel/popup/"] },
   { href: "/panel/qr", label: "QR kodlar", Icon: QrCodeIcon, prefixes: ["/panel/qr"] },
+  { href: "/panel/website", label: "Web sitesi", Icon: GlobeIcon, prefixes: ["/panel/website"] },
   { href: "/panel/reports", label: "Raporlar", Icon: FileTextIcon, prefixes: ["/panel/reports"] },
   { href: "/panel/reviews", label: "Değerlendirmeler", Icon: StarIcon, prefixes: ["/panel/reviews"] },
-  { href: "/panel/team", label: "Ekip", Icon: UsersIcon, prefixes: ["/panel/team"] },
+  { href: "/panel/plan", label: "Plan", Icon: SparkIcon, prefixes: ["/panel/plan"] },
   { href: "/panel/support", label: "Destek", Icon: LifeBuoyIcon, prefixes: ["/panel/support"] },
   { href: "/panel/settings", label: "Ayarlar", Icon: SettingsIcon, prefixes: ["/panel/settings"] },
 ];

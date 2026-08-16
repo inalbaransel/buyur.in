@@ -4,8 +4,10 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { createServerPB } from "@/lib/pocketbase";
 import { MenuProvider } from "@/components/menu/menu-provider";
+import { MenuUnavailable } from "@/app/[slug]/unavailable";
+import { isSubscriptionActive } from "@/lib/entitlements";
 import { menuUrl } from "@/lib/site";
-import type { Business, Popup } from "@/lib/types";
+import type { Business, Category, Popup, Product } from "@/lib/types";
 
 const getBusiness = cache(async (slug: string): Promise<Business | null> => {
   const pb = createServerPB();
@@ -59,16 +61,37 @@ export default async function MenuLayout({
   const business = await getBusiness(slug);
   if (!business) notFound();
 
+  // Freemium limiti (3 ay VEYA 10.000 görüntülenme) dolduysa menü yayından
+  // kalkar — veri silinmez, sahibi plana geçtiğinde aynen geri gelir.
+  if (!isSubscriptionActive(business)) {
+    return <MenuUnavailable business={business} />;
+  }
+
   // Subdomain üzerinden gelindiyse (vezirhan.menuvaapp.com) linklerde slug öneki
   // kullanılmaz; path üzerinden gelindiyse (/vezirhan) eski davranış korunur.
   const hdrs = await headers();
   const basePath = hdrs.get("x-menuva-rewrite") === "subdomain" ? "" : `/${business.slug}`;
 
+  // Menü verisi sunucuda çekiliyor: daha önce tarayıcı açıldıktan sonra iki ek
+  // istek atıp bekliyordu. Artık ilk boyamada menü hazır geliyor.
   const pb = createServerPB();
-  const popups = await pb.collection("menuva_popups").getFullList<Popup>({
-    filter: pb.filter("business = {:id} && is_active = true", { id: business.id }),
-    sort: "-created",
-  });
+  const [popups, categories, products] = await Promise.all([
+    pb.collection("menuva_popups").getFullList<Popup>({
+      filter: pb.filter("business = {:id} && is_active = true", { id: business.id }),
+      sort: "-created",
+      requestKey: null,
+    }),
+    pb.collection("menuva_categories").getFullList<Category>({
+      filter: pb.filter("business = {:id} && is_active = true", { id: business.id }),
+      sort: "order,created",
+      requestKey: null,
+    }),
+    pb.collection("menuva_products").getFullList<Product>({
+      filter: pb.filter("business = {:id} && is_available = true", { id: business.id }),
+      sort: "order,created",
+      requestKey: null,
+    }),
+  ]);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -83,7 +106,13 @@ export default async function MenuLayout({
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <MenuProvider business={business} popup={popups[0] ?? null} basePath={basePath}>
+      <MenuProvider
+        business={business}
+        popup={popups[0] ?? null}
+        basePath={basePath}
+        initialCategories={categories}
+        initialProducts={products}
+      >
         {children}
       </MenuProvider>
     </>

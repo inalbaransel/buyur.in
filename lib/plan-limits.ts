@@ -13,7 +13,6 @@ const UNRESTRICTED_LIMITS: PlanLimits = {
   custom_domain: true,
   branding_removal: true,
   campaigns: true,
-  team_management: true,
   white_label: true,
   api_access: true,
 };
