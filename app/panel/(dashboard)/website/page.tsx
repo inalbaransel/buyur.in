@@ -7,7 +7,7 @@ import { useToast } from "@/components/panel/toast";
 import { Card, PageHeader } from "@/components/panel/ui";
 import { PlanLocked } from "@/components/panel/analytics/states";
 import { CheckCircleIcon, ExternalLinkIcon, GlobeIcon } from "@/components/icons";
-import { menuUrl } from "@/lib/site";
+import { menuUrl, whatsappLink } from "@/lib/site";
 import { isFeatureAvailable } from "@/lib/entitlements";
 
 // Web sitesi sayfası. Burada düzenlenecek bir şey yok — ve bu bilinçli:
@@ -27,14 +27,17 @@ export default function WebsitePage() {
 
   const hasWebsite = isFeatureAvailable(business, "custom_website");
   const isAdvanced = isFeatureAvailable(business, "advanced_website");
+  // Elite'in ayrıcalığı: otomatik menü sitesinden BAĞIMSIZ, kurulumunu bizim
+  // yaptığımız kurumsal site. Panelde üretilmez — talebi buradan başlatılır.
+  const isGifted = isFeatureAvailable(business, "gifted_website");
 
   if (!hasWebsite) {
     return (
       <div>
         <PageHeader title="Web sitesi" description="İşletmenizin bilgilerinden otomatik oluşan restoran sitesi" />
         <PlanLocked
-          title="Custom Website Premium ve Elite planlarında kullanılabilir"
-          description="Panelde girdiğiniz bilgilerden (menü, görseller, çalışma saatleri, konum, iletişim) otomatik bir restoran web sitesi oluşturulur. Ayrı bir site kurmanıza, içerik girmenize ya da güncelleme yapmanıza gerek kalmaz."
+          title="Standart Web Sitesi, Premium ve Elite planlarında kullanılabilir"
+          description="Panelde girdiğiniz bilgilerden (menü, görseller, çalışma saatleri, konum, iletişim) otomatik bir restoran web sitesi oluşturulur. Ayrı bir site kurmanıza, içerik girmenize ya da güncelleme yapmanıza gerek kalmaz. Elite planında bu site gelişmiş deneyime yükselir ve ayrıca kurumsal web sitenizin kurulumu hediye edilir."
         />
       </div>
     );
@@ -77,8 +80,8 @@ export default function WebsitePage() {
           <p className="mt-1 truncate font-display text-lg font-bold text-paprika">{siteUrl}</p>
           <p className="mt-1 text-xs text-ink-soft">
             {isAdvanced
-              ? "Elite: animasyonlu tanıtım, menü slider'ı ve galeri dahil gelişmiş site."
-              : "Premium: sade ve profesyonel restoran sitesi."}
+              ? "Elite — Gelişmiş Web Sitesi: animasyonlu tanıtım, menü slider'ı ve galeri dahil."
+              : "Premium — Standart Web Sitesi: sade ve profesyonel restoran sitesi."}
           </p>
         </div>
         <button
@@ -147,6 +150,27 @@ export default function WebsitePage() {
           </p>
         </Card>
       </div>
+
+      {isGifted && (
+        <Card className="mt-4">
+          <p className="font-mono text-[11px] uppercase tracking-wider text-paprika">Elite hediyesi</p>
+          <p className="mt-2 font-display text-lg font-bold">Kurumsal web siteniz bizden</p>
+          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+            Yukarıdaki otomatik site menünüzden üretilir. Elite aboneliğinizle birlikte, bundan bağımsız standart bir
+            kurumsal web sitesinin kurulumunu da biz üstleniyoruz: tanıtım sayfaları, görsel düzen, alan adı bağlantısı
+            ve yayına alma. Aboneliğiniz sürdüğü sürece bu kurulum için ücret alınmaz; alan adı ve üçüncü taraf servis
+            bedelleri kapsam dışıdır.
+          </p>
+          <a
+            href={whatsappLink("Merhaba, Elite planındaki hediye kurumsal web sitesi kurulumunu başlatmak istiyorum.")}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex items-center gap-2 rounded-md bg-ink px-5 py-2.5 font-mono text-[12px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
+          >
+            Kurulumu başlat
+          </a>
+        </Card>
+      )}
     </div>
   );
 }

@@ -39,7 +39,9 @@ const PERMISSION_FEATURES: Record<Permission, Feature> = {
 export const DEFAULT_LIMITS: PlanLimits = {
   max_businesses: 1,
   max_menus: 1,
-  max_products: 30,
+  // Freemium'da ürün limiti yok — sınır yalnızca süre ve görüntülenme
+  // (bkz. lib/entitlements.ts).
+  max_products: null,
   analytics: true,
   analytics_advanced: false,
   insights: false,

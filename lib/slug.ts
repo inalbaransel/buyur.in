@@ -44,6 +44,8 @@ export const RESERVED_SLUGS = new Set([
   "help",
   "docs",
   "status",
+  "yasal",
+  "legal",
 ]);
 
 export function isReservedSlug(slug: string): boolean {

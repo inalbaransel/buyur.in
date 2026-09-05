@@ -100,7 +100,11 @@ export function PlanUsageCard({ business, compact = false }: { business: Busines
         <p className="mt-2 font-display text-3xl font-extrabold">{PLAN_LABELS[plan]}</p>
         <p className="mt-1 text-sm text-ink-soft">
           Sınırsız menü görüntülenme · süre sınırı yok
-          {entitlements.features.advanced_website ? " · gelişmiş web sitesi" : entitlements.features.custom_website ? " · otomatik web sitesi" : ""}
+          {entitlements.features.gifted_website
+            ? " · gelişmiş web sitesi + hediye kurumsal site"
+            : entitlements.features.custom_website
+              ? " · standart web sitesi"
+              : ""}
         </p>
       </div>
     );

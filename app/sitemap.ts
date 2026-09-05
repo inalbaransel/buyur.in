@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { createServerPB } from "@/lib/pocketbase";
 import { ROOT_DOMAIN, menuHost } from "@/lib/site";
+import { LEGAL_DOCS, legalPath } from "@/lib/legal";
 
 async function getActiveBusinessUrls(): Promise<MetadataRoute.Sitemap> {
   const pb = createServerPB();
@@ -26,6 +27,19 @@ async function getActiveBusinessUrls(): Promise<MetadataRoute.Sitemap> {
   }
 }
 
+/** Yasal metinler: ödeme sağlayıcıları ve arama motorları bu adresleri bulabilsin. */
+function legalUrls(): MetadataRoute.Sitemap {
+  return [
+    { url: `https://${ROOT_DOMAIN}/yasal`, changeFrequency: "yearly", priority: 0.3 },
+    ...LEGAL_DOCS.map((doc) => ({
+      url: `https://${ROOT_DOMAIN}${legalPath(doc.slug)}`,
+      lastModified: new Date(doc.updated),
+      changeFrequency: "yearly" as const,
+      priority: 0.3,
+    })),
+  ];
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const businessUrls = await getActiveBusinessUrls();
 
@@ -36,6 +50,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 1,
     },
+    ...legalUrls(),
     ...businessUrls,
   ];
 }

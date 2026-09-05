@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { whatsappLink } from "@/lib/site";
+import { LEGAL_DOCS, legalPath } from "@/lib/legal";
 import { WhatsappIcon } from "@/components/icons";
 
 export function Logo({ light = false }: { light?: boolean }) {
@@ -52,6 +53,12 @@ const footerNav = [
       },
     ],
   },
+  {
+    // Yasal metinlerin listesi lib/legal.ts'ten geliyor: yeni bir metin
+    // eklendiğinde footer kendiliğinden güncellenir.
+    title: "Yasal",
+    links: LEGAL_DOCS.map((doc) => ({ label: doc.navLabel, href: legalPath(doc.slug) })),
+  },
 ];
 
 export function Footer() {
@@ -81,7 +88,7 @@ export function Footer() {
             </a>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
             {footerNav.map((col) => (
               <div key={col.title} className="flex flex-col gap-3">
                 <span className="font-mono text-[12px] uppercase tracking-wider text-paper">

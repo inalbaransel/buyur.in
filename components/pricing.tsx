@@ -23,8 +23,9 @@ export function Pricing({ plans }: { plans: PlanRecord[] }) {
 
       <p className="mx-auto mt-8 max-w-2xl rounded-2xl border border-line bg-crema/40 px-5 py-4 text-center text-sm text-ink-soft">
         <span className="font-semibold text-ink">Freemium: 3 ay veya 10.000 menü görüntülenmesine kadar ücretsiz.</span>{" "}
-        İki limitten hangisi önce dolarsa Freemium kullanım süresi sona erer. Premium ve Elite planlarında ne süre
-        sınırı ne de görüntülenme sınırı vardır.
+        İki limitten hangisi önce dolarsa Freemium kullanım süresi sona erer. Freemium&apos;da ürün ve kategori sayısı
+        sınırlı değildir — menünüzün tamamını girebilirsiniz. Premium ve Elite planlarında ne süre sınırı ne de
+        görüntülenme sınırı vardır.
       </p>
 
       <PlanComparison />
@@ -95,12 +96,16 @@ const faqs = [
     a: "Hayır. Elite planında da menü görüntülenme sınırı ve süre sınırı yoktur.",
   },
   {
-    q: "Custom Website hangi planlarda var?",
-    a: "Premium ve Elite planlarında otomatik oluşturulan Custom Website bulunur. Panelde girdiğiniz bilgilerden (menü, görseller, çalışma saatleri, konum, iletişim) site kendiliğinden oluşur; ayrıca içerik girmeniz gerekmez.",
+    q: "Freemium'da kaç ürün girebilirim?",
+    a: "Sınırsız. Freemium'da ürün ya da kategori limiti yoktur; menünüzün tamamını eksiksiz girebilirsiniz. Freemium'ın tek sınırı süre ve görüntülenmedir: 3 ay veya 10.000 menü görüntülenmesi.",
   },
   {
-    q: "Premium ve Elite arasındaki fark nedir?",
-    a: "Premium profesyonel bir Custom Website ve gelişmiş analizler sunar. Elite ise daha gelişmiş bir website deneyimi (animasyonlu tanıtım, menü slider'ı, galeri) ile gelişmiş raporlama ve PDF/Excel/CSV dışa aktarma ekler.",
+    q: "Premium ve Elite'in web sitesi farkı tam olarak nedir?",
+    a: "Premium'da Standart Web Sitesi vardır: menü verinizden otomatik oluşan, kendi alan adınızda yayınlanabilen bir restoran sitesi. Panelde ne girdiyseniz sitede o görünür, ayrıca içerik girmenize gerek yoktur. Elite'te bu site Gelişmiş Web Sitesi deneyimine yükselir (animasyonlu tanıtım, menü slider'ı, galeri) ve ek olarak kurumsal web sitenizi hediye ederiz: kurulumunu, tasarımını ve yayına almasını biz yaparız, aboneliğiniz sürdüğü sürece ücret alınmaz.",
+  },
+  {
+    q: "Elite'teki hediye web sitesi neyi kapsıyor?",
+    a: "Elite aboneliğiyle birlikte, otomatik menü sitesinden ayrı olarak standart bir kurumsal web sitesi kurulumu hediye edilir: tanıtım sayfaları, görsel düzen, alan adı bağlantısı ve yayına alma bizde. Alan adı ve varsa üçüncü taraf servis ücretleri kapsam dışıdır; detayları WhatsApp'tan netleştiriyoruz.",
   },
   {
     q: "Freemium süresi dolunca verilerim silinir mi?",
@@ -124,7 +129,7 @@ const faqs = [
   },
   {
     q: "Aylık mı yıllık mı ödemeliyim?",
-    a: "İkisi de mümkün. Yıllık ödemede aylık maliyet %20 düşüyor: Premium ayda 250₺ yerine 200₺ (yıllık 2.400₺), Elite ayda 500₺ yerine 400₺ (yıllık 4.800₺). Aylık ödemede taahhüt yok.",
+    a: "İkisi de mümkün. Yıllık ödemede aylık maliyet %20 düşüyor: Premium ayda 249₺ yerine 199,20₺ (yıllık 2.390,40₺ tek ödeme), Elite ayda 749₺ yerine 599,20₺ (yıllık 7.190,40₺ tek ödeme). Aylık ödemede taahhüt yok, istediğiniz dönem sonunda bırakabilirsiniz.",
   },
 ];
 

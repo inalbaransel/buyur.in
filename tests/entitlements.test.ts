@@ -40,22 +40,42 @@ describe("plan matrisi", () => {
     expect(PLAN_ENTITLEMENTS.premium.features.advanced_website).toBe(false);
     expect(PLAN_ENTITLEMENTS.premium.features.advanced_reports).toBe(false);
 
+    expect(PLAN_ENTITLEMENTS.premium.features.gifted_website).toBe(false);
+
     expect(PLAN_ENTITLEMENTS.elite.features.advanced_website).toBe(true);
+    // Hediye kurumsal site yalnızca Elite'e ait — paket vaadinin kod karşılığı.
+    expect(PLAN_ENTITLEMENTS.elite.features.gifted_website).toBe(true);
     expect(PLAN_ENTITLEMENTS.elite.features.advanced_reports).toBe(true);
     expect(PLAN_ENTITLEMENTS.elite.features.report_export).toBe(true);
   });
 
+  it("Freemium yalnızca süre ve görüntülenme ile sınırlıdır (ürün limiti yok)", () => {
+    const { limits } = PLAN_ENTITLEMENTS.freemium;
+    expect(limits.durationMonths).toBe(3);
+    expect(limits.menuViews).toBe(10_000);
+    // Limit sözlüğünde bir ürün/kategori sınırı KAVRAMI bile yok — ürün limiti
+    // ürün kararı olarak kaldırıldı, "sonsuz sayı" yazarak değil.
+    expect(Object.keys(limits).sort()).toEqual(["durationMonths", "menuViews", "retentionDays"]);
+  });
+
   it("bir özelliğin gerektirdiği en düşük planı bilir", () => {
     expect(requiredPlanFor("custom_website")).toBe("premium");
+    expect(requiredPlanFor("gifted_website")).toBe("elite");
     expect(requiredPlanFor("advanced_reports")).toBe("elite");
     expect(requiredPlanFor("menu")).toBe("freemium");
   });
 
   it("karşılaştırma tablosu matrisle tutarlı (pazarlama ile panel ayrışamaz)", () => {
-    const websiteRow = FEATURE_MATRIX.find((row) => row.label === "Otomatik web sitesi")!;
+    const websiteRow = FEATURE_MATRIX.find((row) => row.label.startsWith("Standart web sitesi"))!;
     expect(websiteRow.values.freemium).toBe(false);
     expect(websiteRow.values.premium).toBe(true);
     expect(websiteRow.values.elite).toBe(true);
+
+    // Hediye site satırı Elite'te serbest metin ("Hediye") ile gösterilir.
+    const giftedRow = FEATURE_MATRIX.find((row) => row.label.startsWith("Hediye kurumsal web sitesi"))!;
+    expect(giftedRow.values.freemium).toBe(false);
+    expect(giftedRow.values.premium).toBe(false);
+    expect(giftedRow.values.elite).toBe("Hediye");
 
     const reportRow = FEATURE_MATRIX.find((row) => row.label === "Gelişmiş raporlar")!;
     expect(reportRow.values.premium).toBe(false);

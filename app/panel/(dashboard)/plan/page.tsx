@@ -14,9 +14,9 @@ import type { Plan } from "@/lib/types";
 // dolayısıyla "sitede yazan" ile "panelde uygulanan" ayrışamaz.
 
 const PLAN_PITCH: Record<Plan, string> = {
-  freemium: "3 ay veya 10.000 menü görüntülenme — hangisi önce dolarsa.",
-  premium: "Sınırsız kullanım, gelişmiş analizler ve otomatik web sitesi.",
-  elite: "Gelişmiş web sitesi, gelişmiş raporlar ve dışa aktarma.",
+  freemium: "3 ay veya 10.000 menü görüntülenme — hangisi önce dolarsa. Ürün sınırı yok.",
+  premium: "Sınırsız kullanım, gelişmiş analizler ve standart web sitesi.",
+  elite: "Hediye kurumsal site, gelişmiş web sitesi, gelişmiş raporlar ve dışa aktarma.",
 };
 
 function Cell({ value }: { value: boolean | string }) {

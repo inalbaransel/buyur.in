@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { planWhatsappLink } from "@/lib/site";
 import { CheckCircleIcon, WhatsappIcon } from "@/components/icons";
+import { MONTHS_IN_YEAR, PLAN_PRICING, formatTL } from "@/lib/pricing";
 import type { PlanRecord } from "@/lib/types";
 
 // Fiyat kartının görsel/davranışsal alanları — `menuva_plans` koleksiyonu sadece
@@ -24,12 +25,6 @@ type PlanCard = {
 };
 
 type Billing = "monthly" | "yearly";
-
-const MONTHS_IN_YEAR = 12;
-
-function formatTL(amount: number): string {
-  return `${new Intl.NumberFormat("tr-TR").format(amount)}₺`;
-}
 
 function isFree(card: PlanCard): boolean {
   return card.monthly === 0 && card.yearlyMonthly === 0;
@@ -60,8 +55,8 @@ function toPlanCard(plan: PlanRecord): PlanCard {
 
 // PocketBase'e ulaşılamadığı ya da `menuva_plans` koleksiyonu henüz seed
 // edilmediği (bkz. scripts/migrate-plans.mjs) nadir durumda landing'in fiyat
-// bölümü boş kalmasın diye son çare statik bir yedek — canlı veri geldiğinde
-// hiç kullanılmaz, o yüzden rakamları seed'lerle aynı tutun.
+// bölümü boş kalmasın diye son çare statik bir yedek. Rakamlar lib/pricing.ts'ten
+// geliyor (ilan edilen fiyatın tek kaynağı), burada elle yazılmaz.
 const FALLBACK_CARDS: PlanCard[] = [
   {
     key: "freemium",
@@ -69,13 +64,14 @@ const FALLBACK_CARDS: PlanCard[] = [
     desc: "Denemek ve küçük menüler için",
     features: [
       "3 ay veya 10.000 menü görüntülenme",
+      "Sınırsız ürün ve kategori",
       "Dijital QR menü",
       "Temel analizler",
       "QR kod & özel URL",
       "Anlık güncellemeler",
     ],
-    monthly: 0,
-    yearlyMonthly: 0,
+    monthly: PLAN_PRICING.freemium.monthly,
+    yearlyMonthly: PLAN_PRICING.freemium.yearlyMonthly,
     trialMonths: 3,
     highlight: false,
   },
@@ -85,13 +81,13 @@ const FALLBACK_CARDS: PlanCard[] = [
     desc: "Satışı büyütmek isteyen mekanlar için",
     features: [
       "Sınırsız menü görüntülenme",
-      "Süre sınırı yok",
-      "Otomatik web sitesi",
+      "Sınırsız ürün · süre sınırı yok",
+      "Standart web sitesi (menüden otomatik)",
       "Gelişmiş analizler ve içgörüler",
       "Kampanyalar · özel alan adı · marka kaldırma",
     ],
-    monthly: 250,
-    yearlyMonthly: 200,
+    monthly: PLAN_PRICING.premium.monthly,
+    yearlyMonthly: PLAN_PRICING.premium.yearlyMonthly,
     trialMonths: 0,
     highlight: true,
     badge: "En çok tercih edilen",
@@ -102,13 +98,14 @@ const FALLBACK_CARDS: PlanCard[] = [
     desc: "Zincirler ve çoklu şubeler için",
     features: [
       "Premium'daki her şey",
+      "Hediye kurumsal web sitesi (kurulumu bizden)",
       "Gelişmiş web sitesi deneyimi",
       "Gelişmiş raporlar",
       "PDF · Excel · CSV dışa aktarma",
       "Öncelikli teknik destek",
     ],
-    monthly: 500,
-    yearlyMonthly: 400,
+    monthly: PLAN_PRICING.elite.monthly,
+    yearlyMonthly: PLAN_PRICING.elite.yearlyMonthly,
     trialMonths: 0,
     highlight: false,
   },

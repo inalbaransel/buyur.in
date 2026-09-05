@@ -13,6 +13,7 @@
 // Önkoşul: scripts/setup-pocketbase.mjs bir kere çalıştırılmış olmalı (plans koleksiyonu var olsun).
 
 import PocketBase from "pocketbase";
+import { PLAN_SEEDS } from "./plan-catalog.mjs";
 
 const PB_URL = process.env.POCKETBASE_API_URL;
 const PB_TOKEN = process.env.POCKETBASE_ADMIN_TOKEN;
@@ -33,104 +34,6 @@ const OLD_TO_NEW = {
 };
 
 const NEW_VALUES = ["freemium", "premium", "elite"];
-
-const PLAN_SEEDS = [
-  {
-    key: "freemium",
-    name: "Freemium",
-    description: "Yeni başlayan işletmeler için 3 ay ücretsiz deneme.",
-    price_monthly: 0,
-    price_yearly_monthly: 0,
-    trial_months: 3,
-    is_active: true,
-    is_default: true,
-    order: 0,
-    features: [
-      "3 ay ücretsiz kullanım",
-      "1 restoran",
-      "1 dijital menü",
-      "Maksimum 30 ürün",
-      "QR Menü",
-      "Temel sipariş yönetimi",
-      "Standart tema",
-      "Standart destek",
-    ],
-    limits: {
-      max_businesses: 1,
-      max_menus: 1,
-      max_products: 30,
-      analytics: false,
-      custom_domain: false,
-      branding_removal: false,
-      campaigns: false,
-      white_label: false,
-      api_access: false,
-    },
-  },
-  {
-    key: "premium",
-    name: "Premium",
-    description: "Büyüyen işletmeler için gelişmiş özellikler.",
-    price_monthly: 250,
-    price_yearly_monthly: 200,
-    trial_months: 0,
-    is_active: true,
-    is_default: false,
-    order: 1,
-    features: [
-      "Sınırsız menü",
-      "Sınırsız ürün",
-      "Gelişmiş tema seçenekleri",
-      "Gelişmiş analizler",
-      "Menuva markasını kaldırma",
-      "Custom Domain desteği",
-      "Öncelikli destek",
-      "Kampanya oluşturma",
-    ],
-    limits: {
-      max_businesses: null,
-      max_menus: null,
-      max_products: null,
-      analytics: true,
-      custom_domain: true,
-      branding_removal: true,
-      campaigns: true,
-      white_label: false,
-      api_access: false,
-    },
-  },
-  {
-    key: "elite",
-    name: "Elite",
-    description: "Kurumsal ihtiyaçlar için tüm özellikler.",
-    price_monthly: 500,
-    price_yearly_monthly: 400,
-    trial_months: 0,
-    is_active: true,
-    is_default: false,
-    order: 2,
-    features: [
-      "Premium'daki her şey",
-      "White Label desteği",
-      "API erişimi",
-      "Gelişmiş raporlama",
-      "Öncelikli teknik destek",
-      "Beta özelliklerine erken erişim",
-      "Gelişmiş güvenlik araçları",
-    ],
-    limits: {
-      max_businesses: null,
-      max_menus: null,
-      max_products: null,
-      analytics: true,
-      custom_domain: true,
-      branding_removal: true,
-      campaigns: true,
-      white_label: true,
-      api_access: true,
-    },
-  },
-];
 
 async function migrateBusinessPlanValues() {
   const collection = await pb.collections.getOne("menuva_businesses");
@@ -184,7 +87,9 @@ async function seedPlans() {
       if (err?.status !== 404) throw err;
     }
     if (existing) {
-      console.log(`= plans/${spec.key} zaten var, atlanıyor (id: ${existing.id}). Fiyat/özellik değişiklikleri admin panelinden yapılmalı.`);
+      console.log(
+        `= plans/${spec.key} zaten var, atlanıyor (id: ${existing.id}). Fiyat/özellik değişikliklerini canlıya yazmak için: node scripts/migrate-plan-pricing.mjs`
+      );
       continue;
     }
     const created = await pb.collection("menuva_plans").create(spec);

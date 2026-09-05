@@ -28,6 +28,7 @@ export type Feature =
   | "branding_removal"
   | "custom_website"
   | "advanced_website"
+  | "gifted_website"
   | "advanced_reports"
   | "report_export";
 
@@ -54,6 +55,7 @@ const NONE: Record<Feature, boolean> = {
   branding_removal: false,
   custom_website: false,
   advanced_website: false,
+  gifted_website: false,
   advanced_reports: false,
   report_export: false,
 };
@@ -91,6 +93,7 @@ export const PLAN_ENTITLEMENTS: Record<Plan, PlanEntitlements> = {
       branding_removal: true,
       custom_website: true,
       advanced_website: true,
+      gifted_website: true,
       advanced_reports: true,
       report_export: true,
     },
@@ -255,8 +258,18 @@ export const FEATURE_MATRIX: FeatureMatrixRow[] = [
   { label: "Kampanyalar", values: { freemium: false, premium: true, elite: true } },
   { label: "menuva markasını kaldırma", values: { freemium: false, premium: true, elite: true } },
   { label: "Özel alan adı", values: { freemium: false, premium: true, elite: true } },
-  { label: "Otomatik web sitesi", values: { freemium: false, premium: true, elite: true } },
-  { label: "Gelişmiş web sitesi deneyimi", values: { freemium: false, premium: false, elite: true } },
+  {
+    label: "Standart web sitesi (menü verisinden otomatik)",
+    values: { freemium: false, premium: true, elite: true },
+  },
+  {
+    label: "Gelişmiş web sitesi deneyimi (animasyon · slider · galeri)",
+    values: { freemium: false, premium: false, elite: true },
+  },
+  {
+    label: "Hediye kurumsal web sitesi (bizim kurduğumuz ayrı site)",
+    values: { freemium: false, premium: false, elite: "Hediye" },
+  },
   { label: "Gelişmiş raporlar", values: { freemium: false, premium: false, elite: true } },
   { label: "PDF / Excel / CSV dışa aktarma", values: { freemium: false, premium: false, elite: true } },
 ];
