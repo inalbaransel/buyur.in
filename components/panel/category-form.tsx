@@ -1,13 +1,32 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { pb } from "@/lib/pocketbase";
 import { useToast } from "@/components/panel/toast";
-import { Card, ErrorText, FormActions, Label } from "@/components/panel/ui";
+import { Card, DraftBanner, ErrorText, FormActions, Label, SaveStatus } from "@/components/panel/ui";
 import { ImageUploader } from "@/components/panel/image-uploader";
 import { MultiLangFields } from "@/components/panel/multi-lang-fields";
+import { useFormDraft } from "@/lib/use-draft";
 import { activeLocales, mainLocale, type TranslatableField, type Translations } from "@/lib/i18n";
 import type { Business, Category } from "@/lib/types";
+
+interface CategoryDraft {
+  name: string;
+  description: string;
+  imageUrl: string;
+  isActive: boolean;
+  translations: Translations;
+}
+
+function toDraft(initial?: Category): CategoryDraft {
+  return {
+    name: initial?.name ?? "",
+    description: initial?.description ?? "",
+    imageUrl: initial?.image_url ?? "",
+    isActive: initial?.is_active ?? true,
+    translations: initial?.translations ?? {},
+  };
+}
 
 export function CategoryForm({
   business,
@@ -22,14 +41,36 @@ export function CategoryForm({
   onSaved: (category: Category) => void;
   onCancel?: () => void;
 }) {
-  const [name, setName] = useState(initial?.name ?? "");
-  const [description, setDescription] = useState(initial?.description ?? "");
-  const [imageUrl, setImageUrl] = useState(initial?.image_url ?? "");
-  const [isActive, setIsActive] = useState(initial?.is_active ?? true);
-  const [translations, setTranslations] = useState<Translations>(initial?.translations ?? {});
+  const baseline = useMemo(
+    () => toDraft(initial),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [initial?.id, initial?.updated]
+  );
+
+  const [name, setName] = useState(baseline.name);
+  const [description, setDescription] = useState(baseline.description);
+  const [imageUrl, setImageUrl] = useState(baseline.imageUrl);
+  const [isActive, setIsActive] = useState(baseline.isActive);
+  const [translations, setTranslations] = useState<Translations>(baseline.translations);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const { toast } = useToast();
+
+  const draft = useFormDraft(
+    `category:${initial?.id ?? `new:${business.id}`}`,
+    { name, description, imageUrl, isActive, translations },
+    baseline,
+    initial?.updated
+  );
+
+  function applyDraft(value: CategoryDraft) {
+    setName(value.name);
+    setDescription(value.description);
+    setImageUrl(value.imageUrl);
+    setIsActive(value.isActive);
+    setTranslations(value.translations);
+  }
 
   function setBaseField(field: TranslatableField, value: string) {
     if (field === "name") setName(value);
@@ -45,6 +86,8 @@ export function CategoryForm({
       const record = initial
         ? await pb.collection("menuva_categories").update<Category>(initial.id, payload)
         : await pb.collection("menuva_categories").create<Category>({ ...payload, business: business.id, order: order ?? 0 });
+      draft.clear();
+      setLastSavedAt(Date.now());
       toast(initial ? "Kategori güncellendi" : "Kategori eklendi");
       onSaved(record);
     } catch {
@@ -61,8 +104,19 @@ export function CategoryForm({
         <FormActions
           saving={saving}
           onCancel={onCancel}
+          status={<SaveStatus saving={saving} savedAt={lastSavedAt ?? initial?.updated ?? null} draftSavedAt={draft.draftSavedAt} />}
           toggle={{ checked: isActive, onChange: setIsActive, label: "Menüde Göster" }}
         />
+        {draft.restorable && (
+          <DraftBanner
+            savedAt={draft.restorable.savedAt}
+            onRestore={() => {
+              if (draft.restorable) applyDraft(draft.restorable.value);
+              draft.dismiss();
+            }}
+            onDiscard={draft.discard}
+          />
+        )}
         <ErrorText>{error}</ErrorText>
 
         {/* Üstte solda kare görsel */}

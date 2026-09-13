@@ -5,6 +5,7 @@ import Link from "next/link";
 import { pb } from "@/lib/pocketbase";
 import { useBusiness } from "@/components/panel/business-context";
 import { useToast } from "@/components/panel/toast";
+import { useConfirm } from "@/components/panel/confirm-dialog";
 import { Button, Card, EmptyState, PageHeader } from "@/components/panel/ui";
 import { GripIcon } from "@/components/icons";
 import type { Category } from "@/lib/types";
@@ -12,7 +13,11 @@ import type { Category } from "@/lib/types";
 export default function CategoriesPage() {
   const { business, isLoading: businessLoading } = useBusiness();
   const { toast } = useToast();
+  const [confirm, confirmDialog] = useConfirm();
   const [categories, setCategories] = useState<Category[]>([]);
+  // Kategori başına ürün sayısı: listede gösterilir ve silme onayında
+  // "kaç ürün etkilenir" bilgisi buradan gelir.
+  const [productCounts, setProductCounts] = useState<Map<string, number>>(new Map());
   const [loading, setLoading] = useState(true);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
@@ -20,24 +25,58 @@ export default function CategoriesPage() {
   useEffect(() => {
     if (!business) return;
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [business]);
 
   async function load() {
     if (!business) return;
     setLoading(true);
-    const list = await pb.collection("menuva_categories").getFullList<Category>({
-      filter: pb.filter("business = {:id}", { id: business.id }),
-      sort: "order,created",
-    });
+    const [list, products] = await Promise.all([
+      pb.collection("menuva_categories").getFullList<Category>({
+        filter: pb.filter("business = {:id}", { id: business.id }),
+        sort: "order,created",
+      }),
+      pb.collection("menuva_products").getFullList<{ id: string; category: string }>({
+        filter: pb.filter("business = {:id}", { id: business.id }),
+        fields: "id,category",
+        batch: 500,
+      }),
+    ]);
+    const counts = new Map<string, number>();
+    for (const product of products) counts.set(product.category, (counts.get(product.category) ?? 0) + 1);
     setCategories(list);
+    setProductCounts(counts);
     setLoading(false);
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Bu kategoriyi ve içindeki tüm ürünleri silmek istediğine emin misin?")) return;
-    await pb.collection("menuva_categories").delete(id);
-    await load();
-    toast("Kategori silindi");
+  async function handleDelete(category: Category) {
+    const count = productCounts.get(category.id) ?? 0;
+    const ok = await confirm({
+      title: `“${category.name}” kategorisi silinsin mi?`,
+      tone: "danger",
+      confirmLabel: count > 0 ? `Kategoriyi ve ${count} ürünü sil` : "Kategoriyi sil",
+      description:
+        count > 0
+          ? "Ürünleri korumak istiyorsan önce başka bir kategoriye taşı ya da kategoriyi “Menüde göster” anahtarıyla gizle."
+          : undefined,
+      details:
+        count > 0
+          ? [
+              `${count} ürün, varyant ve seçenekleriyle birlikte kalıcı olarak silinir.`,
+              "Menüden hemen kalkar; bu işlem geri alınamaz.",
+              "Geçmiş analiz verileri raporlarda kalır.",
+            ]
+          : ["Kategori boş; hiçbir ürün etkilenmez.", "Bu işlem geri alınamaz."],
+    });
+    if (!ok) return;
+
+    try {
+      await pb.collection("menuva_categories").delete(category.id);
+      await load();
+      toast(count > 0 ? `Kategori ve ${count} ürün silindi` : "Kategori silindi");
+    } catch {
+      toast("Kategori silinemedi", "error");
+    }
   }
 
   function handleDragStart(index: number) {
@@ -75,7 +114,7 @@ export default function CategoriesPage() {
     <div>
       <PageHeader
         title="Kategoriler"
-        description="Menünü bölümlere ayır: Kahvaltı, Ana Yemek, Tatlılar… Sırayı değiştirmek için tutup sürükle."
+        description="Menünü bölümlere ayır: Kahvaltı, Ana Yemek, Tatlılar… Sırayı değiştirmek için tutup sürükle. Ürünü olmayan kategoriler müşteri menüsünde görünmez."
         action={
           <Link href="/panel/categories/new">
             <Button>+ Yeni kategori</Button>
@@ -96,48 +135,56 @@ export default function CategoriesPage() {
       )}
 
       <div className="space-y-3">
-        {categories.map((cat, i) => (
-          <Card
-            key={cat.id}
-            draggable
-            onDragStart={() => handleDragStart(i)}
-            onDragOver={(e) => handleDragOver(e, i)}
-            onDrop={() => handleDrop(i)}
-            onDragEnd={handleDragEnd}
-            className={`flex items-center justify-between gap-4 transition-colors ${
-              dragIndex === i ? "opacity-40" : ""
-            } ${overIndex === i && dragIndex !== null && dragIndex !== i ? "border-paprika" : ""}`}
-          >
-            <div className="flex items-center gap-3">
-              <span
-                className="cursor-grab text-ink-soft/60 transition-colors hover:text-ink-soft active:cursor-grabbing"
-                aria-hidden="true"
-              >
-                <GripIcon size={20} />
-              </span>
-              <div>
-                <p className="font-display text-lg font-bold">
-                  {cat.name}
-                  {!cat.is_active && (
-                    <span className="ml-2 font-mono text-[10px] uppercase tracking-wider text-ink-soft">
-                      (gizli)
+        {categories.map((cat, i) => {
+          const count = productCounts.get(cat.id) ?? 0;
+          return (
+            <Card
+              key={cat.id}
+              draggable
+              onDragStart={() => handleDragStart(i)}
+              onDragOver={(e) => handleDragOver(e, i)}
+              onDrop={() => handleDrop(i)}
+              onDragEnd={handleDragEnd}
+              className={`flex items-center justify-between gap-4 transition-colors ${
+                dragIndex === i ? "opacity-40" : ""
+              } ${overIndex === i && dragIndex !== null && dragIndex !== i ? "border-paprika" : ""}`}
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <span
+                  className="cursor-grab text-ink-soft/60 transition-colors hover:text-ink-soft active:cursor-grabbing"
+                  aria-hidden="true"
+                >
+                  <GripIcon size={20} />
+                </span>
+                <div className="min-w-0">
+                  <p className="font-display text-lg font-bold">
+                    {cat.name}
+                    {!cat.is_active && (
+                      <span className="ml-2 font-mono text-[10px] uppercase tracking-wider text-ink-soft">(gizli)</span>
+                    )}
+                  </p>
+                  <p className="text-sm text-ink-soft">
+                    <span className={count === 0 ? "text-paprika" : ""}>
+                      {count === 0 ? "Ürün yok · menüde görünmez" : `${count} ürün`}
                     </span>
-                  )}
-                </p>
-                {cat.description && <p className="text-sm text-ink-soft">{cat.description}</p>}
+                    {cat.description ? ` · ${cat.description}` : ""}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="flex shrink-0 gap-2">
-              <Link href={`/panel/category/${cat.id}`}>
-                <Button variant="outline">Düzenle</Button>
-              </Link>
-              <Button variant="danger" onClick={() => handleDelete(cat.id)}>
-                Sil
-              </Button>
-            </div>
-          </Card>
-        ))}
+              <div className="flex shrink-0 gap-2">
+                <Link href={`/panel/category/${cat.id}`}>
+                  <Button variant="outline">Düzenle</Button>
+                </Link>
+                <Button variant="danger" onClick={() => handleDelete(cat)}>
+                  Sil
+                </Button>
+              </div>
+            </Card>
+          );
+        })}
       </div>
+
+      {confirmDialog}
     </div>
   );
 }

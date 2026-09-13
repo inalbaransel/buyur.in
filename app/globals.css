@@ -383,3 +383,178 @@ body {
     content: "";
   }
 }
+
+/* ─── Toplu QR yazdırma ────────────────────────────────────────────
+   Panel → QR kodlar → "Toplu PDF": masa kartları body'ye taşınan ayrı bir
+   sayfaya basılır, tarayıcının "PDF olarak kaydet" akışıyla indirilir. */
+.qr-print-sheet {
+  display: none;
+}
+
+@media print {
+  body.qr-printing > *:not(.qr-print-sheet) {
+    display: none !important;
+  }
+
+  body.qr-printing .qr-print-sheet {
+    display: block;
+  }
+}
+
+/* ─── Landing: "fiyatı değiştir → menüde anında" kanıtı ─────────────── */
+@keyframes price-swap-out {
+  0%,
+  38% {
+    opacity: 1;
+    transform: none;
+  }
+  46%,
+  92% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes price-swap-in {
+  0%,
+  40% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  48%,
+  90% {
+    opacity: 1;
+    transform: none;
+  }
+  98%,
+  100% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes save-press {
+  0%,
+  30%,
+  46%,
+  100% {
+    transform: scale(1);
+    background: var(--color-ink);
+  }
+  37% {
+    transform: scale(0.93);
+    background: var(--color-paprika);
+  }
+}
+
+.price-swap-old {
+  animation: price-swap-out 6s ease-in-out infinite;
+}
+
+.price-swap-new {
+  opacity: 0;
+  animation: price-swap-in 6s ease-in-out infinite;
+}
+
+.save-pulse {
+  animation: save-press 6s ease-in-out infinite;
+}
+
+/* Menü: sepete ekleme sonrası öneri kartı */
+@keyframes upsell-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.upsell-in {
+  animation: upsell-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .price-swap-old {
+    animation: none;
+    opacity: 0;
+  }
+  .price-swap-new {
+    animation: none;
+    opacity: 1;
+  }
+  .save-pulse,
+  .upsell-in {
+    animation: none;
+  }
+}
+
+/* ─── Blog içeriği (PocketBase editör HTML'i) ──────────────────────── */
+.blog-content {
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  color: var(--color-ink);
+}
+.blog-content > * + * {
+  margin-top: 1.1em;
+}
+.blog-content h2 {
+  margin-top: 2em;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.blog-content h3 {
+  margin-top: 1.6em;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.blog-content a {
+  color: var(--color-paprika);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.blog-content ul,
+.blog-content ol {
+  padding-left: 1.4em;
+}
+.blog-content ul {
+  list-style: disc;
+}
+.blog-content ol {
+  list-style: decimal;
+}
+.blog-content li + li {
+  margin-top: 0.4em;
+}
+.blog-content blockquote {
+  border-left: 3px solid var(--color-paprika);
+  padding-left: 1em;
+  color: var(--color-ink-soft);
+  font-style: italic;
+}
+.blog-content img {
+  border-radius: 1rem;
+}
+.blog-content strong {
+  font-weight: 700;
+}
+.blog-content code {
+  border-radius: 0.3em;
+  background: var(--color-crema);
+  padding: 0.1em 0.35em;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+.blog-content hr {
+  border-color: var(--color-line);
+}

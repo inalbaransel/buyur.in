@@ -57,8 +57,19 @@ function entryParams(): EntryParams {
   return entry;
 }
 
+/** Başka bir sayfaya gömülü (iframe) menü — ör. landing'deki canlı demo — müşteri
+ *  ziyareti değildir: işletmenin analizini ve Freemium sayacını şişirmesin. */
+function isEmbedded(): boolean {
+  try {
+    return window.self !== window.top;
+  } catch {
+    // Farklı origin'deki bir çerçeveye erişim hata fırlatır: gömülü demektir.
+    return true;
+  }
+}
+
 export function trackEvent(slug: string, payload: TrackPayload): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || isEmbedded()) return;
 
   const body = JSON.stringify({
     slug,

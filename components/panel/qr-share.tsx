@@ -1,16 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import QRCode from "qrcode";
 import { menuUrl as buildMenuUrl } from "@/lib/site";
 import { Button, Card } from "@/components/panel/ui";
 import { useToast } from "@/components/panel/toast";
+import { useBusiness } from "@/components/panel/business-context";
+import { markActivation } from "@/lib/activation";
 import { QrCodeIcon } from "@/components/icons";
 import type { Business } from "@/lib/types";
 
 // QR kod + menü linki paylaşım kartı. Genel bakış sayfasına gömülüdür.
 export function QrShare({ business }: { business: Business }) {
   const { toast } = useToast();
+  const { setBusiness } = useBusiness();
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [menuUrl, setMenuUrl] = useState("");
 
@@ -39,6 +43,12 @@ export function QrShare({ business }: { business: Business }) {
     } else {
       await handleCopy();
     }
+  }
+
+  // Aktivasyon metriğinin ilk yarısı: ilk QR indirme.
+  async function handleDownload() {
+    const updated = await markActivation(business, "qr_downloaded_at");
+    if (updated) setBusiness(updated);
   }
 
   return (
@@ -71,7 +81,7 @@ export function QrShare({ business }: { business: Business }) {
             Paylaş
           </Button>
           {qrDataUrl && (
-            <a href={qrDataUrl} download={`${business.slug}-qr.png`}>
+            <a href={qrDataUrl} download={`${business.slug}-qr.png`} onClick={handleDownload}>
               <Button type="button" variant="outline">
                 QR indir
               </Button>
@@ -79,7 +89,11 @@ export function QrShare({ business }: { business: Business }) {
           )}
         </div>
         <p className="mt-3 text-xs text-ink-soft">
-          QR&apos;ı masalara, vitrine ya da paket poşetlerine bastır. Menüdeki her değişiklik anında bu adreste görünür.
+          QR&apos;ı masalara, vitrine ya da paket poşetlerine bastır. Masa numaralı QR&apos;ları toplu PDF almak için{" "}
+          <Link href="/panel/qr" className="font-medium text-paprika hover:underline">
+            QR kodlar
+          </Link>{" "}
+          sayfasına geç.
         </p>
       </div>
     </Card>

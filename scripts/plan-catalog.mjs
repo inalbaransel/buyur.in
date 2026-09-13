@@ -1,18 +1,23 @@
 // Paket kataloğu: üç planın adı, açıklaması, fiyatı, özellik listesi ve
-// limitleri. Hem ilk seed (scripts/migrate-plans.mjs) hem de canlı kayıtları
-// güncelleyen göç (scripts/migrate-plan-pricing.mjs) buradan okur — böylece
-// "kodda yazan" ile "veritabanında duran" paket tanımı ayrışamaz.
+// limitleri. İlk seed (scripts/migrate-plans.mjs), canlı kayıtları güncelleyen
+// göç (scripts/migrate-plan-pricing.mjs) VE landing sayfasındaki fiyat kartları
+// (components/pricing-plans.tsx) buradan okur — böylece "sitede yazan",
+// "kodda yazan" ve "veritabanında duran" paket tanımı ayrışamaz.
 //
 // Uygulama tarafındaki karşılıkları:
 //   · yetki matrisi  → lib/entitlements.ts
 //   · ilan fiyatları → lib/pricing.ts
-// Fiyat ya da paket içeriği değişince üçü birden güncellenmelidir.
+// Fiyat ya da paket içeriği değişince üçü birden güncellenmelidir
+// (tests/plan-catalog.test.ts tutarlılığı kilitler).
+//
+// Özellik metinleri kural: yalnızca ürünün BUGÜN yaptığı iş yazılır. Sipariş
+// yönetimi, API erişimi, ürün limiti gibi olmayan şeyler burada yer almaz.
 
 export const PLAN_SEEDS = [
   {
     key: "freemium",
     name: "Freemium",
-    description: "Yeni başlayan işletmeler için 3 ay ücretsiz deneme.",
+    description: "Ürünü deneyen küçük işletmeler için: menünü kur, QR'ını yayına al.",
     price_monthly: 0,
     price_yearly_monthly: 0,
     trial_months: 3,
@@ -22,12 +27,10 @@ export const PLAN_SEEDS = [
     features: [
       "3 ay veya 10.000 menü görüntülenme",
       "Sınırsız ürün ve kategori",
-      "1 restoran",
-      "1 dijital menü",
-      "QR Menü",
+      "QR menü ve size özel menü adresi",
+      "Anlık fiyat ve ürün güncelleme",
+      "Sepet: müşteri seçimini garsona gösterir",
       "Temel analizler",
-      "Standart tema",
-      "Standart destek",
     ],
     limits: {
       max_businesses: 1,
@@ -36,7 +39,8 @@ export const PLAN_SEEDS = [
       // (10.000). İşletme menüsünün tamamını girebilsin ki ürünü kesilen bir
       // menüyle değil, gerçek menüsüyle karar versin.
       max_products: null,
-      analytics: false,
+      // Temel analizler Freemium'a dahil (lib/entitlements.ts → basic_analytics).
+      analytics: true,
       custom_domain: false,
       branding_removal: false,
       campaigns: false,
@@ -47,7 +51,7 @@ export const PLAN_SEEDS = [
   {
     key: "premium",
     name: "Premium",
-    description: "Büyüyen işletmeler için gelişmiş özellikler.",
+    description: "Aktif restoran ve kafeler için: kampanya, analiz ve markasız profesyonel menü.",
     price_monthly: 249,
     price_yearly_monthly: 199.2,
     trial_months: 0,
@@ -55,14 +59,12 @@ export const PLAN_SEEDS = [
     is_default: false,
     order: 1,
     features: [
-      "Sınırsız menü görüntülenme",
-      "Sınırsız ürün · süre sınırı yok",
-      "Standart Web Sitesi (menüden otomatik)",
-      "Gelişmiş analizler ve içgörüler",
-      "Menuva markasını kaldırma",
-      "Custom Domain desteği",
-      "Kampanya oluşturma",
-      "Öncelikli destek",
+      "Süre ve görüntülenme sınırı yok",
+      "Kampanyalar ve açılış pop-up'ı",
+      "Gelişmiş analizler ve otomatik içgörüler",
+      "menuva markasını kaldırma",
+      "Özel alan adı",
+      "Standart web sitesi (menüden otomatik)",
     ],
     limits: {
       max_businesses: null,
@@ -79,7 +81,9 @@ export const PLAN_SEEDS = [
   {
     key: "elite",
     name: "Elite",
-    description: "Kurumsal ihtiyaçlar için tüm özellikler.",
+    // Elite'in ana değeri: gelişmiş web sitesi + raporlama + öncelikli hizmet.
+    // API/güvenlik araçları ürünün bugün sunduğu şeyler değil; vaat edilmez.
+    description: "Premium ve kurumsal işletmeler için: gelişmiş web sitesi, raporlama ve öncelikli hizmet.",
     price_monthly: 749,
     price_yearly_monthly: 599.2,
     trial_months: 0,
@@ -88,13 +92,11 @@ export const PLAN_SEEDS = [
     order: 2,
     features: [
       "Premium'daki her şey",
-      "Hediye kurumsal web sitesi (kurulumu bizden)",
-      "Gelişmiş Web Sitesi deneyimi",
-      "Gelişmiş raporlama · PDF/Excel/CSV dışa aktarma",
-      "White Label desteği",
-      "API erişimi",
+      "Gelişmiş web sitesi (animasyon · slider · galeri)",
+      "Hediye kurumsal web sitesi — kurulumu bizden",
+      "Rapor merkezi · PDF ve CSV dışa aktarma",
+      "3 yıl analiz geçmişi",
       "Öncelikli teknik destek",
-      "Beta özelliklerine erken erişim",
     ],
     limits: {
       max_businesses: null,
@@ -104,8 +106,8 @@ export const PLAN_SEEDS = [
       custom_domain: true,
       branding_removal: true,
       campaigns: true,
-      white_label: true,
-      api_access: true,
+      white_label: false,
+      api_access: false,
     },
   },
 ];

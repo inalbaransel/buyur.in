@@ -1,7 +1,32 @@
 import { describe, expect, it } from "vitest";
 import { PLAN_SEEDS } from "../scripts/plan-catalog.mjs";
 import { PLAN_PRICING, yearlyDiscountPercent, yearlyTotal, formatTL } from "@/lib/pricing";
-import { PLAN_ORDER } from "@/lib/entitlements";
+import { PLAN_ENTITLEMENTS, PLAN_ORDER } from "@/lib/entitlements";
+
+// Landing'deki fiyat kartları bu katalogdan okunuyor (components/pricing-plans.tsx);
+// toplantıdaki P0 kararı: sayfanın hiçbir yerinde plan/ürün sınırı/özellik çelişkisi
+// kalmasın. Ürünün bugün yapmadığı işler kataloğa giremez.
+describe("paket kataloğunun vaatleri", () => {
+  it("olmayan bir özelliği vaat etmez", () => {
+    const forbidden = [/sipariş yönetimi/i, /\bAPI\b/, /maksimum \d+ ürün/i, /white label/i, /güvenlik araç/i, /ekip yönetimi/i];
+    for (const seed of PLAN_SEEDS) {
+      for (const feature of [seed.description, ...seed.features]) {
+        for (const pattern of forbidden) expect(feature, `${seed.key}: ${feature}`).not.toMatch(pattern);
+      }
+    }
+  });
+
+  it("veritabanı limitleri yetki matrisiyle çelişmez", () => {
+    for (const seed of PLAN_SEEDS) {
+      const features = PLAN_ENTITLEMENTS[seed.key as keyof typeof PLAN_ENTITLEMENTS].features;
+      expect(seed.limits.analytics, `${seed.key} analytics`).toBe(features.basic_analytics);
+      expect(seed.limits.campaigns, `${seed.key} campaigns`).toBe(features.campaigns);
+      expect(seed.limits.custom_domain, `${seed.key} custom_domain`).toBe(features.custom_domain);
+      expect(seed.limits.branding_removal, `${seed.key} branding_removal`).toBe(features.branding_removal);
+      expect(seed.limits.api_access, `${seed.key} api_access`).toBe(false);
+    }
+  });
+});
 
 // Fiyat üç yerde yaşıyor: lib/pricing.ts (siteye ilan edilen), plan-catalog.mjs
 // (veritabanına yazılan) ve PocketBase kaydı. İlk ikisi burada kilitleniyor;

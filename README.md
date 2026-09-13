@@ -93,10 +93,35 @@ sonra rollup çalıştırılmalı.
 npm test        # vitest (agregasyon, atıf, tarih/saat dilimi, tenant izolasyonu, gating)
 ```
 
+## 2. hafta değişikliklerini canlıya alma
+
+Kod tarafı hazır; canlı PocketBase'de bir kez çalıştırılması gerekenler:
+
+```bash
+# 1) Yeni alan + koleksiyon: menuva_businesses.activation (aktivasyon metriği)
+#    ve menuva_blog_posts (blog). İdempotent.
+POCKETBASE_API_URL=... POCKETBASE_ADMIN_TOKEN=... node scripts/setup-pocketbase.mjs
+
+# 2) Canlı paket kayıtlarını katalogla hizala: eski "Maksimum 30 ürün",
+#    "Temel sipariş yönetimi", "API erişimi" metinleri ve 250/200 · 500/400 fiyatları
+#    burada düzelir. (Landing zaten katalogdan okuyor; bu adım panel/limitler için.)
+POCKETBASE_API_URL=... POCKETBASE_ADMIN_TOKEN=... node scripts/migrate-plan-pricing.mjs
+
+# 3) QR hunisi metriklerini (menü açılışı → ürün → sepet) geçmiş günler için üret.
+curl -H "x-analytics-secret: $ANALYTICS_CRON_SECRET" "https://<domain>/api/analytics/rollup?days=60"
+```
+
+**Blog:** yazılar PocketBase yönetim ekranında `menuva_blog_posts` koleksiyonuna
+girilir (`slug`, `title`, `excerpt`, `content` editör alanı, `cover_url`, `tags`,
+`is_published`, `published_at`). Yayınlananlar `/blog` altında 5 dakika içinde görünür
+ve sitemap'e eklenir.
+
+**Sosyal kanıt:** landing'deki canlı menü kartları `lib/showcase.ts`'ten gelir. Gerçek
+bir müşteri onay verdiğinde oraya eklenir (`kind: "customer"`, istenirse gerçek yorum).
+
 ## Sıradaki adımlar
 
 - [ ] Canlıya alma (Coolify/Vercel) + `menuvaapp.com` domain'i
-- [ ] Drag & drop sıralama (şimdilik ▲▼ ok butonları var)
-- [ ] Analitik paneli (görüntülenme, QR tarama sayısı)
-- [ ] Çoklu dil desteği (TR/EN/AR/RU)
-xx
+- [ ] Online ödeme (iyzico/PayTR) — "Premium'u başlat" bugün panel içi geçiş talebi açıyor
+- [ ] Gerçek müşteri logoları/yorumları (landing sosyal kanıt katmanı hazır)
+- [ ] Panelin gerçek ekran görüntüleri (landing'deki panel vitrini şimdilik kodla çizilmiş kopya)

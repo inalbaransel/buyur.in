@@ -10,10 +10,15 @@ import { isReservedSlug, slugify } from "@/lib/slug";
 import { Button, Card, ErrorText, Input, Label, PageHeader, UpgradeNotice } from "@/components/panel/ui";
 import { QrShare } from "@/components/panel/qr-share";
 import { PlanUsageCard } from "@/components/panel/plan-usage";
-import { fetchPlanLimits } from "@/lib/plan-limits";
+import { LaunchChecklist } from "@/components/panel/launch-checklist";
 import { addMonths } from "@/lib/plan-period";
 import { ROOT_DOMAIN, menuHost } from "@/lib/site";
 import { AnalyticsError, fetchAnalytics } from "@/lib/analytics/panel-client";
+import { PLAN_LABELS, isFeatureAvailable, normalizePlan } from "@/lib/entitlements";
+import { SECTOR_TEMPLATES, sectorTemplate, type SectorKey } from "@/lib/sector-templates";
+import { saveActivation } from "@/lib/activation";
+import { trackMarketingEvent } from "@/lib/marketing-events";
+import { readPlanIntent, type PlanIntent } from "@/lib/plan-intent";
 import type { Business, Plan, PlanRecord } from "@/lib/types";
 
 function Onboarding() {
@@ -22,6 +27,7 @@ function Onboarding() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
+  const [sector, setSector] = useState<SectorKey | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -42,7 +48,12 @@ function Onboarding() {
       setError("Bu adres sisteme ayrılmış, başka bir tane seç.");
       return;
     }
+    if (!sector) {
+      setError("İşletme türünü seç — kategorilerin buna göre hazır gelecek.");
+      return;
+    }
 
+    const template = sectorTemplate(sector);
     setLoading(true);
     try {
       // Varsayılan kayıt paketi admin panelinden değiştirilebilir (plans.is_default) —
@@ -64,7 +75,7 @@ function Onboarding() {
         owner: user.id,
         name,
         slug,
-        template: "liste",
+        template: template.template,
         plan: defaultPlan,
         // Freemium penceresi kayıt anında sabitleniyor: plan kaydındaki süre
         // sonradan değişse bile mevcut işletmenin hakkı değişmesin.
@@ -73,7 +84,25 @@ function Onboarding() {
         menu_views: 0,
         is_active: true,
       });
-      setBusiness(business);
+
+      // Sektör şablonu: örnek ürün yok, yalnızca kategori iskeleti. Ürünü olmayan
+      // kategori müşteri menüsünde görünmez; bir tanesi açılamazsa kurulum durmaz.
+      for (const [order, categoryName] of template.categories.entries()) {
+        try {
+          await pb.collection("menuva_categories").create({
+            business: business.id,
+            name: categoryName,
+            order,
+            is_active: true,
+          });
+        } catch {
+          /* bir kategori açılamadıysa kullanıcı panelden ekleyebilir */
+        }
+      }
+
+      const withSector = await saveActivation(business, { sector });
+      trackMarketingEvent("business_created", { sector });
+      setBusiness(withSector ?? business);
     } catch (err) {
       if (err instanceof ClientResponseError && err.response?.data?.slug) {
         setError("Bu adres zaten kullanılıyor, başka bir isim dene.");
@@ -85,12 +114,14 @@ function Onboarding() {
     }
   }
 
+  const selected = sector ? sectorTemplate(sector) : null;
+
   return (
-    <div className="mx-auto max-w-md">
-      <h1 className="font-display text-2xl font-extrabold tracking-tight">Hoş geldin 👋</h1>
+    <div className="mx-auto max-w-xl">
+      <h1 className="font-display text-2xl font-extrabold tracking-tight">Hoş geldin</h1>
       <p className="mt-2 text-sm text-ink-soft">Menünü oluşturmadan önce işletmeni tanıyalım.</p>
       <Card className="mt-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <Label htmlFor="name">İşletme adı</Label>
             <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Alpha Cafe" />
@@ -111,6 +142,39 @@ function Onboarding() {
               <span className="shrink-0 text-ink-soft">.{ROOT_DOMAIN}</span>
             </div>
           </div>
+
+          <fieldset>
+            <legend className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-ink-soft">
+              İşletme türün
+            </legend>
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+              {SECTOR_TEMPLATES.map((item) => {
+                const active = sector === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setSector(item.key)}
+                    className={`rounded-2xl border px-4 py-3 text-left transition-colors ${
+                      active ? "border-paprika bg-paprika/5" : "border-line hover:border-ink/30"
+                    }`}
+                  >
+                    <span className={`block text-sm font-semibold ${active ? "text-paprika" : ""}`}>{item.label}</span>
+                    <span className="mt-0.5 block text-xs leading-snug text-ink-soft">{item.description}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {selected && selected.categories.length > 0 && (
+              <p className="mt-3 rounded-xl bg-crema/60 px-3.5 py-2.5 text-xs leading-relaxed text-ink-soft">
+                <span className="font-semibold text-ink">Hazır gelecek kategoriler: </span>
+                {selected.categories.join(", ")}. İstediğini silip yeniden adlandırabilirsin; ürün eklemediğin
+                kategoriler menüde görünmez.
+              </p>
+            )}
+          </fieldset>
+
           <ErrorText>{error}</ErrorText>
           <Button type="submit" loading={loading} className="w-full">
             Menümü oluştur
@@ -121,15 +185,12 @@ function Onboarding() {
   );
 }
 
-const PAGE_VIEW_LABELS: Record<string, string> = {
-  welcome: "Karşılama",
-  menu: "Menü (kategoriler)",
-  category: "Kategori sayfaları",
-  product: "Ürün sayfaları",
-  search: "Arama",
-  cart: "Sepet",
-  degerlendir: "Değerlendirme",
-};
+interface OverviewSummary {
+  totals: { page_views?: number; sessions?: number; visitors?: number; qr_scans?: number; cart_adds?: number };
+  series: { page_views?: { date: string; value: number }[] };
+  topProducts?: { key: string; label: string; metrics: Record<string, number> }[];
+  topCategories?: { key: string; label: string; metrics: Record<string, number> }[];
+}
 
 function BarList({ title, items }: { title: string; items: { label: string; count: number }[] }) {
   const max = Math.max(...items.map((i) => i.count), 1);
@@ -157,20 +218,11 @@ function BarList({ title, items }: { title: string; items: { label: string; coun
   );
 }
 
-interface OverviewSummary {
-  totals: { page_views?: number; sessions?: number; visitors?: number; qr_scans?: number; cart_adds?: number };
-  series: { page_views?: { date: string; value: number }[] };
-  topProducts?: { key: string; label: string; metrics: Record<string, number> }[];
-  topCategories?: { key: string; label: string; metrics: Record<string, number> }[];
-}
-
-/** Panel ana sayfasındaki özet. Daha önce burası son 30 günün TÜM ham
- *  event'lerini tarayıcıya çekiyordu (getFullList, sayfa sayfa) — veri
- *  büyüyünce onlarca megabayt ve düzinelerce istek anlamına geliyordu.
- *  Artık tek bir agregat isteği: /api/analytics/overview. */
+/** Panel ana sayfasındaki özet — tek bir agregat isteği: /api/analytics/overview. */
 function StatsSection({ business }: { business: Business }) {
   const [data, setData] = useState<OverviewSummary | null>(null);
   const [failed, setFailed] = useState(false);
+  const [nonce, setNonce] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -187,14 +239,15 @@ function StatsSection({ business }: { business: Business }) {
       });
 
     return () => controller.abort();
-  }, [business.id]);
+  }, [business.id, nonce]);
 
   if (failed) {
     return (
-      <Card className="mt-8">
-        <p className="text-sm text-ink-soft">
-          İstatistikler şu anda yüklenemiyor. Birkaç dakika sonra tekrar deneyin.
-        </p>
+      <Card className="mt-8 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-ink-soft">İstatistikler şu anda yüklenemiyor.</p>
+        <Button type="button" variant="outline" onClick={() => setNonce((value) => value + 1)}>
+          Tekrar dene
+        </Button>
       </Card>
     );
   }
@@ -251,19 +304,56 @@ function StatsSection({ business }: { business: Business }) {
   );
 }
 
+/** Landing'de "Premium'u başlat" deyip gelen Freemium işletmeye kaldığı yeri hatırlatır. */
+function PlanIntentNotice({ business }: { business: Business }) {
+  const [intent, setIntent] = useState<PlanIntent | null>(null);
+
+  useEffect(() => {
+    setIntent(readPlanIntent());
+  }, []);
+
+  const current = normalizePlan(business.plan);
+  if (!intent || current !== "freemium") return null;
+
+  return (
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-paprika/30 bg-paprika/5 px-6 py-4">
+      <p className="text-sm">
+        <span className="font-semibold">{PLAN_LABELS[intent.plan]} planını başlatmak istiyordun.</span>{" "}
+        <span className="text-ink-soft">Menünü kurarken istediğin an geçişi başlatabilirsin.</span>
+      </p>
+      <Link
+        href="/panel/plan"
+        className="rounded-md bg-ink px-4 py-2 font-mono text-[12px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
+      >
+        Planı başlat
+      </Link>
+    </div>
+  );
+}
+
 function Overview({ business }: { business: Business }) {
   const [counts, setCounts] = useState<{ categories: number; products: number } | null>(null);
-  const [analyticsAllowed, setAnalyticsAllowed] = useState<boolean | null>(null);
+  // Yetki kararı veritabanındaki (bayat kalabilen) plan limitlerinden değil,
+  // yetki matrisinin tek kaynağından: Freemium'da temel analiz açıktır.
+  const analyticsAllowed = isFeatureAvailable(business, "basic_analytics");
 
   useEffect(() => {
     let cancelled = false;
     async function loadCounts() {
-      const [categories, products] = await Promise.all([
-        pb.collection("menuva_categories").getList(1, 1, { filter: pb.filter("business = {:id}", { id: business.id }) }),
-        pb.collection("menuva_products").getList(1, 1, { filter: pb.filter("business = {:id}", { id: business.id }) }),
-      ]);
-      if (!cancelled) {
-        setCounts({ categories: categories.totalItems, products: products.totalItems });
+      try {
+        const [categories, products] = await Promise.all([
+          pb.collection("menuva_categories").getList(1, 1, {
+            filter: pb.filter("business = {:id}", { id: business.id }),
+            requestKey: null,
+          }),
+          pb.collection("menuva_products").getList(1, 1, {
+            filter: pb.filter("business = {:id}", { id: business.id }),
+            requestKey: null,
+          }),
+        ]);
+        if (!cancelled) setCounts({ categories: categories.totalItems, products: products.totalItems });
+      } catch {
+        if (!cancelled) setCounts({ categories: 0, products: 0 });
       }
     }
     loadCounts();
@@ -272,19 +362,11 @@ function Overview({ business }: { business: Business }) {
     };
   }, [business.id]);
 
-  useEffect(() => {
-    let cancelled = false;
-    fetchPlanLimits(business.plan).then((limits) => {
-      if (!cancelled) setAnalyticsAllowed(limits.analytics);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [business.plan]);
-
   return (
     <div>
       <PageHeader title={business.name} description={menuHost(business.slug)} />
+      <PlanIntentNotice business={business} />
+      <LaunchChecklist business={business} counts={counts} />
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Kategori</p>
@@ -297,15 +379,15 @@ function Overview({ business }: { business: Business }) {
         <PlanUsageCard business={business} compact />
       </div>
       <QrShare business={business} />
-      {analyticsAllowed === false ? (
+      {analyticsAllowed ? (
+        <StatsSection business={business} />
+      ) : (
         <div className="mt-10">
           <UpgradeNotice
             title="Ziyaretçi istatistikleri kilitli"
-            description="Sayfa görüntülenme, en çok bakılan ürün/kategori gibi istatistikler mevcut planında yok. Görmek için planını yükselt."
+            description="Sayfa görüntülenme, en çok bakılan ürün/kategori gibi istatistikler şu an kapalı. Görmek için planını yükselt."
           />
         </div>
-      ) : (
-        analyticsAllowed && <StatsSection business={business} />
       )}
     </div>
   );

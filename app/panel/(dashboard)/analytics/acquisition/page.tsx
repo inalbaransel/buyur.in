@@ -38,6 +38,11 @@ interface QrRow {
   label: string;
   scans: number;
   sessions: number;
+  /** QR hunisi — adım başına tekil oturum. */
+  menu_opens: number;
+  product_viewers: number;
+  cart_adders: number;
+  conversion: number;
 }
 
 interface DeviceRow {
@@ -204,15 +209,45 @@ export default function AcquisitionPage() {
                 }
               >
                 {(qr.data?.items.length ?? 0) > 0 ? (
-                  <BarList
-                    color={CATEGORICAL[2]}
-                    items={(qr.data?.items ?? []).map((item) => ({
-                      key: item.key,
-                      label: item.label,
-                      value: item.scans,
-                      note: `${formatNumber(item.sessions)} oturum`,
-                    }))}
-                  />
+                  <div className="overflow-x-auto">
+                    {/* QR bazında huni: tarama → menü açılışı → ürün görüntüleme → sepete ekleme
+                        (adım başına tekil oturum). Dönüşüm = sepete ekleyen oturum / QR oturumu. */}
+                    <table className="w-full min-w-[560px] text-sm">
+                      <thead>
+                        <tr className="border-b border-line text-left font-mono text-[10px] uppercase tracking-wider text-ink-soft">
+                          <th className="py-2">QR</th>
+                          <th className="py-2 text-right">Tarama</th>
+                          <th className="py-2 text-right">Menü açılışı</th>
+                          <th className="py-2 text-right">Ürün görüntüleme</th>
+                          <th className="py-2 text-right">Sepete ekleme</th>
+                          <th className="py-2 text-right">Dönüşüm</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(qr.data?.items ?? []).map((item) => {
+                          const base = Math.max(item.sessions, item.menu_opens, 1);
+                          return (
+                            <tr key={item.key} className="border-b border-line/50 last:border-0">
+                              <td className="py-2.5">
+                                <span className="block font-medium">{item.label}</span>
+                                <span className="mt-1 flex h-1.5 w-32 overflow-hidden rounded-full bg-crema" aria-hidden>
+                                  <span
+                                    className="h-full"
+                                    style={{ width: `${(item.cart_adders / base) * 100}%`, background: CATEGORICAL[2] }}
+                                  />
+                                </span>
+                              </td>
+                              <td className="py-2.5 text-right tabular-nums">{formatNumber(item.scans)}</td>
+                              <td className="py-2.5 text-right tabular-nums">{formatNumber(item.menu_opens)}</td>
+                              <td className="py-2.5 text-right tabular-nums">{formatNumber(item.product_viewers)}</td>
+                              <td className="py-2.5 text-right tabular-nums">{formatNumber(item.cart_adders)}</td>
+                              <td className="py-2.5 text-right tabular-nums">{formatPercent(item.conversion, 0)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     <LineChart

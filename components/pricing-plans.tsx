@@ -2,127 +2,51 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { planWhatsappLink } from "@/lib/site";
+import { whatsappLink } from "@/lib/site";
 import { CheckCircleIcon, WhatsappIcon } from "@/components/icons";
-import { MONTHS_IN_YEAR, PLAN_PRICING, formatTL } from "@/lib/pricing";
-import type { PlanRecord } from "@/lib/types";
+import { MONTHS_IN_YEAR, PLAN_PRICING, formatTL, yearlyDiscountPercent } from "@/lib/pricing";
+import { PLAN_ORDER } from "@/lib/entitlements";
+import { PLAN_SEEDS } from "@/scripts/plan-catalog.mjs";
+import type { Plan } from "@/lib/types";
 
-// Fiyat kartının görsel/davranışsal alanları — `menuva_plans` koleksiyonu sadece
-// ham veriyi tutar; cta metni/href/vurgu gibi sunum kararları burada türetiliyor.
-type PlanCard = {
-  key: string;
+// Fiyat kartlarının içeriği (ad, açıklama, özellikler) veritabanına yazılan
+// paket kataloğuyla AYNI kaynaktan, rakamlar ilan fiyatının tek kaynağından
+// (lib/pricing.ts) geliyor. Canlı `menuva_plans` kaydı bayat kalsa bile (göç
+// çalıştırılmamış olsa bile) sitede çelişkili bir paket metni görünmez —
+// toplantıdaki "30 ürün / sınırsız ürün" çelişkisi tam olarak buradan doğmuştu.
+
+interface PlanCard {
+  key: Plan;
   name: string;
   desc: string;
   features: string[];
-  /** Aylık ödemede aylık ücret. */
   monthly: number;
-  /** Yıllık ödemede aylık eşdeğer ücret; yıllık toplam = 12 katı. */
   yearlyMonthly: number;
-  /** Süreli ücretsiz plan ise kaç ay sürdüğü; ücretli planlarda 0. */
   trialMonths: number;
   highlight: boolean;
   badge?: string;
-};
+}
+
+const CARDS: PlanCard[] = PLAN_ORDER.map((key) => {
+  const seed = PLAN_SEEDS.find((entry) => entry.key === key);
+  return {
+    key,
+    name: seed?.name ?? key,
+    desc: seed?.description ?? "",
+    features: seed?.features ?? [],
+    monthly: PLAN_PRICING[key].monthly,
+    yearlyMonthly: PLAN_PRICING[key].yearlyMonthly,
+    trialMonths: seed?.trial_months ?? 0,
+    // "En çok tercih edilen" vurgusu bilinçli olarak orta katmana sabit.
+    highlight: key === "premium",
+    badge: key === "premium" ? "En çok tercih edilen" : undefined,
+  };
+});
 
 type Billing = "monthly" | "yearly";
 
-function isFree(card: PlanCard): boolean {
-  return card.monthly === 0 && card.yearlyMonthly === 0;
-}
-
-/** Fiyat alanları aylık modele göç etmemiş (scripts/migrate-plan-pricing.mjs
- *  henüz çalışmamış) kayıtları eliyoruz — eksik alanı 0 kabul edip Premium'u
- *  "0₺" göstermektense statik yedeğe düşmek daha az yanıltıcı. */
-function hasPricing(plan: PlanRecord): boolean {
-  return Number.isFinite(plan.price_monthly) && Number.isFinite(plan.price_yearly_monthly);
-}
-
-function toPlanCard(plan: PlanRecord): PlanCard {
-  return {
-    key: plan.key,
-    name: plan.name,
-    desc: plan.description,
-    features: plan.features,
-    monthly: plan.price_monthly,
-    yearlyMonthly: plan.price_yearly_monthly,
-    trialMonths: plan.trial_months ?? 0,
-    // "En çok tercih edilen" vurgusu bilinçli olarak orta katmana (premium) sabit —
-    // paket sayısı/sırası değişse de landing'in tasarım niyeti bu.
-    highlight: plan.key === "premium",
-    badge: plan.key === "premium" ? "En çok tercih edilen" : undefined,
-  };
-}
-
-// PocketBase'e ulaşılamadığı ya da `menuva_plans` koleksiyonu henüz seed
-// edilmediği (bkz. scripts/migrate-plans.mjs) nadir durumda landing'in fiyat
-// bölümü boş kalmasın diye son çare statik bir yedek. Rakamlar lib/pricing.ts'ten
-// geliyor (ilan edilen fiyatın tek kaynağı), burada elle yazılmaz.
-const FALLBACK_CARDS: PlanCard[] = [
-  {
-    key: "freemium",
-    name: "Freemium",
-    desc: "Denemek ve küçük menüler için",
-    features: [
-      "3 ay veya 10.000 menü görüntülenme",
-      "Sınırsız ürün ve kategori",
-      "Dijital QR menü",
-      "Temel analizler",
-      "QR kod & özel URL",
-      "Anlık güncellemeler",
-    ],
-    monthly: PLAN_PRICING.freemium.monthly,
-    yearlyMonthly: PLAN_PRICING.freemium.yearlyMonthly,
-    trialMonths: 3,
-    highlight: false,
-  },
-  {
-    key: "premium",
-    name: "Premium",
-    desc: "Satışı büyütmek isteyen mekanlar için",
-    features: [
-      "Sınırsız menü görüntülenme",
-      "Sınırsız ürün · süre sınırı yok",
-      "Standart web sitesi (menüden otomatik)",
-      "Gelişmiş analizler ve içgörüler",
-      "Kampanyalar · özel alan adı · marka kaldırma",
-    ],
-    monthly: PLAN_PRICING.premium.monthly,
-    yearlyMonthly: PLAN_PRICING.premium.yearlyMonthly,
-    trialMonths: 0,
-    highlight: true,
-    badge: "En çok tercih edilen",
-  },
-  {
-    key: "elite",
-    name: "Elite",
-    desc: "Zincirler ve çoklu şubeler için",
-    features: [
-      "Premium'daki her şey",
-      "Hediye kurumsal web sitesi (kurulumu bizden)",
-      "Gelişmiş web sitesi deneyimi",
-      "Gelişmiş raporlar",
-      "PDF · Excel · CSV dışa aktarma",
-      "Öncelikli teknik destek",
-    ],
-    monthly: PLAN_PRICING.elite.monthly,
-    yearlyMonthly: PLAN_PRICING.elite.yearlyMonthly,
-    trialMonths: 0,
-    highlight: false,
-  },
-];
-
-/** Yıllık ödemenin aylığa göre kaç puan ucuz olduğu — toggle rozetindeki oran.
- *  Paketler farklı oranlar taşırsa en yükseğini gösteriyoruz ("%X'e varan"
- *  demek yerine tek rakam: kartların altındaki tasarruf satırı zaten net). */
-function yearlyDiscountPercent(cards: PlanCard[]): number {
-  const rates = cards
-    .filter((card) => !isFree(card) && card.monthly > 0)
-    .map((card) => 1 - card.yearlyMonthly / card.monthly);
-  if (rates.length === 0) return 0;
-  return Math.round(Math.max(...rates) * 100);
-}
-
-function BillingToggle({ billing, onChange, discount }: { billing: Billing; onChange: (b: Billing) => void; discount: number }) {
+function BillingToggle({ billing, onChange }: { billing: Billing; onChange: (b: Billing) => void }) {
+  const discount = yearlyDiscountPercent(PLAN_PRICING.premium);
   const options: { value: Billing; label: string }[] = [
     { value: "monthly", label: "Aylık" },
     { value: "yearly", label: "Yıllık" },
@@ -161,83 +85,120 @@ function BillingToggle({ billing, onChange, discount }: { billing: Billing; onCh
   );
 }
 
+/** Yıllıkta büyük rakam aylık karşılıktır; peşin tutar hemen altında AYNI
+ *  okunurlukta yazılır ("Aylık karşılığı 199,20₺ — yıllık 2.390,40₺ peşin"). */
 function PlanPrice({ card, billing }: { card: PlanCard; billing: Billing }) {
-  const muted = card.highlight ? "text-paper/50" : "text-ink-soft";
+  const soft = card.highlight ? "text-paper/60" : "text-ink-soft";
+  const eyebrow = `mt-4 font-mono text-[10px] uppercase tracking-wider ${soft}`;
 
-  if (isFree(card)) {
+  if (card.monthly === 0) {
     return (
       <>
-        <div className="mt-4 flex items-baseline gap-2">
+        <p className={eyebrow}>{card.trialMonths > 0 ? `${card.trialMonths} ay ücretsiz` : "Ücretsiz"}</p>
+        <div className="mt-1 flex items-baseline gap-2">
           <span className="font-display text-5xl font-extrabold">0₺</span>
-          <span className={`font-mono text-xs uppercase tracking-wider ${muted}`}>
-            {card.trialMonths > 0 ? `${card.trialMonths} ay*` : "ücretsiz"}
-          </span>
         </div>
-        <p className={`mt-1 text-xs ${card.highlight ? "text-paper/50" : "text-ink-soft/80"}`}>
-          {card.trialMonths > 0
-            ? `${card.trialMonths} ay veya 10.000 görüntülenme · kredi kartı yok`
-            : "Süre sınırı yok · kredi kartı yok"}
+        <p className="mt-2 text-sm font-semibold">
+          {card.trialMonths > 0 ? `${card.trialMonths} ay veya 10.000 görüntülenme` : "Süre sınırı yok"}
         </p>
+        <p className={`text-xs ${soft}`}>Kredi kartı istenmez</p>
       </>
     );
   }
 
-  const amount = billing === "yearly" ? card.yearlyMonthly : card.monthly;
-  const savingPercent = card.monthly > 0 ? Math.round((1 - card.yearlyMonthly / card.monthly) * 100) : 0;
+  const saving = Math.round((1 - card.yearlyMonthly / card.monthly) * 100);
 
-  return (
-    <>
-      <div className="mt-4 flex items-baseline gap-2">
-        <span className="font-display text-5xl font-extrabold">{formatTL(amount)}</span>
-        <span className={`font-mono text-xs uppercase tracking-wider ${muted}`}>/ ay</span>
-      </div>
-      <p className={`mt-1 text-xs ${card.highlight ? "text-paper/50" : "text-ink-soft/80"}`}>
-        {billing === "yearly"
-          ? `Yıllık ${formatTL(card.yearlyMonthly * MONTHS_IN_YEAR)} tek ödeme${savingPercent > 0 ? ` · %${savingPercent} tasarruf` : ""}`
-          : `Yıllık ödemede ayda ${formatTL(card.yearlyMonthly)}`}
-      </p>
-    </>
-  );
-}
-
-function PlanCta({ card }: { card: PlanCard }) {
-  const style = card.highlight
-    ? "bg-paprika text-paper hover:bg-paprika-deep hover:shadow-[0_16px_34px_-12px_rgba(232,73,31,0.9)]"
-    : "border border-ink text-ink hover:bg-ink hover:text-paper";
-
-  const className = `shine-on-hover relative mt-8 flex items-center justify-center gap-2 overflow-hidden rounded-full py-3.5 text-center font-mono text-[13px] uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 ${style}`;
-
-  // Ödeme akışı henüz yok: ücretsiz plan doğrudan kayda gider, ücretli planlar
-  // WhatsApp'a — plan adı mesaja yazılır (bkz. lib/site.ts planWhatsappLink).
-  if (isFree(card)) {
+  if (billing === "yearly") {
     return (
-      <Link href="/panel/register" className={className}>
-        Ücretsiz başla
-      </Link>
+      <>
+        <p className={eyebrow}>Aylık karşılığı</p>
+        <div className="mt-1 flex items-baseline gap-2">
+          <span className="font-display text-5xl font-extrabold">{formatTL(card.yearlyMonthly)}</span>
+          <span className={`font-mono text-xs uppercase tracking-wider ${soft}`}>/ ay</span>
+        </div>
+        <p className="mt-2 text-sm font-semibold">Yıllık {formatTL(card.yearlyMonthly * MONTHS_IN_YEAR)} peşin</p>
+        <p className={`text-xs ${soft}`}>{saving > 0 ? `Aylık ödemeye göre %${saving} tasarruf` : "Tek seferde tahsil edilir"}</p>
+      </>
     );
   }
 
   return (
-    <a href={planWhatsappLink(card.name)} target="_blank" rel="noopener noreferrer" className={className}>
-      <WhatsappIcon size={15} />
-      WhatsApp&apos;tan başvur
-    </a>
+    <>
+      <p className={eyebrow}>Aylık ödeme</p>
+      <div className="mt-1 flex items-baseline gap-2">
+        <span className="font-display text-5xl font-extrabold">{formatTL(card.monthly)}</span>
+        <span className={`font-mono text-xs uppercase tracking-wider ${soft}`}>/ ay</span>
+      </div>
+      <p className="mt-2 text-sm font-semibold">Her ay faturalanır · taahhüt yok</p>
+      <p className={`text-xs ${soft}`}>Yıllık ödersen ayda {formatTL(card.yearlyMonthly)}</p>
+    </>
   );
 }
 
-export function PlanGrid({ plans }: { plans: PlanRecord[] }) {
-  const live = plans.filter(hasPricing).map(toPlanCard);
-  const cards = live.length > 0 ? live : FALLBACK_CARDS;
-  // Varsayılan yıllık: paketlerin ilan edilen fiyatı (ayda 200₺/400₺) yıllık
-  // ödemeye göre kurgulandı, aylığa geçiş bilinçli bir tercih olsun.
+/** Satın alma yolları: Freemium ve Premium kayıt akışından başlar (WhatsApp'a
+ *  bağımlı değil); Elite bir demo görüşmesiyle başlar. */
+function PlanCta({ card, billing }: { card: PlanCard; billing: Billing }) {
+  const style = card.highlight
+    ? "bg-paprika text-paper hover:bg-paprika-deep hover:shadow-[0_16px_34px_-12px_rgba(232,73,31,0.9)]"
+    : "border border-ink text-ink hover:bg-ink hover:text-paper";
+  const className = `shine-on-hover relative mt-8 flex items-center justify-center gap-2 overflow-hidden rounded-full py-3.5 text-center font-mono text-[13px] uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 ${style}`;
+  const note = `mt-2.5 text-center text-[11px] ${card.highlight ? "text-paper/50" : "text-ink-soft/80"}`;
+
+  if (card.key === "freemium") {
+    return (
+      <>
+        <Link href="/panel/register" data-track="plan_cta" data-track-plan="freemium" className={className}>
+          Ücretsiz oluştur
+        </Link>
+        <p className={note}>Menünü kur, QR&apos;ını yayına al</p>
+      </>
+    );
+  }
+
+  if (card.key === "premium") {
+    return (
+      <>
+        <Link
+          href={`/panel/register?plan=premium&billing=${billing}`}
+          data-track="plan_cta"
+          data-track-plan="premium"
+          data-track-billing={billing}
+          className={className}
+        >
+          Premium&apos;u başlat
+        </Link>
+        <p className={note}>Hesabını aç, ödemeyi panelden başlat</p>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <a
+        href={whatsappLink("Merhaba! menuva Elite paketi için demo görmek istiyorum.")}
+        target="_blank"
+        rel="noopener noreferrer"
+        data-track="plan_cta"
+        data-track-plan="elite"
+        className={className}
+      >
+        Elite demo al
+      </a>
+      <p className={note}>Demo görüşmesi WhatsApp&apos;tan planlanır</p>
+    </>
+  );
+}
+
+export function PlanGrid() {
+  // Varsayılan yıllık: ilan edilen fiyat yıllık kurguya göre belirlendi.
   const [billing, setBilling] = useState<Billing>("yearly");
 
   return (
     <>
-      <BillingToggle billing={billing} onChange={setBilling} discount={yearlyDiscountPercent(cards)} />
+      <BillingToggle billing={billing} onChange={setBilling} />
 
       <div className="mt-12 grid items-start gap-5 md:grid-cols-3">
-        {cards.map((card, i) => (
+        {CARDS.map((card, i) => (
           <div
             key={card.key}
             data-reveal
@@ -255,10 +216,10 @@ export function PlanGrid({ plans }: { plans: PlanRecord[] }) {
             )}
 
             <h3 className="font-display text-xl font-bold">{card.name}</h3>
+            <p className={`mt-1 text-sm ${card.highlight ? "text-paper/60" : "text-ink-soft"}`}>{card.desc}</p>
             <PlanPrice card={card} billing={billing} />
-            <p className={`mt-2 text-sm ${card.highlight ? "text-paper/60" : "text-ink-soft"}`}>{card.desc}</p>
 
-            <ul className="mt-6 flex-1 space-y-2.5 text-sm">
+            <ul className="mt-6 flex-1 space-y-2.5 border-t border-current/10 pt-6 text-sm">
               {card.features.map((f) => (
                 <li key={f} className="flex items-start gap-2">
                   <span className="mt-0.5 shrink-0 text-herb" aria-hidden>
@@ -269,10 +230,24 @@ export function PlanGrid({ plans }: { plans: PlanRecord[] }) {
               ))}
             </ul>
 
-            <PlanCta card={card} />
+            <PlanCta card={card} billing={billing} />
           </div>
         ))}
       </div>
+
+      <p className="mt-8 text-center text-sm text-ink-soft">
+        Karar vermeden önce sormak mı istiyorsunuz?{" "}
+        <a
+          href={whatsappLink("Merhaba, menuva paketleri hakkında bir sorum var:")}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-track="whatsapp_lead"
+          data-track-location="pricing"
+          className="inline-flex items-center gap-1 font-medium text-ink underline decoration-line underline-offset-4 transition-colors hover:text-paprika"
+        >
+          <WhatsappIcon size={13} /> WhatsApp&apos;tan yazın
+        </a>
+      </p>
     </>
   );
 }

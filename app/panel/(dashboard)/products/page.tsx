@@ -5,12 +5,14 @@ import Link from "next/link";
 import { pb } from "@/lib/pocketbase";
 import { useBusiness } from "@/components/panel/business-context";
 import { useToast } from "@/components/panel/toast";
+import { useConfirm } from "@/components/panel/confirm-dialog";
 import { Button, Card, EmptyState, PageHeader } from "@/components/panel/ui";
 import type { Category, Product } from "@/lib/types";
 
 export default function ProductsPage() {
   const { business, isLoading: businessLoading } = useBusiness();
   const { toast } = useToast();
+  const [confirm, confirmDialog] = useConfirm();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +20,7 @@ export default function ProductsPage() {
   useEffect(() => {
     if (!business) return;
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [business]);
 
   async function load() {
@@ -45,11 +48,43 @@ export default function ProductsPage() {
     toast(next ? "Ürün satışa açıldı" : "Ürün satıştan kaldırıldı");
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Bu ürünü silmek istediğine emin misin?")) return;
-    await pb.collection("menuva_products").delete(id);
-    setProducts((prev) => prev.filter((p) => p.id !== id));
-    toast("Ürün silindi");
+  async function handleDelete(product: Product) {
+    // Silinecek bağımlılıklar: ürünün varyant/seçenekleri (cascade).
+    let optionCount = 0;
+    try {
+      const options = await pb.collection("menuva_product_options").getList(1, 1, {
+        filter: pb.filter("product = {:id}", { id: product.id }),
+        fields: "id",
+        requestKey: null,
+      });
+      optionCount = options.totalItems;
+    } catch {
+      /* sayı alınamazsa onay genel metinle devam eder */
+    }
+
+    const ok = await confirm({
+      title: `“${product.name}” silinsin mi?`,
+      tone: "danger",
+      confirmLabel: "Ürünü sil",
+      description: product.is_available
+        ? "Geçici olarak kaldırmak istiyorsan silmek yerine “Satışta” anahtarını kapat; ürün menüden kalkar ama bilgileri durur."
+        : undefined,
+      details: [
+        "Menüden hemen kalkar; bu işlem geri alınamaz.",
+        ...(optionCount > 0 ? [`${optionCount} varyant/seçenek de silinir.`] : []),
+        "Müşterilerin sepetindeki bu ürün bir sonraki açılışta görünmez.",
+        "Geçmiş analiz verileri raporlarda kalır.",
+      ],
+    });
+    if (!ok) return;
+
+    try {
+      await pb.collection("menuva_products").delete(product.id);
+      setProducts((prev) => prev.filter((p) => p.id !== product.id));
+      toast("Ürün silindi");
+    } catch {
+      toast("Ürün silinemedi", "error");
+    }
   }
 
   if (businessLoading || loading) {
@@ -130,7 +165,7 @@ export default function ProductsPage() {
                       <Link href={`/panel/product/${product.id}`}>
                         <Button variant="outline">Düzenle</Button>
                       </Link>
-                      <Button variant="danger" onClick={() => handleDelete(product.id)}>
+                      <Button variant="danger" onClick={() => handleDelete(product)}>
                         Sil
                       </Button>
                     </div>
@@ -141,6 +176,8 @@ export default function ProductsPage() {
           );
         })}
       </div>
+
+      {confirmDialog}
     </div>
   );
 }

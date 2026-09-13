@@ -145,6 +145,14 @@ const TOTAL_EVENT_METRIC: Partial<Record<MenuEvent["type"], string>> = {
   language_change: "language_changes",
 };
 
+/** QR bazında huni adımları (tekil oturum): menü açıldı → ürün görüldü → sepete eklendi. */
+const QR_FUNNEL_METRICS: Partial<Record<MenuEvent["type"], string>> = {
+  page_view: "menu_opens",
+  product_view: "product_viewers",
+  product_detail_view: "product_viewers",
+  add_to_cart: "cart_adders",
+};
+
 /** Ham event + oturum kayıtlarından bir günün bütün agregat satırlarını üretir.
  *  Saf fonksiyon: IO yok, test edilebilir. */
 export function buildDailyRows(events: MenuEvent[], sessions: MenuSession[], timezone: string): StatRow[] {
@@ -269,6 +277,11 @@ export function buildDailyRows(events: MenuEvent[], sessions: MenuSession[], tim
       builder.unique("qr", key, event.label || key, "sessions", event.session);
     }
 
+    // QR hunisi: QR'la başlayan oturumun QR'ı her event'e yazılıyor (bkz.
+    // /api/track writeEvent), adım başına tekil oturum sayılır.
+    const qrStep = event.qr ? QR_FUNNEL_METRICS[event.type] : undefined;
+    if (qrStep && event.qr) builder.unique("qr", event.qr, "", qrStep, event.session);
+
     if (event.popup) {
       if (event.type === "campaign_view") builder.add("campaign", event.popup, event.label || event.popup, "views");
       if (event.type === "campaign_click") builder.add("campaign", event.popup, event.label || event.popup, "clicks");
@@ -357,14 +370,69 @@ async function persistRows(pb: PocketBase, businessId: string, day: string, rows
     return () =>
       current
         ? pb.collection(STATS_COLLECTION).update(current.id, payload, { requestKey: null })
-        : pb.collection(STATS_COLLECTION).create(payload, { requestKey: null });
+        : createOrUpdate(pb, payload);
   });
 
   const deletes = Array.from(existingByKey)
     .filter(([id]) => !seen.has(id))
-    .map(([, row]) => () => pb.collection(STATS_COLLECTION).delete(row.id, { requestKey: null }));
+    .map(([, row]) => () =>
+      pb
+        .collection(STATS_COLLECTION)
+        .delete(row.id, { requestKey: null })
+        .catch((err: unknown) => {
+          // Paralel bir rollup aynı satırı çoktan silmiş olabilir.
+          if (errorStatus(err) !== 404) throw err;
+        })
+    );
 
   await runPool([...writes, ...deletes], WRITE_CONCURRENCY);
+}
+
+interface StatPayload {
+  business: string;
+  date: string;
+  dimension: StatDimension;
+  key: string;
+  label: string;
+  metrics: Record<string, number>;
+}
+
+function errorStatus(err: unknown): number | undefined {
+  if (typeof err !== "object" || err === null || !("status" in err)) return undefined;
+  return Number((err as { status: unknown }).status);
+}
+
+/** Satırı oluşturur; aynı anahtarlı satır bu arada başka bir istek tarafından
+ *  yazılmışsa (benzersiz indeks çakışması) onu günceller.
+ *
+ *  Panelde bir sayfa birden çok analiz ucunu aynı anda çağırıyor ve sunucusuz
+ *  ortamda bu istekler farklı örneklere düşüyor: aynı gün paralel rollup'lanınca
+ *  ikinci `create` (business, date, dimension, key) indeksine takılıyordu. Bu
+ *  hata tüm isteği 500'e çevirip paneli "Analiz verileri şu anda yüklenemiyor"
+ *  ekranına düşürüyordu. */
+async function createOrUpdate(pb: PocketBase, payload: StatPayload): Promise<unknown> {
+  try {
+    return await pb.collection(STATS_COLLECTION).create(payload, { requestKey: null });
+  } catch (err) {
+    if (errorStatus(err) !== 400) throw err;
+
+    let existing: { id: string };
+    try {
+      existing = await pb.collection(STATS_COLLECTION).getFirstListItem<{ id: string }>(
+        pb.filter("business = {:business} && date = {:date} && dimension = {:dimension} && key = {:key}", {
+          business: payload.business,
+          date: payload.date,
+          dimension: payload.dimension,
+          key: payload.key,
+        }),
+        { fields: "id", requestKey: null }
+      );
+    } catch {
+      // Çakışan satır bulunamadıysa hata gerçek bir doğrulama hatasıdır.
+      throw err;
+    }
+    return pb.collection(STATS_COLLECTION).update(existing.id, payload, { requestKey: null });
+  }
 }
 
 /** Yüzlerce satırı tek tek beklemek yerine sınırlı eşzamanlılıkla yazar —
@@ -380,8 +448,23 @@ async function runPool(tasks: (() => Promise<unknown>)[], concurrency: number): 
   await Promise.all(workers);
 }
 
+/** Aynı örnekte aynı işletme-gününün eşzamanlı hesabını tekilleştirir: panelde
+ *  paralel gelen istekler aynı günü ikişer kez hesaplayıp birbirinin satırlarıyla
+ *  yarışmasın. (Farklı örnekler arası yarışı createOrUpdate karşılıyor.) */
+const inflightDays = new Map<string, Promise<number>>();
+
 /** Tek bir işletme-gününü yeniden hesaplar. */
-export async function rollupDay(pb: PocketBase, business: Business, day: string): Promise<number> {
+export function rollupDay(pb: PocketBase, business: Business, day: string): Promise<number> {
+  const key = `${business.id} ${day}`;
+  const running = inflightDays.get(key);
+  if (running) return running;
+
+  const task = computeDay(pb, business, day).finally(() => inflightDays.delete(key));
+  inflightDays.set(key, task);
+  return task;
+}
+
+async function computeDay(pb: PocketBase, business: Business, day: string): Promise<number> {
   const timezone = businessTimezone(business);
   const { from, to } = dayBoundsUtc(day, timezone);
   const [events, sessions] = await Promise.all([
@@ -513,7 +596,13 @@ export async function ensureFreshStats(
   const background = selected.filter((day) => !blocking.includes(day));
 
   for (const day of blocking) {
-    await rollupDay(pb, business, day);
+    try {
+      await rollupDay(pb, business, day);
+    } catch (err) {
+      // Tek bir günün hesaplanamaması tüm analiz isteğini düşürmesin: mevcut
+      // agregatla yanıt verilir, gün bir sonraki istekte ya da cron'da yeniden denenir.
+      console.error(`[rollup] ${business.id}/${day} hesaplanamadı:`, err);
+    }
   }
 
   for (const day of background) {

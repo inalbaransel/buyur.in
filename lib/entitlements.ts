@@ -271,5 +271,5 @@ export const FEATURE_MATRIX: FeatureMatrixRow[] = [
     values: { freemium: false, premium: false, elite: "Hediye" },
   },
   { label: "Gelişmiş raporlar", values: { freemium: false, premium: false, elite: true } },
-  { label: "PDF / Excel / CSV dışa aktarma", values: { freemium: false, premium: false, elite: true } },
+  { label: "PDF ve CSV dışa aktarma", values: { freemium: false, premium: false, elite: true } },
 ];

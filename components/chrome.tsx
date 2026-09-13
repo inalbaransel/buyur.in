@@ -29,10 +29,11 @@ const footerNav = [
   {
     title: "Ürün",
     links: [
-      { label: "Özellikler", href: "#menu" },
-      { label: "Analizler", href: "#analiz" },
-      { label: "Nasıl çalışır", href: "#nasil" },
-      { label: "Fiyatlar", href: "#fiyat" },
+      { label: "Neden menuva", href: "/#neden" },
+      { label: "Canlı demo", href: "/#canli-menu" },
+      { label: "Nasıl çalışır", href: "/#nasil" },
+      { label: "Fiyatlar", href: "/#fiyat" },
+      { label: "Blog", href: "/blog" },
     ],
   },
   {

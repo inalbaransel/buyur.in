@@ -1,6 +1,16 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { pb } from "@/lib/pocketbase";
@@ -33,7 +43,12 @@ import { CartBar } from "@/components/menu/cart";
 import { PopupModal } from "@/components/menu/popup-modal";
 import { LanguageModal } from "@/components/menu/language-modal";
 import { CategoryDrawer } from "@/components/menu/category-drawer";
+import { UpsellSheet } from "@/components/menu/upsell-sheet";
+import { upsellSuggestions } from "@/lib/upsell";
 import { ArrowLeftIcon, MenuIcon, SearchIcon, ShoppingBagIcon } from "@/components/icons";
+
+/** Sepete eklemenin nereden geldiği: menüdeki ürün kartı ya da "yanına içecek" önerisi. */
+type AddSource = "menu" | "upsell";
 
 interface MenuContextValue {
   business: Business;
@@ -284,6 +299,11 @@ export function MenuProvider({
   const [products] = useState<Product[]>(initialProducts);
   const categoriesLoading = false;
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Sepete ekleme sonrası "yanına içecek" önerisi — oturum başına bir kez.
+  const [upsell, setUpsell] = useState<{ addedName: string; items: Product[] } | null>(null);
+  // Seçenekli bir ürün öneriden eklenirse, seçim penceresi onaylanınca kaynak korunur.
+  const [pickerSource, setPickerSource] = useState<AddSource>("menu");
+  const closeUpsell = useCallback(() => setUpsell(null), []);
 
   useEffect(() => {
     setCart(loadCart(business.slug));
@@ -304,6 +324,14 @@ export function MenuProvider({
     }
     return map;
   }, [products]);
+
+  // Ürünü olmayan (ya da tüm ürünleri satış dışı) kategoriler müşteriye
+  // gösterilmez: sektör şablonuyla açılıp henüz doldurulmamış kategoriler
+  // menüyü yarım gibi göstermesin.
+  const visibleCategories = useMemo(
+    () => categories.filter((category) => (productCountByCategory.get(category.id) ?? 0) > 0),
+    [categories, productCountByCategory]
+  );
 
   const baseLocale = mainLocale(business);
   const locales = useMemo(() => activeLocales(business), [business]);
@@ -388,7 +416,7 @@ export function MenuProvider({
     saveCart(business.slug, next);
   }
 
-  function addToCart(product: Product, selections: CartSelection[], quantity: number) {
+  function addToCart(product: Product, selections: CartSelection[], quantity: number, source: AddSource = "menu") {
     const key = lineKey(product.id, selections);
     const unitPrice = unitPriceFor(product, selections);
     const existing = cart.find((l) => l.key === key);
@@ -402,24 +430,51 @@ export function MenuProvider({
       label: product.name,
       productId: product.id,
       locale,
-      meta: { quantity },
+      // Öneriden gelen eklemeler ayrışsın: upsell'in işe yarayıp yaramadığı ölçülür.
+      meta: source === "upsell" ? { quantity, source } : { quantity },
     });
+    if (source === "menu") offerUpsell(product, next);
+  }
+
+  /** "Yanına içecek" önerisi: oturum başına en fazla bir kez, yalnızca menüde
+   *  içecek kategorisi varsa ve sepette henüz içecek yoksa. */
+  function offerUpsell(product: Product, lines: CartLine[]) {
+    const storageKey = `menuva-upsell-${business.slug}`;
+    try {
+      if (window.sessionStorage.getItem(storageKey)) return;
+    } catch {
+      /* sessionStorage kapalı: yine de bir kez göstermeyi deneriz */
+    }
+    const items = upsellSuggestions({
+      added: product,
+      categories,
+      products,
+      cartProductIds: lines.map((line) => line.productId),
+    });
+    if (items.length === 0) return;
+    try {
+      window.sessionStorage.setItem(storageKey, "1");
+    } catch {
+      /* yoksay */
+    }
+    setUpsell({ addedName: tf(product, "name"), items });
   }
 
   function track(payload: TrackPayload) {
     trackEvent(business.slug, { locale, ...payload });
   }
 
-  async function addProduct(product: Product) {
+  async function addProduct(product: Product, source: AddSource = "menu") {
     const options = await pb.collection("menuva_product_options").getFullList<ProductOption>({
       filter: pb.filter("product = {:id}", { id: product.id }),
       requestKey: null,
       sort: "order,created",
     });
     if (options.length === 0) {
-      addToCart(product, [], 1);
+      addToCart(product, [], 1, source);
     } else {
       setPickerOptions(options);
+      setPickerSource(source);
       setPickerProduct(product);
     }
   }
@@ -487,7 +542,7 @@ export function MenuProvider({
         locales,
         t,
         tf,
-        categories,
+        categories: visibleCategories,
         products,
         categoriesLoading,
         imageByCategory,
@@ -498,7 +553,11 @@ export function MenuProvider({
         lang={locale}
         dir={isRTLLocale(locale) ? "rtl" : "ltr"}
         style={brandStyle}
-        className="min-h-screen bg-paper pb-24"
+        // text-ink şart: renk token'ları bu kökte ezildiği halde body'nin rengi
+        // global (açık tema) mürekkepten hesaplanıp miras kalıyordu — koyu
+        // yüzeylerde renk sınıfı olmayan her metin (kategori başlıkları, dil
+        // listesi…) zemine gömülüyordu.
+        className="min-h-screen bg-paper pb-24 text-ink"
       >
         <TrackPageViews business={business} base={basePath} locale={locale} />
         {/* İlk açılışta önce dil seçimi; dil modalı kapanınca kampanya popup'ı gösterilir. */}
@@ -510,8 +569,9 @@ export function MenuProvider({
             options={pickerOptions}
             onClose={() => setPickerProduct(null)}
             onConfirm={(selections, quantity) => {
-              addToCart(pickerProduct, selections, quantity);
+              addToCart(pickerProduct, selections, quantity, pickerSource);
               setPickerProduct(null);
+              setPickerSource("menu");
             }}
           />
         )}
@@ -521,6 +581,17 @@ export function MenuProvider({
         <main className="mx-auto max-w-3xl">{children}</main>
 
         <CartBar lines={cart} base={basePath} />
+        {upsell && (
+          <UpsellSheet
+            addedName={upsell.addedName}
+            items={upsell.items}
+            onAdd={(product) => {
+              setUpsell(null);
+              addProduct(product, "upsell");
+            }}
+            onClose={closeUpsell}
+          />
+        )}
         <BottomNav base={basePath} />
       </div>
     </MenuContext.Provider>

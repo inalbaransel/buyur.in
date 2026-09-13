@@ -3,29 +3,25 @@ import { whatsappLink } from "@/lib/site";
 import { CheckCircleIcon, WhatsappIcon } from "@/components/icons";
 import { PlanGrid } from "@/components/pricing-plans";
 import { FEATURE_MATRIX, PLAN_LABELS, PLAN_ORDER } from "@/lib/entitlements";
-import type { PlanRecord } from "@/lib/types";
+import { MONTHS_IN_YEAR, PLAN_PRICING, formatTL, yearlyDiscountPercent } from "@/lib/pricing";
 
-export function Pricing({ plans }: { plans: PlanRecord[] }) {
+export function Pricing() {
   return (
-    <section id="fiyat" className="mx-auto max-w-6xl px-5 py-24">
-      <p className="text-center font-mono text-[13px] uppercase tracking-[0.2em] text-paprika">
-        Hesap lütfen
-      </p>
+    <section id="fiyat" data-track-view="pricing_viewed" className="mx-auto max-w-6xl px-5 py-24">
+      <p className="text-center font-mono text-[13px] uppercase tracking-[0.2em] text-paprika">Hesap lütfen</p>
       <h2 className="mt-3 text-center font-display text-4xl font-extrabold tracking-tight md:text-5xl">
         Baskı maliyetinden ucuz
       </h2>
       <p className="mx-auto mt-4 max-w-xl text-center text-ink-soft">
-        Bir kez menü bastırmanın parasıyla aylarca dijital kalın. Ücretsiz
-        başlayın, işinize yaradığında devam edin.
+        Bir kez menü bastırmanın parasıyla aylarca dijital kalın. Ücretsiz başlayın, işinize yaradığında devam edin.
       </p>
 
-      <PlanGrid plans={plans} />
+      <PlanGrid />
 
-      <p className="mx-auto mt-8 max-w-2xl rounded-2xl border border-line bg-crema/40 px-5 py-4 text-center text-sm text-ink-soft">
+      <p className="mx-auto mt-10 max-w-2xl rounded-2xl border border-line bg-crema/40 px-5 py-4 text-center text-sm text-ink-soft">
         <span className="font-semibold text-ink">Freemium: 3 ay veya 10.000 menü görüntülenmesine kadar ücretsiz.</span>{" "}
-        İki limitten hangisi önce dolarsa Freemium kullanım süresi sona erer. Freemium&apos;da ürün ve kategori sayısı
-        sınırlı değildir — menünüzün tamamını girebilirsiniz. Premium ve Elite planlarında ne süre sınırı ne de
-        görüntülenme sınırı vardır.
+        İki limitten hangisi önce dolarsa Freemium sona erer. Ürün ve kategori sayısı hiçbir planda sınırlı değildir —
+        menünüzün tamamını girebilirsiniz. Premium ve Elite&apos;te süre ya da görüntülenme sınırı yoktur.
       </p>
 
       <PlanComparison />
@@ -82,38 +78,41 @@ function PlanComparison() {
   );
 }
 
+const premium = PLAN_PRICING.premium;
+const elite = PLAN_PRICING.elite;
+
 const faqs = [
+  {
+    q: "menuva sipariş alıyor mu?",
+    a: "Bugün sipariş ya da ödeme almıyor. Müşteri beğendiklerini sepette toplar, toplamı görür ve ekranı garsona gösterir; siparişi garsonunuz alır. Yanlış ya da eksik sipariş azalır, mevcut düzeniniz değişmez.",
+  },
   {
     q: "Freemium ne kadar süre ücretsiz?",
     a: "Freemium plan 3 ay veya 10.000 menü görüntülenmesine kadar ücretsizdir. Bu iki limitten hangisi önce dolarsa Freemium sona erer. Kredi kartı istemiyoruz.",
   },
   {
-    q: "Premium'da menü görüntülenme sınırı var mı?",
-    a: "Hayır. Premium plan sınırsız menü görüntülenmesi sunar ve süre sınırı yoktur.",
-  },
-  {
-    q: "Elite'de menü görüntülenme sınırı var mı?",
-    a: "Hayır. Elite planında da menü görüntülenme sınırı ve süre sınırı yoktur.",
-  },
-  {
     q: "Freemium'da kaç ürün girebilirim?",
-    a: "Sınırsız. Freemium'da ürün ya da kategori limiti yoktur; menünüzün tamamını eksiksiz girebilirsiniz. Freemium'ın tek sınırı süre ve görüntülenmedir: 3 ay veya 10.000 menü görüntülenmesi.",
+    a: "Sınırsız. Hiçbir planda ürün ya da kategori limiti yoktur; menünüzün tamamını eksiksiz girebilirsiniz. Freemium'ın tek sınırı süre ve görüntülenmedir: 3 ay veya 10.000 menü görüntülenmesi.",
   },
   {
-    q: "Premium ve Elite'in web sitesi farkı tam olarak nedir?",
-    a: "Premium'da Standart Web Sitesi vardır: menü verinizden otomatik oluşan, kendi alan adınızda yayınlanabilen bir restoran sitesi. Panelde ne girdiyseniz sitede o görünür, ayrıca içerik girmenize gerek yoktur. Elite'te bu site Gelişmiş Web Sitesi deneyimine yükselir (animasyonlu tanıtım, menü slider'ı, galeri) ve ek olarak kurumsal web sitenizi hediye ederiz: kurulumunu, tasarımını ve yayına almasını biz yaparız, aboneliğiniz sürdüğü sürece ücret alınmaz.",
+    q: "Premium ve Elite arasındaki fark nedir?",
+    a: "Premium; kampanyalar, gelişmiş analizler, menuva markası olmadan profesyonel menü, özel alan adı ve menünüzden otomatik oluşan standart web sitesi içerir. Elite bunlara gelişmiş web sitesi deneyimini (animasyonlu tanıtım, menü slider'ı, galeri), kurulumunu bizim yaptığımız hediye kurumsal web sitesini, rapor merkezini (PDF ve CSV dışa aktarma) ve öncelikli teknik desteği ekler.",
   },
   {
     q: "Elite'teki hediye web sitesi neyi kapsıyor?",
-    a: "Elite aboneliğiyle birlikte, otomatik menü sitesinden ayrı olarak standart bir kurumsal web sitesi kurulumu hediye edilir: tanıtım sayfaları, görsel düzen, alan adı bağlantısı ve yayına alma bizde. Alan adı ve varsa üçüncü taraf servis ücretleri kapsam dışıdır; detayları WhatsApp'tan netleştiriyoruz.",
+    a: "Elite aboneliğiyle birlikte, otomatik menü sitesinden ayrı olarak standart bir kurumsal web sitesi kurulumu hediye edilir: tanıtım sayfaları, görsel düzen, alan adı bağlantısı ve yayına alma bizde. Alan adı ve varsa üçüncü taraf servis ücretleri kapsam dışıdır.",
+  },
+  {
+    q: "Premium'a nasıl geçerim?",
+    a: "Ücretsiz hesabınızı açın, ardından panelde Plan sayfasından “Premium'u başlat” deyin. Talebiniz ekibimize düşer; ödeme ve aktivasyon adımlarını destek talebiniz üzerinden tamamlarız. Menünüz ve verileriniz olduğu gibi kalır.",
+  },
+  {
+    q: "Aylık mı yıllık mı ödemeliyim?",
+    a: `İkisi de mümkün. Yıllık ödemede aylık maliyet %${yearlyDiscountPercent(premium)} düşer: Premium ayda ${formatTL(premium.monthly)} yerine ${formatTL(premium.yearlyMonthly)} (yıllık ${formatTL(premium.yearlyMonthly * MONTHS_IN_YEAR)} peşin), Elite ayda ${formatTL(elite.monthly)} yerine ${formatTL(elite.yearlyMonthly)} (yıllık ${formatTL(elite.yearlyMonthly * MONTHS_IN_YEAR)} peşin). Aylık ödemede taahhüt yok, istediğiniz dönem sonunda bırakabilirsiniz.`,
   },
   {
     q: "Freemium süresi dolunca verilerim silinir mi?",
     a: "Hayır. Menünüz, ürünleriniz, görselleriniz ve analiz geçmişiniz olduğu gibi kalır. Yalnızca menünüzün yayını ve gelişmiş özellikler durur; bir plana geçtiğinizde her şey kaldığı yerden devam eder.",
-  },
-  {
-    q: "Teknik bilgim yok, kullanabilir miyim?",
-    a: "Kesinlikle. menuva, telefon kullanabilen herkes için tasarlandı. Ürün eklemek fotoğraf paylaşmak kadar kolay. Takıldığınız yerde WhatsApp'tan yazın, birlikte kuralım.",
   },
   {
     q: "Fiyat değiştirdiğimde müşteri ne zaman görür?",
@@ -121,15 +120,15 @@ const faqs = [
   },
   {
     q: "QR kodu nasıl alacağım?",
-    a: "Kayıt olduğunuzda otomatik oluşur. Panelden yüksek çözünürlüklü indirir, dilediğiniz boyutta bastırırsınız. Masa, vitrin ve sosyal medya için ayrı QR'lar oluşturup hangisinin daha çok tarandığını görebilirsiniz.",
+    a: "Kayıt olduğunuzda otomatik oluşur. Panelden yüksek çözünürlüklü indirir, dilediğiniz boyutta bastırırsınız. Masa numaralı QR'ları toplu oluşturup tek PDF olarak alabilir, hangi masanın QR'ının menüyü açtırıp sepete dönüştüğünü ayrı ayrı görebilirsiniz.",
   },
   {
     q: "Analizler tam olarak neyi gösteriyor?",
-    a: "Menünüzün kaç kez açıldığını, hangi ürünlerin en çok incelendiğini, müşterinin menüde ne kadar kaldığını ve trafiğin nereden geldiğini. Yani neyi öne çıkaracağınıza tahminle değil veriyle karar verirsiniz.",
+    a: "Menünüzün kaç kez açıldığını, hangi ürünlerin incelenip sepete eklendiğini, müşterinin menüde ne kadar kaldığını ve trafiğin nereden geldiğini. Freemium'da temel özet, Premium ve Elite'te ürün, kategori, kaynak ve QR kırılımları.",
   },
   {
-    q: "Aylık mı yıllık mı ödemeliyim?",
-    a: "İkisi de mümkün. Yıllık ödemede aylık maliyet %20 düşüyor: Premium ayda 249₺ yerine 199,20₺ (yıllık 2.390,40₺ tek ödeme), Elite ayda 749₺ yerine 599,20₺ (yıllık 7.190,40₺ tek ödeme). Aylık ödemede taahhüt yok, istediğiniz dönem sonunda bırakabilirsiniz.",
+    q: "Teknik bilgim yok, kullanabilir miyim?",
+    a: "Kesinlikle. Ürün eklemek fotoğraf paylaşmak kadar kolay. İsterseniz menünüzü gönderin, demo menünüzü biz hazırlayalım.",
   },
 ];
 
@@ -137,9 +136,7 @@ export function FAQ() {
   return (
     <section className="border-t border-line bg-crema/40">
       <div className="mx-auto max-w-3xl px-5 py-24">
-        <h2 className="text-center font-display text-4xl font-extrabold tracking-tight">
-          Sık sorulanlar
-        </h2>
+        <h2 className="text-center font-display text-4xl font-extrabold tracking-tight">Sık sorulanlar</h2>
         <div className="mt-10 divide-y divide-line">
           {faqs.map((f) => (
             <details key={f.q} data-reveal className="group py-5">
@@ -160,17 +157,18 @@ export function FAQ() {
         <div className="mt-12 flex flex-col items-center gap-4 rounded-2xl border border-line bg-paper p-8 text-center">
           <p className="font-display text-xl font-bold">Sorunuz listede yok mu?</p>
           <p className="max-w-md text-sm text-ink-soft">
-            Yazın, gerçek bir insan cevaplasın. Satış konuşması değil — sadece
-            merak ettiğinizi öğrenin.
+            Yazın, gerçek bir insan cevaplasın. Satış konuşması değil — sadece merak ettiğinizi öğrenin.
           </p>
           <a
             href={whatsappLink("Merhaba, menuva hakkında bir sorum var:")}
             target="_blank"
             rel="noopener noreferrer"
+            data-track="whatsapp_lead"
+            data-track-location="faq"
             className="inline-flex items-center gap-2 rounded-full border border-ink px-6 py-3 font-mono text-[13px] uppercase tracking-wider transition-colors hover:bg-ink hover:text-paper"
           >
             <WhatsappIcon size={15} />
-            WhatsApp'tan sorun
+            WhatsApp&apos;tan sorun
           </a>
         </div>
       </div>
@@ -179,15 +177,15 @@ export function FAQ() {
 }
 
 // Kapanış CTA'sı herkese hitap etmeli: tek bir "restoran sahibi" tipi
-// yok — mahalle kafesi de, zincir de, food truck da aynı yerden başlıyor.
+// yok — mahalle kafesi de, otel de aynı yerden başlıyor.
 const audiences = [
   "Kafeler",
   "Restoranlar",
   "Pastaneler",
-  "Barlar",
-  "Food truck'lar",
   "Oteller",
+  "Barlar",
   "Kahvaltı salonları",
+  "Food truck'lar",
   "Bulut mutfaklar",
 ];
 
@@ -203,39 +201,37 @@ export function ClosingCTA() {
         />
       </div>
 
-      <div
-        data-reveal
-        className="relative mx-auto flex max-w-3xl flex-col items-center gap-7 px-5 py-24 text-center"
-      >
-        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-paper/70">
-          Beş dakika sonrası
-        </p>
+      <div data-reveal className="relative mx-auto flex max-w-3xl flex-col items-center gap-7 px-5 py-24 text-center">
+        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-paper/70">Bir sonraki servis</p>
 
         <h2 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-paper md:text-5xl">
-          Menünüz bu akşam yayında olabilir.
+          Bir sonraki servise güncel menüyle başlayın.
         </h2>
 
         <p className="max-w-lg leading-relaxed text-paper/80">
-          İster tek şubeli mahalle kafesi olun, ister onlarca masalı bir
-          restoran — kurulum aynı: hesabı açın, ürünleri girin, QR'ı masaya
-          koyun. Baskı yok, sözleşme yok, kredi kartı yok.
+          Kredi kartı girmeden hesabınızı açın ya da mevcut menünüzü gönderin, ilk kurulumu birlikte yapalım.
         </p>
 
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
           <Link
             href="/panel/register"
+            data-track="cta_click"
+            data-track-location="final"
+            data-track-cta="create_free"
             className="shine-on-hover relative overflow-hidden rounded-full bg-ink px-9 py-4 text-center font-mono text-sm uppercase tracking-wider text-paper transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-12px_rgba(35,24,18,0.7)]"
           >
-            Ücretsiz başla
+            Ücretsiz menünü oluştur
           </Link>
           <a
-            href={whatsappLink("Merhaba, menuva hakkında bilgi almak istiyorum.")}
+            href={whatsappLink("Merhaba! Menümü göndermek istiyorum, ilk kurulumu birlikte yapabilir miyiz?")}
             target="_blank"
             rel="noopener noreferrer"
+            data-track="whatsapp_lead"
+            data-track-location="final"
             className="inline-flex items-center justify-center gap-2 rounded-full border border-paper/40 px-9 py-4 text-center font-mono text-sm uppercase tracking-wider text-paper transition-all duration-300 hover:-translate-y-0.5 hover:border-paper hover:bg-paper hover:text-paprika"
           >
             <WhatsappIcon size={15} />
-            Önce konuşalım
+            Menümü gönder
           </a>
         </div>
 

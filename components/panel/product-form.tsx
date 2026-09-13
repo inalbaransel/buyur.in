@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { pb } from "@/lib/pocketbase";
 import { useToast } from "@/components/panel/toast";
 import { allergenLabels, badgeLabels } from "@/lib/labels";
-import { Card, ErrorText, FormActions, Input, Label, Select } from "@/components/panel/ui";
+import { Card, DraftBanner, ErrorText, FormActions, Input, Label, SaveStatus, Select } from "@/components/panel/ui";
 import { ImageUploader } from "@/components/panel/image-uploader";
 import { MultiLangFields } from "@/components/panel/multi-lang-fields";
+import { useFormDraft } from "@/lib/use-draft";
 import { activeLocales, mainLocale, type TranslatableField, type Translations } from "@/lib/i18n";
 import type { Allergen, Badge, Business, Category, Product } from "@/lib/types";
 
@@ -21,24 +22,105 @@ interface ProductFormProps {
   onCancel?: () => void;
 }
 
+/** Formun taslak olarak saklanan hâli (bkz. lib/use-draft.ts). */
+interface ProductDraft {
+  category: string;
+  name: string;
+  description: string;
+  price: string;
+  image: string;
+  prepMin: string;
+  prepMax: string;
+  calories: string;
+  allergens: Allergen[];
+  badges: Badge[];
+  isAvailable: boolean;
+  discountPercent: string;
+  campaignLabel: string;
+  translations: Translations;
+}
+
+function toDraft(initial: Product | undefined, categories: Category[]): ProductDraft {
+  return {
+    category: initial?.category ?? categories[0]?.id ?? "",
+    name: initial?.name ?? "",
+    description: initial?.description ?? "",
+    price: initial?.price?.toString() ?? "",
+    image: initial?.images?.[0] ?? "",
+    prepMin: initial?.prep_time_min ? initial.prep_time_min.toString() : initial ? "0" : "",
+    prepMax: initial?.prep_time_max ? initial.prep_time_max.toString() : initial ? "0" : "",
+    calories: initial?.calories ? initial.calories.toString() : initial ? "0" : "",
+    allergens: initial?.allergens ?? [],
+    badges: initial?.badges ?? [],
+    isAvailable: initial?.is_available ?? true,
+    discountPercent: initial?.discount_percent ? initial.discount_percent.toString() : initial ? "0" : "",
+    campaignLabel: initial?.campaign_label ?? "",
+    translations: initial?.translations ?? {},
+  };
+}
+
 export function ProductForm({ business, categories, initial, onSaved, onCancel }: ProductFormProps) {
-  const [category, setCategory] = useState(initial?.category ?? categories[0]?.id ?? "");
-  const [name, setName] = useState(initial?.name ?? "");
-  const [description, setDescription] = useState(initial?.description ?? "");
-  const [price, setPrice] = useState(initial?.price?.toString() ?? "");
-  const [image, setImage] = useState<string>(initial?.images?.[0] ?? "");
-  const [prepMin, setPrepMin] = useState(initial?.prep_time_min?.toString() ?? "");
-  const [prepMax, setPrepMax] = useState(initial?.prep_time_max?.toString() ?? "");
-  const [calories, setCalories] = useState(initial?.calories?.toString() ?? "");
-  const [allergens, setAllergens] = useState<Allergen[]>(initial?.allergens ?? []);
-  const [badges, setBadges] = useState<Badge[]>(initial?.badges ?? []);
-  const [isAvailable, setIsAvailable] = useState(initial?.is_available ?? true);
-  const [discountPercent, setDiscountPercent] = useState(initial?.discount_percent?.toString() ?? "");
-  const [campaignLabel, setCampaignLabel] = useState(initial?.campaign_label ?? "");
-  const [translations, setTranslations] = useState<Translations>(initial?.translations ?? {});
+  const baseline = useMemo(
+    () => toDraft(initial, categories),
+    // Kayıt güncellendiğinde (updated) taban da tazelenir.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [initial?.id, initial?.updated, categories.length]
+  );
+
+  const [category, setCategory] = useState(baseline.category);
+  const [name, setName] = useState(baseline.name);
+  const [description, setDescription] = useState(baseline.description);
+  const [price, setPrice] = useState(baseline.price);
+  const [image, setImage] = useState<string>(baseline.image);
+  const [prepMin, setPrepMin] = useState(baseline.prepMin);
+  const [prepMax, setPrepMax] = useState(baseline.prepMax);
+  const [calories, setCalories] = useState(baseline.calories);
+  const [allergens, setAllergens] = useState<Allergen[]>(baseline.allergens);
+  const [badges, setBadges] = useState<Badge[]>(baseline.badges);
+  const [isAvailable, setIsAvailable] = useState(baseline.isAvailable);
+  const [discountPercent, setDiscountPercent] = useState(baseline.discountPercent);
+  const [campaignLabel, setCampaignLabel] = useState(baseline.campaignLabel);
+  const [translations, setTranslations] = useState<Translations>(baseline.translations);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const { toast } = useToast();
+
+  const current: ProductDraft = {
+    category,
+    name,
+    description,
+    price,
+    image,
+    prepMin,
+    prepMax,
+    calories,
+    allergens,
+    badges,
+    isAvailable,
+    discountPercent,
+    campaignLabel,
+    translations,
+  };
+  const draft = useFormDraft(`product:${initial?.id ?? `new:${business.id}`}`, current, baseline, initial?.updated);
+
+  function applyDraft(value: ProductDraft) {
+    // Taslaktaki kategori silinmişse mevcut seçim korunur.
+    if (categories.some((cat) => cat.id === value.category)) setCategory(value.category);
+    setName(value.name);
+    setDescription(value.description);
+    setPrice(value.price);
+    setImage(value.image);
+    setPrepMin(value.prepMin);
+    setPrepMax(value.prepMax);
+    setCalories(value.calories);
+    setAllergens(value.allergens);
+    setBadges(value.badges);
+    setIsAvailable(value.isAvailable);
+    setDiscountPercent(value.discountPercent);
+    setCampaignLabel(value.campaignLabel);
+    setTranslations(value.translations);
+  }
 
   function setBaseField(field: TranslatableField, value: string) {
     if (field === "name") setName(value);
@@ -82,6 +164,8 @@ export function ProductForm({ business, categories, initial, onSaved, onCancel }
       const record = initial
         ? await pb.collection("menuva_products").update<Product>(initial.id, payload)
         : await pb.collection("menuva_products").create<Product>({ ...payload, order: 999 });
+      draft.clear();
+      setLastSavedAt(Date.now());
       toast(initial ? "Ürün güncellendi" : "Ürün eklendi");
       onSaved(record);
     } catch {
@@ -97,8 +181,19 @@ export function ProductForm({ business, categories, initial, onSaved, onCancel }
       <FormActions
         saving={saving}
         onCancel={onCancel}
+        status={<SaveStatus saving={saving} savedAt={lastSavedAt ?? initial?.updated ?? null} draftSavedAt={draft.draftSavedAt} />}
         toggle={{ checked: isAvailable, onChange: setIsAvailable, label: "Satışta" }}
       />
+      {draft.restorable && (
+        <DraftBanner
+          savedAt={draft.restorable.savedAt}
+          onRestore={() => {
+            if (draft.restorable) applyDraft(draft.restorable.value);
+            draft.dismiss();
+          }}
+          onDiscard={draft.discard}
+        />
+      )}
       <ErrorText>{error}</ErrorText>
 
       <Card className="space-y-5">

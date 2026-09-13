@@ -373,12 +373,22 @@ const qr: Handler = async (args) => {
       totals: { scans: totals.qr_scans ?? 0 },
       series: dailySeries(rows, args.range, "qr_scans"),
       hourly: hourlyTotals(rows, "sessions"),
-      items: entries.map((entry) => ({
-        key: entry.key,
-        label: labels.get(entry.key) || entry.label,
-        scans: entry.metrics.scans ?? 0,
-        sessions: entry.metrics.sessions ?? 0,
-      })),
+      // QR bazında huni: tarama → menü açılışı → ürün görüntüleme → sepete
+      // ekleme (adım başına tekil oturum; bkz. rollup QR_FUNNEL_METRICS).
+      items: entries.map((entry) => {
+        const sessions = entry.metrics.sessions ?? 0;
+        const cartAdders = entry.metrics.cart_adders ?? 0;
+        return {
+          key: entry.key,
+          label: labels.get(entry.key) || entry.label,
+          scans: entry.metrics.scans ?? 0,
+          sessions,
+          menu_opens: entry.metrics.menu_opens ?? 0,
+          product_viewers: entry.metrics.product_viewers ?? 0,
+          cart_adders: cartAdders,
+          conversion: ratio(cartAdders, sessions),
+        };
+      }),
     },
   };
 };

@@ -128,7 +128,7 @@ Aşağıdaki tablo [`lib/entitlements.ts`](../lib/entitlements.ts) içindeki
 | Gelişmiş web sitesi deneyimi | — | — | ✅ |
 | **Hediye kurumsal web sitesi** | — | — | **Hediye** |
 | Gelişmiş raporlar | — | — | ✅ |
-| PDF / Excel / CSV dışa aktarma | — | — | ✅ |
+| PDF ve CSV dışa aktarma | — | — | ✅ |
 | Analiz verisi saklama süresi | 90 gün | 365 gün | 1.095 gün |
 
 ---
@@ -298,7 +298,27 @@ kodda köşeli parantezle işaretli duruyorlar:
 | Yetkili mahkeme / icra dairesi | `lib/legal.ts` → Kullanım Koşulları §9 | Şirket merkezine göre |
 
 Ayrıca ürün tarafında bekleyenler: **online ödeme akışı henüz yok** — ücretli
-plana geçiş WhatsApp/e-posta üzerinden yürüyor ve yasal metinler bugün bunu
-anlatıyor. Panelde fatura bilgisi ve fatura arşivi ekranı da yok; ikisi de
-devreye alındığında Ödeme ve Faturalandırma metinlerindeki ilgili maddeler
-güncellenmelidir.
+plana geçiş panel içi geçiş talebi (destek talebi) ya da WhatsApp üzerinden
+yürüyor ve yasal metinler bugün bunu anlatıyor. Panelde fatura bilgisi ve fatura
+arşivi ekranı da yok; ikisi de devreye alındığında Ödeme ve Faturalandırma
+metinlerindeki ilgili maddeler güncellenmelidir.
+
+---
+
+## 10. 2. hafta kararları (7 Eylül 2026 toplantısı)
+
+Toplantıdaki P0 "satış engellerini kaldır" maddelerinin kod karşılığı:
+
+| Konu | Karar | Nerede |
+|---|---|---|
+| Freemium ürün sınırı | **Sınırsız.** "Maksimum 30 ürün" metni canlıdaki bayat `menuva_plans` kaydından geliyordu. | `scripts/plan-catalog.mjs` |
+| Landing fiyat kartları | Artık veritabanından değil **koddaki katalogdan** okunur; DB bayat kalsa bile sitede çelişki çıkmaz. | `components/pricing-plans.tsx` |
+| Faz 1 kapsamı | "Temel sipariş yönetimi" yok; doğru ifade **"Sepet: müşteri seçimini garsona gösterir"**. SSS'de açıkça "sipariş/ödeme almıyor" yazıyor. | katalog + `components/pricing.tsx` |
+| Elite'in ana değeri | **Gelişmiş web sitesi + hediye kurumsal site + rapor merkezi + öncelikli destek.** API / white label / güvenlik araçları ürün bugün sunmadığı için vaat edilmez (`api_access: false`). | katalog + `tests/plan-catalog.test.ts` |
+| Yıllık fiyat gösterimi | "Aylık karşılığı 199,20₺ / ay" + hemen altında aynı okunurlukta "Yıllık 2.390,40₺ peşin". | `components/pricing-plans.tsx` |
+| Satın alma yolu | Freemium → kayıt. Premium → **"Premium'u başlat"**: kayıt (`?plan=premium`) → panel Plan sayfasında geçiş talebi. Elite → "Elite demo al" (WhatsApp demo görüşmesi). WhatsApp artık yalnızca ikincil yol. | `app/panel/(dashboard)/plan/page.tsx` |
+| Analiz/Rapor yüklenmeme hatası | Paralel isteklerde aynı günün iki kez rollup'lanması `idx_stats_unique` çakışmasıyla 500 dönüyordu; artık upsert + tekilleştirme + hata toleransı. | `lib/analytics/rollup.ts` |
+
+Sosyal kanıt kuralı: kartlardaki sayılar canlı menüden okunur; müşteri yorumu
+yalnızca işletmenin onayladığı gerçek bir cümleyse `lib/showcase.ts`'e yazılır.
+Vezirhan bir demo menü olduğu için sitede "Demo menü" diye etiketlidir.

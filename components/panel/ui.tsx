@@ -9,6 +9,7 @@ import type {
 } from "react";
 import Link from "next/link";
 import { LockIcon } from "@/components/icons";
+import { formatSavedTime } from "@/lib/format";
 
 export function Label(props: LabelHTMLAttributes<HTMLLabelElement>) {
   const { className = "", ...rest } = props;
@@ -100,12 +101,55 @@ export function PageHeader({ title, description, action }: { title: string; desc
   );
 }
 
+/** Formun kayıt durumu: yayınlanmış son kayıt mı, yoksa yayınlanmamış yerel
+ *  taslak mı daha yeni — kullanıcı neyin canlıda olduğunu her an bilsin. */
+export function SaveStatus({
+  saving,
+  savedAt,
+  draftSavedAt,
+}: {
+  saving?: boolean;
+  /** Son başarılı kayıt (ms) ya da kaydın `updated` alanı. */
+  savedAt?: number | string | null;
+  draftSavedAt?: number | null;
+}) {
+  if (saving) return <span className="text-ink-soft">Kaydediliyor…</span>;
+  const savedMs = typeof savedAt === "string" ? Date.parse(savedAt.replace(" ", "T")) : (savedAt ?? null);
+  const hasSaved = savedMs !== null && Number.isFinite(savedMs);
+  if (draftSavedAt && (!hasSaved || draftSavedAt > (savedMs as number))) {
+    return <span className="text-ink-soft">Taslak kaydedildi · {formatSavedTime(draftSavedAt)} · henüz yayında değil</span>;
+  }
+  if (hasSaved) return <span className="text-herb">Son kaydedildi · {formatSavedTime(savedMs as number)}</span>;
+  return null;
+}
+
+/** Önceki oturumdan kalmış, kaydedilmemiş taslak bildirimi. */
+export function DraftBanner({ savedAt, onRestore, onDiscard }: { savedAt: number; onRestore: () => void; onDiscard: () => void }) {
+  return (
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-paprika/30 bg-paprika/5 px-4 py-3 text-sm">
+      <p>
+        <span className="font-semibold">Kaydedilmemiş bir taslağın var</span>
+        <span className="text-ink-soft"> · {formatSavedTime(savedAt)}</span>
+      </p>
+      <div className="flex gap-2">
+        <Button type="button" variant="ghost" onClick={onDiscard}>
+          Sil
+        </Button>
+        <Button type="button" onClick={onRestore}>
+          Geri yükle
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // Formların sağ üstüne yerleşen kaydet/vazgeç çubuğu — kullanıcının kaydetmek
 // için sayfayı en alta kaydırması gerekmez. `toggle` verilirse (ör. "Menüde
 // Göster") kaydet butonunun hemen soluna kompakt bir switch olarak eklenir.
 export function FormActions({
   saving,
   saved,
+  status,
   onCancel,
   saveLabel = "Kaydet",
   cancelLabel = "Vazgeç",
@@ -113,6 +157,8 @@ export function FormActions({
 }: {
   saving?: boolean;
   saved?: boolean;
+  /** Serbest durum satırı (ör. <SaveStatus />); verilirse `saved` yerine gösterilir. */
+  status?: ReactNode;
   onCancel?: () => void;
   saveLabel?: string;
   cancelLabel?: string;
@@ -121,7 +167,7 @@ export function FormActions({
   return (
     <div className="mb-6 flex items-center gap-3 border-b border-line pb-4">
       <span className="mr-auto font-mono text-[11px] uppercase tracking-wider text-herb">
-        {saved ? "Kaydedildi ✓" : ""}
+        {status ?? (saved ? "Kaydedildi ✓" : "")}
       </span>
       {toggle && <Switch compact checked={toggle.checked} onChange={toggle.onChange} label={toggle.label} />}
       {onCancel && (

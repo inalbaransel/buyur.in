@@ -90,6 +90,37 @@ export interface Business {
    *  ikisi de tanımsızsa (eski kayıt) tüm diller aktif sayılır. */
   languages?: Locale[];
   translations?: Translations;
+  /** Aktivasyon adımlarının ilk gerçekleştiği anlar (bkz. lib/activation.ts). */
+  activation?: BusinessActivation;
+  created: string;
+  updated: string;
+}
+
+/** "Menünü yayına hazırla" hunisinin kalıcı işaretleri. Aktivasyon metriği:
+ *  ilk QR indirme + ilk gerçek menü görüntülemesi. */
+export interface BusinessActivation {
+  /** Onboarding'de seçilen sektör şablonu (lib/sector-templates.ts). */
+  sector?: string;
+  qr_downloaded_at?: string;
+  /** Panel kontrol listesinin tamamlandığı an. */
+  checklist_completed_at?: string;
+}
+
+/** menuva blog yazısı — içerik PocketBase yönetim ekranından girilir. */
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  cover_url: string;
+  /** PocketBase "editor" alanı: HTML. Yalnızca yöneticiler yazar. */
+  content: string;
+  author: string;
+  tags: string[];
+  is_published: boolean;
+  published_at: string;
+  seo_title: string;
+  seo_description: string;
   created: string;
   updated: string;
 }

@@ -247,6 +247,20 @@ const UI_STRINGS = {
     ru: "Покажите этот экран официанту, чтобы сделать заказ.",
   },
   viewMenu: { tr: "Menüye göz at", en: "View menu", ar: "تصفح القائمة", ru: "Смотреть меню" },
+  // Sepete ekleme sonrası küçük öneri (components/menu/upsell-sheet.tsx).
+  upsellTitle: {
+    tr: "Yanına içecek ister misin?",
+    en: "Something to drink with it?",
+    ar: "هل تريد مشروبًا معه؟",
+    ru: "Добавить напиток?",
+  },
+  upsellAdded: {
+    tr: "{name} sepete eklendi",
+    en: "{name} added to your cart",
+    ar: "تمت إضافة {name} إلى السلة",
+    ru: "{name} в корзине",
+  },
+  noThanks: { tr: "Hayır, teşekkürler", en: "No, thanks", ar: "لا، شكرًا", ru: "Нет, спасибо" },
   chooseLanguage: { tr: "Dil seçin", en: "Choose language", ar: "اختر اللغة", ru: "Выберите язык" },
   categoriesLabel: { tr: "Kategoriler", en: "Categories", ar: "الفئات", ru: "Категории" },
   productCount: {

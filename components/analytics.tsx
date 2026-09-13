@@ -278,7 +278,7 @@ function ViewsChart() {
             Son 12 ay
           </p>
         </div>
-        <p className="font-mono text-[11px] text-herb">↑ %190 artış</p>
+        <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft">Örnek veri</p>
       </div>
 
       <div className="relative mt-5">
@@ -597,15 +597,19 @@ export function Analytics() {
       <div className="mx-auto max-w-6xl px-5 py-24">
         <div className="mx-auto max-w-2xl text-center">
           <p className="font-mono text-[13px] uppercase tracking-[0.2em] text-paprika">
-            Rakamlar konuşsun
+            Analitik ve satış yönlendirme
           </p>
           <h2 className="mt-3 font-display text-4xl font-extrabold tracking-tight md:text-5xl">
-            Menünüz artık veri de üretiyor
+            Hangi ürünün satıldığını tahmin etmeyin, görün
           </h2>
           <p className="mt-4 text-ink-soft">
-            Kâğıt menü size hiçbir şey söylemez. menuva, müşterinin neye baktığını,
-            ne kadar kaldığını ve neyi sepete attığını gösterir — panelde, sade bir
-            ekranda.
+            Kâğıt menü size hiçbir şey söylemez. menuva, müşterinin neye baktığını ve
+            neyi sepete eklediğini gösterir; şefin önerisini, kampanyayı ve fiyatı
+            buna göre ayarlarsınız.
+          </p>
+          {/* Aşağıdaki rakamlar bir sonuç iddiası değil, panel ekranının örneği. */}
+          <p className="mt-5 inline-flex rounded-full border border-line bg-paper px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-soft">
+            Örnek panel görünümü · rakamlar temsilidir
           </p>
         </div>
 

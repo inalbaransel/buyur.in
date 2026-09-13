@@ -290,6 +290,9 @@ async function main() {
       // Ana dil dışındaki aktif ek diller.
       select("languages", ["tr", "en", "ar", "ru"], { maxSelect: 3 }),
       json("translations"),
+      // Aktivasyon işaretleri (lib/activation.ts): sektör şablonu, ilk QR
+      // indirme, kontrol listesinin tamamlanması. Aktivasyon metriği buradan okunur.
+      json("activation"),
       ...stamps(),
     ],
     indexes: ["CREATE UNIQUE INDEX `idx_businesses_slug` ON `menuva_businesses` (`slug`)"],

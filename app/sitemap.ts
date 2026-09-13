@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { createServerPB } from "@/lib/pocketbase";
 import { ROOT_DOMAIN, menuHost } from "@/lib/site";
 import { LEGAL_DOCS, legalPath } from "@/lib/legal";
+import { listPosts } from "@/lib/blog";
 
 async function getActiveBusinessUrls(): Promise<MetadataRoute.Sitemap> {
   const pb = createServerPB();
@@ -40,8 +41,22 @@ function legalUrls(): MetadataRoute.Sitemap {
   ];
 }
 
+/** Blog: liste sayfası + yayındaki yazılar (koleksiyon yoksa yalnızca liste). */
+async function blogUrls(): Promise<MetadataRoute.Sitemap> {
+  const posts = await listPosts(500);
+  return [
+    { url: `https://${ROOT_DOMAIN}/blog`, changeFrequency: "weekly", priority: 0.6 },
+    ...posts.map((post) => ({
+      url: `https://${ROOT_DOMAIN}/blog/${post.slug}`,
+      lastModified: post.updated || post.published_at,
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    })),
+  ];
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const businessUrls = await getActiveBusinessUrls();
+  const [businessUrls, blog] = await Promise.all([getActiveBusinessUrls(), blogUrls()]);
 
   return [
     {
@@ -50,6 +65,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 1,
     },
+    ...blog,
     ...legalUrls(),
     ...businessUrls,
   ];

@@ -18,7 +18,8 @@ import { ROOT_DOMAIN } from "@/lib/site";
 const SITE_URL = `https://${ROOT_DOMAIN}`;
 const SITE_TITLE = "menuva — Dijital QR Menü";
 const SITE_DESCRIPTION =
-  "Menünüzü dakikalar içinde dijitalleştirin. Fiyat güncelleyin, kampanya ekleyin, QR kodla paylaşın. Baskı yok, bekleme yok.";
+  "Restoran, kafe, pastane ve oteller için QR menü. Menünüzü dakikalar içinde kurun, fiyatları anında değiştirin, ürünleri öne çıkarın ve müşterinin seçimini garsona eksiksiz gösterin.";
+const SHARE_DESCRIPTION = "Menünüzü güncel tutun, müşterinin seçimini kolaylaştırın. Kredi kartı yok, 5 dakikada kurulum.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -58,7 +59,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: SITE_TITLE,
-    description: "Kâğıt menü devri kapandı. Menünüz artık her masada güncel.",
+    description: SHARE_DESCRIPTION,
     url: SITE_URL,
     siteName: "menuva",
     locale: "tr_TR",
@@ -67,7 +68,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: SITE_TITLE,
-    description: "Kâğıt menü devri kapandı. Menünüz artık her masada güncel.",
+    description: SHARE_DESCRIPTION,
   },
   formatDetection: {
     telephone: false,

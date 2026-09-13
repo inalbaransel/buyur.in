@@ -1,11 +1,19 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ClientResponseError } from "pocketbase";
 import { pb } from "@/lib/pocketbase";
 import { Button, ErrorText, Input, Label } from "@/components/panel/ui";
+import { PLAN_LABELS } from "@/lib/entitlements";
+import { parsePlanIntent, savePlanIntent, type IntentPlan } from "@/lib/plan-intent";
+import { captureAttribution, trackMarketingEvent } from "@/lib/marketing-events";
+
+const START_TITLES: Record<IntentPlan, string> = {
+  premium: "Premium'u başlat",
+  elite: "Elite'i başlat",
+};
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -14,6 +22,19 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [intent, setIntent] = useState<IntentPlan | null>(null);
+
+  // Landing'deki "Premium'u başlat" buraya ?plan=premium ile gelir. Niyet
+  // saklanır; hesap açılıp menü kurulunca ödeme adımı panelden başlatılır.
+  // (useSearchParams yerine window: sayfa statik kalsın, Suspense gerekmesin.)
+  useEffect(() => {
+    captureAttribution();
+    const parsed = parsePlanIntent(window.location.search);
+    if (parsed) {
+      savePlanIntent(parsed.plan, parsed.billing);
+      setIntent(parsed.plan);
+    }
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -33,6 +54,7 @@ export default function RegisterPage() {
         passwordConfirm: password,
       });
       await pb.collection("menuva_users").authWithPassword(email, password);
+      trackMarketingEvent("signup_completed", { plan_intent: intent ?? "freemium" });
       router.replace("/panel");
     } catch (err) {
       if (err instanceof ClientResponseError && err.response?.data?.email) {
@@ -47,8 +69,12 @@ export default function RegisterPage() {
 
   return (
     <div className="rounded-2xl border border-line bg-paper p-8">
-      <h1 className="font-display text-xl font-bold">Ücretsiz hesap aç</h1>
-      <p className="mt-1 text-sm text-ink-soft">Kredi kartı gerekmez, 5 dakikada kurulur.</p>
+      <h1 className="font-display text-xl font-bold">{intent ? START_TITLES[intent] : "Ücretsiz hesap aç"}</h1>
+      <p className="mt-1 text-sm text-ink-soft">
+        {intent
+          ? `Önce hesabını aç ve menünü kur; ${PLAN_LABELS[intent]} geçişini panelden tek tıkla başlatırsın. Kredi kartı şimdi istenmez.`
+          : "Kredi kartı gerekmez, 5 dakikada kurulur."}
+      </p>
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
           <Label htmlFor="name">Adın</Label>

@@ -16,6 +16,9 @@ import { pbRequestCount } from "@/lib/pocketbase-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Hiç hesaplanmamış günler istek anında (tembel) rollup'lanıyor; varsayılan
+// fonksiyon süresi buna yetmeyip isteği yarıda kesebiliyordu.
+export const maxDuration = 60;
 
 const PB_ID_RE = /^[a-z0-9]{15}$/;
 
