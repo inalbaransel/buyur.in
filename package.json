@@ -22,6 +22,7 @@
     "@vercel/analytics": "^2.0.1",
     "minio": "^8.0.7",
     "next": "^15.3.3",
+    "openai": "^7.15.0",
     "pocketbase": "^0.25.2",
     "qrcode": "^1.5.4",
     "react": "^19.1.0",

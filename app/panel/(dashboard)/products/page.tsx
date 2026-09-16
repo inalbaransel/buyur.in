@@ -6,7 +6,7 @@ import { pb } from "@/lib/pocketbase";
 import { useBusiness } from "@/components/panel/business-context";
 import { useToast } from "@/components/panel/toast";
 import { useConfirm } from "@/components/panel/confirm-dialog";
-import { Button, Card, EmptyState, PageHeader } from "@/components/panel/ui";
+import { Button, Card, EmptyState, PageHeader, AiButton } from "@/components/panel/ui";
 import type { Category, Product } from "@/lib/types";
 
 export default function ProductsPage() {
@@ -99,9 +99,14 @@ export default function ProductsPage() {
           title="Önce bir kategori oluştur"
           description="Ürün eklemeden önce en az bir kategori gerekiyor."
           action={
-            <Link href="/panel/categories">
-              <Button>Kategori oluştur</Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link href="/panel/products/import">
+                <AiButton />
+              </Link>
+              <Link href="/panel/categories">
+                <Button>Kategori oluştur</Button>
+              </Link>
+            </div>
           }
         />
       </div>
@@ -114,9 +119,14 @@ export default function ProductsPage() {
         title="Ürünler"
         description="Fiyat, görsel, rozet ve daha fazlasını yönet."
         action={
-          <Link href="/panel/products/new">
-            <Button>+ Yeni ürün</Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/panel/products/import">
+              <AiButton />
+            </Link>
+            <Link href="/panel/products/new">
+              <Button>+ Yeni ürün</Button>
+            </Link>
+          </div>
         }
       />
 
@@ -125,9 +135,14 @@ export default function ProductsPage() {
           title="Henüz ürün yok"
           description="İlk ürününü ekleyerek menünü canlandır."
           action={
-            <Link href="/panel/products/new">
-              <Button>+ Yeni ürün</Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link href="/panel/products/import">
+                <AiButton />
+              </Link>
+              <Link href="/panel/products/new">
+                <Button>+ Yeni ürün</Button>
+              </Link>
+            </div>
           }
         />
       )}

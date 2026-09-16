@@ -8,7 +8,7 @@ import type {
   TextareaHTMLAttributes,
 } from "react";
 import Link from "next/link";
-import { LockIcon } from "@/components/icons";
+import { LockIcon, SparklesIcon } from "@/components/icons";
 import { formatSavedTime } from "@/lib/format";
 
 export function Label(props: LabelHTMLAttributes<HTMLLabelElement>) {
@@ -69,6 +69,51 @@ export function Button({ variant = "primary", loading, className = "", disabled,
     <button className={`${base} ${variants[variant]} ${className}`} disabled={disabled || loading} {...rest}>
       {loading ? "..." : children}
     </button>
+  );
+}
+
+export function AiButton({ className = "", children = "AI İle Tara", ...rest }: ButtonProps) {
+  return (
+    <div className="relative group/aibtn inline-block">
+      <style>{`
+        @keyframes ai-sparkle {
+          0%, 100% { transform: scale(1) rotate(0deg); }
+          50% { transform: scale(1.15) rotate(15deg); }
+        }
+        @keyframes ai-shimmer {
+          0% { left: -50%; transform: skewX(-20deg); }
+          100% { left: 150%; transform: skewX(-20deg); }
+        }
+      `}</style>
+      <button
+        {...rest}
+        className={`group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-md bg-gradient-to-br from-paprika to-paprika-deep px-5 py-2.5 font-mono text-[13px] uppercase tracking-wider text-white shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      >
+        <div className="absolute inset-0 w-full h-full pointer-events-none">
+           <div className="absolute top-0 bottom-0 w-12 bg-white/20 blur-[2px]" style={{ animation: "ai-shimmer 2.5s infinite linear" }} />
+        </div>
+        <div className="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100" />
+        
+        <div style={{ animation: "ai-sparkle 2s infinite ease-in-out" }} className="relative z-10 drop-shadow-md">
+          <SparklesIcon size={18} />
+        </div>
+        
+        <span className="relative z-10 font-bold drop-shadow-sm">{children}</span>
+      </button>
+
+      <div className="pointer-events-none absolute top-full left-1/2 z-50 mt-3 w-64 -translate-x-1/2 -translate-y-2 rounded-2xl border border-line bg-paper p-3 opacity-0 shadow-xl transition-all duration-300 group-hover/aibtn:translate-y-0 group-hover/aibtn:opacity-100">
+        <p className="mb-2 text-center text-xs font-medium leading-relaxed text-ink">
+          Fiziksel menünüzün fotoğrafını çekin, yapay zeka ürünleri otomatik okuyup listeye eklesin.
+        </p>
+        <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-crema border border-line/50">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/ai-scan.jpg" alt="AI Demo" className="absolute inset-0 h-full w-full object-cover" />
+        </div>
+        <div className="absolute -top-[8px] left-1/2 h-0 w-0 -translate-x-1/2 border-l-[8px] border-r-[8px] border-b-[8px] border-transparent border-b-line">
+          <div className="absolute top-[2px] left-1/2 h-0 w-0 -translate-x-1/2 border-l-[7px] border-r-[7px] border-b-[7px] border-transparent border-b-paper" />
+        </div>
+      </div>
+    </div>
   );
 }
 

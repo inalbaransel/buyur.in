@@ -6,7 +6,7 @@ import { pb } from "@/lib/pocketbase";
 import { useBusiness } from "@/components/panel/business-context";
 import { useToast } from "@/components/panel/toast";
 import { useConfirm } from "@/components/panel/confirm-dialog";
-import { Button, Card, EmptyState, PageHeader } from "@/components/panel/ui";
+import { Button, Card, EmptyState, PageHeader, AiButton } from "@/components/panel/ui";
 import { GripIcon } from "@/components/icons";
 import type { Category } from "@/lib/types";
 
@@ -116,9 +116,14 @@ export default function CategoriesPage() {
         title="Kategoriler"
         description="Menünü bölümlere ayır: Kahvaltı, Ana Yemek, Tatlılar… Sırayı değiştirmek için tutup sürükle. Ürünü olmayan kategoriler müşteri menüsünde görünmez."
         action={
-          <Link href="/panel/categories/new">
-            <Button>+ Yeni kategori</Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/panel/products/import">
+              <AiButton />
+            </Link>
+            <Link href="/panel/categories/new">
+              <Button>+ Yeni kategori</Button>
+            </Link>
+          </div>
         }
       />
 
@@ -127,9 +132,14 @@ export default function CategoriesPage() {
           title="Henüz kategori yok"
           description="İlk kategorini oluşturarak menünü kurmaya başla."
           action={
-            <Link href="/panel/categories/new">
-              <Button>+ Yeni kategori</Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link href="/panel/products/import">
+                <AiButton />
+              </Link>
+              <Link href="/panel/categories/new">
+                <Button>+ Yeni kategori</Button>
+              </Link>
+            </div>
           }
         />
       )}
