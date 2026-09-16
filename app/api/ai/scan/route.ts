@@ -22,6 +22,10 @@ export async function POST(req: NextRequest) {
   if (!images || !Array.isArray(images) || images.length === 0) {
     return NextResponse.json({ error: "Görsel bulunamadı." }, { status: 400 });
   }
+
+  if (images.length > 10) {
+    return NextResponse.json({ error: "Tek seferde en fazla 10 sayfa menü tarayabilirsiniz." }, { status: 400 });
+  }
   
   if (typeof businessId !== "string") {
     return NextResponse.json({ error: "Geçersiz istek." }, { status: 400 });
