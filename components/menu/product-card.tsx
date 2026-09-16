@@ -5,7 +5,7 @@ import { trackEvent, trackOnce } from "@/lib/analytics/track-client";
 import type { Product, Template } from "@/lib/types";
 import { allergenLabels, badgeLabels } from "@/lib/labels";
 import { formatPrice } from "@/lib/format";
-import { BadgeIcon, CheckCircleIcon, ClockIcon, FlameIcon } from "@/components/icons";
+import { BadgeIcon, CheckCircleIcon, ClockIcon, FlameIcon, ImageIcon } from "@/components/icons";
 import { useMenu } from "@/components/menu/menu-provider";
 
 export function ProductCard({
@@ -76,19 +76,21 @@ export function ProductCard({
         onOpen ? "cursor-pointer " : ""
       }${isGrid ? "flex flex-col" : "flex gap-4"}`}
     >
-      {image && (
-        <div
-          className={
-            isGrid
-              ? "relative mb-3 aspect-square w-full overflow-hidden rounded-lg bg-crema"
-              : "relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-crema"
-          }
-        >
+      <div
+        className={
+          isGrid
+            ? "relative mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg bg-crema text-ink-soft/30"
+            : "relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-crema text-ink-soft/30"
+        }
+      >
+        {image ? (
           <picture>
             <img src={image} alt={name} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
           </picture>
-        </div>
-      )}
+        ) : (
+          <ImageIcon size={isGrid ? 48 : 32} strokeWidth={1.2} />
+        )}
+      </div>
       <div className="flex flex-1 flex-col">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-display text-lg font-bold leading-tight">{name}</h3>

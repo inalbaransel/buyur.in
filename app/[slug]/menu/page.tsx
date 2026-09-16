@@ -42,12 +42,26 @@ export default function MenuCategoriesPage() {
                     />
                   </picture>
                 ) : (
-                  <span
-                    className="flex h-full w-full items-center justify-center font-display text-2xl font-extrabold"
+                  <div
+                    className="flex h-full w-full items-center justify-center text-ink-soft/40"
                     style={{ color: "var(--brand-text)" }}
                   >
-                    {name.charAt(0)}
-                  </span>
+                    <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                      <defs>
+                        <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                          <circle cx="2" cy="2" r="1.2" fill="currentColor" opacity="0.15" />
+                        </pattern>
+                      </defs>
+                      <rect width="100%" height="100%" fill="url(#dots)" />
+                      <circle cx="50" cy="50" r="20" fill="currentColor" opacity="0.08" />
+                      <circle cx="50" cy="50" r="30" fill="currentColor" opacity="0.04" />
+                      <g transform="translate(38, 38)" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                      </g>
+                    </svg>
+                  </div>
                 )}
               </div>
               <div className="flex items-center justify-between gap-2 p-3">
