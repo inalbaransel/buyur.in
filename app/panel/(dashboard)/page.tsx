@@ -85,16 +85,32 @@ function Onboarding() {
         is_active: true,
       });
 
-      // Sektör şablonu: örnek ürün yok, yalnızca kategori iskeleti. Ürünü olmayan
-      // kategori müşteri menüsünde görünmez; bir tanesi açılamazsa kurulum durmaz.
-      for (const [order, categoryName] of template.categories.entries()) {
+      // Sektör şablonu: Kategoriler ve varsa örnek ürünleri oluşturulur.
+      // Ürünü olmayan kategori müşteri menüsünde görünmez; bir tanesi açılamazsa kurulum durmaz.
+      for (const [order, categoryData] of template.categories.entries()) {
         try {
-          await pb.collection("menuva_categories").create({
+          const categoryRecord = await pb.collection("menuva_categories").create({
             business: business.id,
-            name: categoryName,
+            name: categoryData.name,
             order,
             is_active: true,
           });
+
+          for (const [productOrder, productData] of categoryData.products.entries()) {
+            try {
+              await pb.collection("menuva_products").create({
+                business: business.id,
+                category: categoryRecord.id,
+                name: productData.name,
+                description: productData.description,
+                price: productData.price,
+                is_available: true,
+                order: productOrder,
+              });
+            } catch {
+              /* ürün eklenemezse atla */
+            }
+          }
         } catch {
           /* bir kategori açılamadıysa kullanıcı panelden ekleyebilir */
         }
@@ -169,7 +185,7 @@ function Onboarding() {
             {selected && selected.categories.length > 0 && (
               <p className="mt-3 rounded-xl bg-crema/60 px-3.5 py-2.5 text-xs leading-relaxed text-ink-soft">
                 <span className="font-semibold text-ink">Hazır gelecek kategoriler: </span>
-                {selected.categories.join(", ")}. İstediğini silip yeniden adlandırabilirsin; ürün eklemediğin
+                {selected.categories.map((c) => c.name).join(", ")}. İstediğini silip yeniden adlandırabilirsin; ürün eklemediğin
                 kategoriler menüde görünmez.
               </p>
             )}

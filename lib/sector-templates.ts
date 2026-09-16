@@ -12,7 +12,10 @@ export interface SectorTemplate {
   description: string;
   /** Menü görünümü: görsel ağırlıklı sektörlerde grid. */
   template: Template;
-  categories: string[];
+  categories: {
+    name: string;
+    products: { name: string; description: string; price: number }[];
+  }[];
 }
 
 export const SECTOR_TEMPLATES: SectorTemplate[] = [
@@ -21,28 +24,129 @@ export const SECTOR_TEMPLATES: SectorTemplate[] = [
     label: "Kafe",
     description: "Kahve, tatlı ve atıştırmalık",
     template: "liste",
-    categories: ["Sıcak Kahveler", "Soğuk Kahveler", "Çaylar", "Soğuk İçecekler", "Tatlılar", "Atıştırmalıklar"],
+    categories: [
+      {
+        name: "Sıcak Kahveler",
+        products: [
+          { name: "Filtre Kahve", description: "Taze demlenmiş yöresel filtre kahve", price: 120 },
+          { name: "Caffe Latte", description: "Espresso ve sıcak süt", price: 145 },
+          { name: "Americano", description: "Espresso ve sıcak su", price: 130 },
+        ],
+      },
+      {
+        name: "Soğuk Kahveler",
+        products: [
+          { name: "Iced Latte", description: "Buzlu espresso ve süt", price: 150 },
+          { name: "Iced Americano", description: "Buzlu americano", price: 135 },
+        ],
+      },
+      {
+        name: "Çaylar",
+        products: [
+          { name: "Fincan Çay", description: "Taze demlenmiş Türk çayı", price: 60 },
+          { name: "Bitki Çayı", description: "Günün bitki çayı (Nane limon, Adaçayı vb.)", price: 125 },
+        ],
+      },
+      { name: "Soğuk İçecekler", products: [] },
+      {
+        name: "Tatlılar",
+        products: [
+          { name: "San Sebastian Cheesecake", description: "Özel peynirli İspanyol keki", price: 180 },
+          { name: "Brownie", description: "Belçika çikolatalı yoğun kek", price: 160 },
+        ],
+      },
+      { name: "Atıştırmalıklar", products: [] },
+    ],
   },
   {
     key: "restoran",
     label: "Restoran",
     description: "Başlangıçtan tatlıya tam menü",
     template: "liste",
-    categories: ["Başlangıçlar", "Çorbalar", "Salatalar", "Ana Yemekler", "Tatlılar", "İçecekler"],
+    categories: [
+      {
+        name: "Başlangıçlar",
+        products: [
+          { name: "Günün Çorbası", description: "Şefin özel tarifiyle taze çorba", price: 120 },
+          { name: "Paçanga Böreği", description: "Pastırmalı ve kaşarlı çıtır börek", price: 160 },
+        ],
+      },
+      { name: "Salatalar", products: [] },
+      {
+        name: "Ana Yemekler",
+        products: [
+          { name: "Izgara Köfte", description: "Közlenmiş biber ve pilav ile", price: 280 },
+          { name: "Tavuk Şinitzel", description: "Patates kızartması ve özel sos ile", price: 240 },
+        ],
+      },
+      {
+        name: "Tatlılar",
+        products: [
+          { name: "Sütlaç", description: "Fırınlanmış geleneksel sütlaç", price: 130 },
+        ],
+      },
+      {
+        name: "İçecekler",
+        products: [
+          { name: "Ayran", description: "Köpüklü yayık ayranı", price: 60 },
+          { name: "Kola / Fanta / Sprite", description: "Kutu meşrubat 330ml", price: 75 },
+        ],
+      },
+    ],
   },
   {
     key: "pastane",
     label: "Pastane",
     description: "Görsel ağırlıklı vitrin menüsü",
     template: "grid",
-    categories: ["Pastalar", "Dilim Tatlılar", "Kurabiye & Kuru Pasta", "Börek & Poğaça", "Sıcak İçecekler", "Soğuk İçecekler"],
+    categories: [
+      {
+        name: "Pastalar",
+        products: [
+          { name: "Çikolatalı Pasta", description: "Yoğun çikolata kremalı yaş pasta", price: 180 },
+          { name: "Meyveli Pasta", description: "Mevsim meyveli hafif pasta", price: 175 },
+        ],
+      },
+      {
+        name: "Börek & Poğaça",
+        products: [
+          { name: "Su Böreği", description: "Peynirli el açması su böreği (Porsiyon)", price: 140 },
+          { name: "Kaşarlı Poğaça", description: "Sıcak taze poğaça", price: 50 },
+        ],
+      },
+      { name: "Kurabiye & Kuru Pasta", products: [] },
+      { name: "Sıcak İçecekler", products: [] },
+    ],
   },
   {
     key: "bar",
     label: "Bar",
     description: "Kokteyl, içki ve atıştırmalık",
     template: "liste",
-    categories: ["Kokteyller", "Biralar", "Şaraplar", "Rakı & Viski", "Alkolsüz İçecekler", "Atıştırmalıklar"],
+    categories: [
+      {
+        name: "Kokteyller",
+        products: [
+          { name: "Mojito", description: "Beyaz rom, taze nane ve misket limonu", price: 280 },
+          { name: "Margarita", description: "Tekila, portakal likörü ve limon suyu", price: 300 },
+        ],
+      },
+      {
+        name: "Biralar",
+        products: [
+          { name: "Fıçı Bira 50cl", description: "Soğuk servis fıçı bira", price: 150 },
+          { name: "Şişe Bira 33cl", description: "Yerli şişe bira", price: 140 },
+        ],
+      },
+      {
+        name: "Atıştırmalıklar",
+        products: [
+          { name: "Bira Tabağı", description: "Soğan halkası, sosis, patates kızartması", price: 220 },
+          { name: "Çerez Tabağı", description: "Karışık lüks çerez", price: 120 },
+        ],
+      },
+      { name: "Şaraplar", products: [] },
+    ],
   },
   {
     key: "bos",
