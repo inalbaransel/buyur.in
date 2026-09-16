@@ -20,7 +20,7 @@ export default function NewProductPage() {
 
   useEffect(() => {
     if (!business) return;
-    pb.collection("menuva_categories")
+    pb.collection("buyur_categories")
       .getFullList<Category>({ filter: pb.filter("business = {:id}", { id: business.id }), sort: "order,created" })
       .then((list) => {
         setCategories(list);
@@ -34,7 +34,7 @@ export default function NewProductPage() {
     async function checkLimit() {
       const [limits, existing] = await Promise.all([
         fetchPlanLimits(business!.plan),
-        pb.collection("menuva_products").getList(1, 1, { filter: pb.filter("business = {:id}", { id: business!.id }) }),
+        pb.collection("buyur_products").getList(1, 1, { filter: pb.filter("business = {:id}", { id: business!.id }) }),
       ]);
       if (cancelled) return;
       setLimitReached(limits.max_products !== null && existing.totalItems >= limits.max_products);

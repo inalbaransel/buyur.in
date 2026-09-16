@@ -13,7 +13,7 @@ const getBusiness = cache(async (slug: string): Promise<Business | null> => {
   const pb = createServerPB();
   try {
     return await pb
-      .collection("menuva_businesses")
+      .collection("buyur_businesses")
       .getFirstListItem<Business>(pb.filter("slug = {:slug} && is_active = true", { slug }));
   } catch {
     return null;
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const business = await getBusiness(slug);
   if (!business) return {};
 
-  const title = `${business.name} — Menü | menuva`;
+  const title = `${business.name} — Menü | buyur`;
   const description = business.description || `${business.name} dijital menüsü — güncel fiyatlar, kategoriler ve ürünler.`;
 
   return {
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title,
       description,
       url: menuUrl(business.slug),
-      siteName: "menuva",
+      siteName: "buyur",
       images: business.cover_url ? [business.cover_url] : undefined,
       locale: "tr_TR",
       type: "website",
@@ -67,26 +67,26 @@ export default async function MenuLayout({
     return <MenuUnavailable business={business} />;
   }
 
-  // Subdomain üzerinden gelindiyse (vezirhan.menuvaapp.com) linklerde slug öneki
+  // Subdomain üzerinden gelindiyse (vezirhan.buyur.in) linklerde slug öneki
   // kullanılmaz; path üzerinden gelindiyse (/vezirhan) eski davranış korunur.
   const hdrs = await headers();
-  const basePath = hdrs.get("x-menuva-rewrite") === "subdomain" ? "" : `/${business.slug}`;
+  const basePath = hdrs.get("x-buyur-rewrite") === "subdomain" ? "" : `/${business.slug}`;
 
   // Menü verisi sunucuda çekiliyor: daha önce tarayıcı açıldıktan sonra iki ek
   // istek atıp bekliyordu. Artık ilk boyamada menü hazır geliyor.
   const pb = createServerPB();
   const [popups, categories, products] = await Promise.all([
-    pb.collection("menuva_popups").getFullList<Popup>({
+    pb.collection("buyur_popups").getFullList<Popup>({
       filter: pb.filter("business = {:id} && is_active = true", { id: business.id }),
       sort: "-created",
       requestKey: null,
     }),
-    pb.collection("menuva_categories").getFullList<Category>({
+    pb.collection("buyur_categories").getFullList<Category>({
       filter: pb.filter("business = {:id} && is_active = true", { id: business.id }),
       sort: "order,created",
       requestKey: null,
     }),
-    pb.collection("menuva_products").getFullList<Product>({
+    pb.collection("buyur_products").getFullList<Product>({
       filter: pb.filter("business = {:id} && is_available = true", { id: business.id }),
       sort: "order,created",
       requestKey: null,

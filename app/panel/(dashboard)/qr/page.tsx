@@ -104,7 +104,7 @@ function QrCard({
         <div className="mt-3 flex flex-wrap gap-2">
           <a
             href={dataUrl || undefined}
-            download={`menuva-qr-${code.code}.png`}
+            download={`buyur-qr-${code.code}.png`}
             onClick={onDownloaded}
             className="rounded-md border border-line px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-colors hover:border-paprika hover:text-paprika"
           >
@@ -202,7 +202,7 @@ export default function QrCodesPage() {
   const load = useCallback(async () => {
     if (!business) return;
     try {
-      const records = await pb.collection("menuva_qr_codes").getFullList<QrCode>({
+      const records = await pb.collection("buyur_qr_codes").getFullList<QrCode>({
         filter: pb.filter("business = {:id}", { id: business.id }),
         sort: "created",
         requestKey: null,
@@ -241,7 +241,7 @@ export default function QrCodesPage() {
 
     setSaving(true);
     try {
-      await pb.collection("menuva_qr_codes").create({
+      await pb.collection("buyur_qr_codes").create({
         business: business.id,
         name: trimmed,
         code: makeCode(trimmed, placement),
@@ -275,7 +275,7 @@ export default function QrCodesPage() {
       const chunk = names.slice(index, index + BULK_CONCURRENCY);
       const results = await Promise.allSettled(
         chunk.map((qrName) =>
-          pb.collection("menuva_qr_codes").create({
+          pb.collection("buyur_qr_codes").create({
             business: business.id,
             name: qrName,
             code: makeCode(qrName, "table"),
@@ -311,7 +311,7 @@ export default function QrCodesPage() {
     });
     if (!ok) return;
     try {
-      await pb.collection("menuva_qr_codes").delete(code.id);
+      await pb.collection("buyur_qr_codes").delete(code.id);
       toast("QR kodu silindi");
       await load();
     } catch {

@@ -4,7 +4,7 @@ import { businessTimezone, dayBoundsUtc, dayRange } from "@/lib/analytics/time";
 import type { DateRange } from "@/lib/analytics/range";
 import type { Business, DailyStat, MenuSession, StatDimension } from "@/lib/types";
 
-// Agregat okuma katmanı: panel sorguları ham event'e değil menuva_stats_daily'ye
+// Agregat okuma katmanı: panel sorguları ham event'e değil buyur_stats_daily'ye
 // bakar. Buradaki fonksiyonlar saf şekillendirme yapar (IO yalnızca loadStats /
 // rangeUniqueVisitors içinde).
 
@@ -252,7 +252,7 @@ export async function rangeUniqueVisitors(
   try {
     // Tek tur: ilk sayfa hem toplam sayıyı hem ilk 500 ziyaretçiyi getirir.
     // (Önceden ayrı bir sayım turu daha atılıyordu — her tur ~250ms.)
-    const first = await pb.collection("menuva_sessions").getList<MenuSession>(1, 500, {
+    const first = await pb.collection("buyur_sessions").getList<MenuSession>(1, 500, {
       filter: pb.filter("business = {:business} && started_at >= {:from} && started_at < {:to}", {
         business: business.id,
         from,
@@ -273,7 +273,7 @@ export async function rangeUniqueVisitors(
       const pages = Math.ceil(first.totalItems / 500);
       const rest = await Promise.all(
         Array.from({ length: pages - 1 }, (_, index) =>
-          pb.collection("menuva_sessions").getList<MenuSession>(index + 2, 500, {
+          pb.collection("buyur_sessions").getList<MenuSession>(index + 2, 500, {
             filter: pb.filter("business = {:business} && started_at >= {:from} && started_at < {:to}", {
               business: business.id,
               from,
@@ -318,7 +318,7 @@ async function cachedBusinessMap(
 /** İşletmenin bütün ürün adları (id → ad). */
 export async function businessProductNames(pb: PocketBase, businessId: string): Promise<Map<string, string>> {
   return cachedBusinessMap(pb, `products-name\u0000${businessId}`, async () => {
-    const records = await pb.collection("menuva_products").getFullList<{ id: string; name: string }>({
+    const records = await pb.collection("buyur_products").getFullList<{ id: string; name: string }>({
       filter: pb.filter("business = {:business}", { business: businessId }),
       fields: "id,name",
       batch: 500,
@@ -331,7 +331,7 @@ export async function businessProductNames(pb: PocketBase, businessId: string): 
 /** İşletmenin ürün → kategori eşlemesi. */
 export async function businessProductCategories(pb: PocketBase, businessId: string): Promise<Map<string, string>> {
   return cachedBusinessMap(pb, `products-category\u0000${businessId}`, async () => {
-    const records = await pb.collection("menuva_products").getFullList<{ id: string; category: string }>({
+    const records = await pb.collection("buyur_products").getFullList<{ id: string; category: string }>({
       filter: pb.filter("business = {:business}", { business: businessId }),
       fields: "id,category",
       batch: 500,
@@ -344,7 +344,7 @@ export async function businessProductCategories(pb: PocketBase, businessId: stri
 /** İşletmenin kategori adları (id → ad). */
 export async function businessCategoryNames(pb: PocketBase, businessId: string): Promise<Map<string, string>> {
   return cachedBusinessMap(pb, `categories-name\u0000${businessId}`, async () => {
-    const records = await pb.collection("menuva_categories").getFullList<{ id: string; name: string }>({
+    const records = await pb.collection("buyur_categories").getFullList<{ id: string; name: string }>({
       filter: pb.filter("business = {:business}", { business: businessId }),
       fields: "id,name",
       batch: 500,

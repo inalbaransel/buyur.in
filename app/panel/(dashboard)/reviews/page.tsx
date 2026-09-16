@@ -51,7 +51,7 @@ export default function ReviewsPage() {
 
   useEffect(() => {
     if (!business) return;
-    pb.collection("menuva_reviews")
+    pb.collection("buyur_reviews")
       .getFullList<Review>({
         filter: pb.filter("business = {:id}", { id: business.id }),
         requestKey: null,

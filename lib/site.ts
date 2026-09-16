@@ -1,4 +1,4 @@
-export const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "menuvaapp.com";
+export const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "buyur.in";
 
 export function menuHost(slug: string): string {
   return `${slug}.${ROOT_DOMAIN}`;
@@ -22,6 +22,6 @@ export function whatsappLink(message: string): string {
 
 export function planWhatsappLink(plan: string): string {
   return whatsappLink(
-    `Merhaba! menuva "${plan}" planıyla ilgileniyorum. Detayları ve fiyatı öğrenebilir miyim?`
+    `Merhaba! buyur "${plan}" planıyla ilgileniyorum. Detayları ve fiyatı öğrenebilir miyim?`
   );
 }

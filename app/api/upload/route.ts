@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   const pb = createServerPB();
   pb.authStore.save(authHeader, null);
   try {
-    await pb.collection("menuva_users").authRefresh();
+    await pb.collection("buyur_users").authRefresh();
   } catch {
     return NextResponse.json({ error: "Oturum geçersiz." }, { status: 401 });
   }
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
   let businessSlug: string;
   try {
-    const business = await pb.collection("menuva_businesses").getOne(businessId);
+    const business = await pb.collection("buyur_businesses").getOne(businessId);
     if (business.owner !== userId) {
       return NextResponse.json({ error: "Bu işletmeye erişiminiz yok." }, { status: 403 });
     }

@@ -3,7 +3,7 @@ import type { Business, Category, Product } from "@/lib/types";
 
 // Otomatik web sitesinin içerik türetimi.
 //
-// Kural: web sitesi ayrı bir içerik sistemi DEĞİL, mevcut menuva verisinin
+// Kural: web sitesi ayrı bir içerik sistemi DEĞİL, mevcut buyur verisinin
 // sunum katmanıdır. Burada hiçbir yeni alan, hiçbir "site içeriği" kavramı yok;
 // işletme panelde ne girdiyse site ondan üretilir. Bilgi yoksa ilgili bölüm
 // gösterilmez — boş bölüm çıkmaz.

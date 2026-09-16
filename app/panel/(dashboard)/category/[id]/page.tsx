@@ -22,7 +22,7 @@ export default function EditCategoryPage() {
     // requestKey: null -> React StrictMode'un dev'de effect'i iki kez
     // çalıştırması bu isteği SDK'nın otomatik iptal etmesine yol açabilir;
     // iptal edilen isteği "kayıt bulunamadı" sanıp listeye atmayalım.
-    pb.collection("menuva_categories")
+    pb.collection("buyur_categories")
       .getOne<Category>(id, { requestKey: null })
       .then(setCategory)
       .catch((err) => {

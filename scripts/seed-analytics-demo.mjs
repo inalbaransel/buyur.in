@@ -207,12 +207,12 @@ async function runPool(tasks, concurrency, onProgress) {
 
 // ─── Temizlik ───
 async function cleanSeed(businessId) {
-  const events = await pb.collection("menuva_events").getFullList({
+  const events = await pb.collection("buyur_events").getFullList({
     filter: pb.filter("business = {:b} && session ~ {:prefix}", { b: businessId, prefix: `${SEED_PREFIX}%` }),
     fields: "id",
     batch: 500,
   });
-  const sessions = await pb.collection("menuva_sessions").getFullList({
+  const sessions = await pb.collection("buyur_sessions").getFullList({
     filter: pb.filter("business = {:b} && key ~ {:prefix}", { b: businessId, prefix: `${SEED_PREFIX}%` }),
     fields: "id",
     batch: 500,
@@ -221,12 +221,12 @@ async function cleanSeed(businessId) {
   console.log(`silinecek: ${events.length} event, ${sessions.length} oturum`);
 
   await runPool(
-    events.map((record) => () => pb.collection("menuva_events").delete(record.id)),
+    events.map((record) => () => pb.collection("buyur_events").delete(record.id)),
     WRITE_CONCURRENCY,
     (done, total) => console.log(`  event ${done}/${total}`)
   );
   await runPool(
-    sessions.map((record) => () => pb.collection("menuva_sessions").delete(record.id)),
+    sessions.map((record) => () => pb.collection("buyur_sessions").delete(record.id)),
     WRITE_CONCURRENCY
   );
 
@@ -236,7 +236,7 @@ async function cleanSeed(businessId) {
 // ─── Üretim ───
 async function main() {
   const business = await pb
-    .collection("menuva_businesses")
+    .collection("buyur_businesses")
     .getFirstListItem(pb.filter("slug = {:slug}", { slug: SLUG }));
 
   console.log(`işletme: ${business.name} (${business.id})`);
@@ -247,16 +247,16 @@ async function main() {
   }
 
   const [categories, products, popups, qrCodes] = await Promise.all([
-    pb.collection("menuva_categories").getFullList({
+    pb.collection("buyur_categories").getFullList({
       filter: pb.filter("business = {:b} && is_active = true", { b: business.id }),
       sort: "order,created",
     }),
-    pb.collection("menuva_products").getFullList({
+    pb.collection("buyur_products").getFullList({
       filter: pb.filter("business = {:b} && is_available = true", { b: business.id }),
       sort: "order,created",
     }),
-    pb.collection("menuva_popups").getFullList({ filter: pb.filter("business = {:b}", { b: business.id }) }),
-    pb.collection("menuva_qr_codes").getFullList({
+    pb.collection("buyur_popups").getFullList({ filter: pb.filter("business = {:b}", { b: business.id }) }),
+    pb.collection("buyur_qr_codes").getFullList({
       filter: pb.filter("business = {:b} && is_active = true", { b: business.id }),
     }),
   ]);
@@ -557,13 +557,13 @@ async function main() {
   console.log("yazılıyor…");
 
   await runPool(
-    sessionRows.map((row) => () => pb.collection("menuva_sessions").create(row, { requestKey: null })),
+    sessionRows.map((row) => () => pb.collection("buyur_sessions").create(row, { requestKey: null })),
     WRITE_CONCURRENCY,
     (done, total) => console.log(`  oturum ${done}/${total}`)
   );
 
   await runPool(
-    eventRows.map((row) => () => pb.collection("menuva_events").create(row, { requestKey: null })),
+    eventRows.map((row) => () => pb.collection("buyur_events").create(row, { requestKey: null })),
     WRITE_CONCURRENCY,
     (done, total) => console.log(`  event ${done}/${total}`)
   );

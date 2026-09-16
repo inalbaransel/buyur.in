@@ -38,7 +38,7 @@ export function cartCount(lines: CartLine[]): number {
   return lines.reduce((sum, l) => sum + l.quantity, 0);
 }
 
-const STORAGE_PREFIX = "menuva-cart-";
+const STORAGE_PREFIX = "buyur-cart-";
 
 export function loadCart(slug: string): CartLine[] {
   if (typeof window === "undefined") return [];

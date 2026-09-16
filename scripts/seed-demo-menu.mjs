@@ -1,4 +1,4 @@
-// Demo işletmenin menüsünü menuva'nın TÜM menü özelliklerini gösterecek biçimde
+// Demo işletmenin menüsünü buyur'un TÜM menü özelliklerini gösterecek biçimde
 // doldurur: 14 kategori, ~60 ürün, yedi rozetin tamamı, on alerjen türü, kalori,
 // hazırlanma süresi, varyant/seçenek grupları, indirim + kampanya etiketi,
 // tükenen ürün, kategori açıklaması ve pop-up'lar.
@@ -65,7 +65,7 @@ function translationsOf(entry) {
 async function findCategory(businessId, name) {
   try {
     return await pb
-      .collection("menuva_categories")
+      .collection("buyur_categories")
       .getFirstListItem(pb.filter("business = {:b} && name = {:n}", { b: businessId, n: name }));
   } catch {
     return null;
@@ -75,7 +75,7 @@ async function findCategory(businessId, name) {
 async function findProduct(businessId, name) {
   try {
     return await pb
-      .collection("menuva_products")
+      .collection("buyur_products")
       .getFirstListItem(pb.filter("business = {:b} && name = {:n}", { b: businessId, n: name }));
   } catch {
     return null;
@@ -84,7 +84,7 @@ async function findProduct(businessId, name) {
 
 /** Kategorideki mevcut ürünlerden görsel havuzu — --reuse-images için. */
 async function imagePool(categoryId) {
-  const existing = await pb.collection("menuva_products").getFullList({
+  const existing = await pb.collection("buyur_products").getFullList({
     filter: pb.filter("category = {:c}", { c: categoryId }),
     fields: "images",
   });
@@ -110,7 +110,7 @@ async function showcaseBusiness(business) {
   }
 
   console.log(`~ işletme alanları tamamlanıyor: ${Object.keys(patch).join(", ")}`);
-  if (!DRY) await pb.collection("menuva_businesses").update(business.id, patch);
+  if (!DRY) await pb.collection("buyur_businesses").update(business.id, patch);
 }
 
 async function seedProduct(business, category, spec, order, pool) {
@@ -148,13 +148,13 @@ async function seedProduct(business, category, spec, order, pool) {
     return 1;
   }
 
-  const product = await pb.collection("menuva_products").create(payload);
+  const product = await pb.collection("buyur_products").create(payload);
   console.log(`  + ${spec.name}${spec.sale ? ` (−%${spec.sale.percent})` : ""}${spec.sold_out ? " [tükendi]" : ""}`);
 
   if (spec.options?.length) {
     let optionOrder = 0;
     for (const option of spec.options) {
-      await pb.collection("menuva_product_options").create({
+      await pb.collection("buyur_product_options").create({
         product: product.id,
         group_name: option.group,
         name: option.name,
@@ -172,7 +172,7 @@ async function seedProduct(business, category, spec, order, pool) {
 async function seedPopups(business) {
   let added = 0;
   for (const popup of DEMO_POPUPS) {
-    const existing = await pb.collection("menuva_popups").getList(1, 1, {
+    const existing = await pb.collection("buyur_popups").getList(1, 1, {
       filter: pb.filter("business = {:b} && title = {:t}", { b: business.id, t: popup.title }),
     });
     if (existing.totalItems > 0) {
@@ -180,7 +180,7 @@ async function seedPopups(business) {
       continue;
     }
     if (!DRY) {
-      await pb.collection("menuva_popups").create({
+      await pb.collection("buyur_popups").create({
         business: business.id,
         title: popup.title,
         message: popup.message,
@@ -199,14 +199,14 @@ async function seedPopups(business) {
 
 async function main() {
   const business = await pb
-    .collection("menuva_businesses")
+    .collection("buyur_businesses")
     .getFirstListItem(pb.filter("slug = {:slug}", { slug: SLUG }));
   console.log(`İşletme: ${business.name} (${business.slug}) — ana dil: ${business.main_language ?? "tr"}`);
   if (DRY) console.log("(dry çalıştırma — hiçbir kayıt yazılmayacak)\n");
 
   await showcaseBusiness(business);
 
-  const existingCategories = await pb.collection("menuva_categories").getFullList({
+  const existingCategories = await pb.collection("buyur_categories").getFullList({
     filter: pb.filter("business = {:id}", { id: business.id }),
   });
   let categoryOrder = existingCategories.length;
@@ -227,7 +227,7 @@ async function main() {
       };
       category = DRY
         ? { id: `dry-${categorySpec.name}` }
-        : await pb.collection("menuva_categories").create(payload);
+        : await pb.collection("buyur_categories").create(payload);
       console.log(`\n+ Kategori: ${categorySpec.name}`);
     } else {
       console.log(`\n= Kategori: ${categorySpec.name} (mevcut)`);
@@ -237,7 +237,7 @@ async function main() {
       if (!category.description && categorySpec.desc) patch.description = categorySpec.desc;
       if (Object.keys(category.translations ?? {}).length === 0) patch.translations = translationsOf(categorySpec);
       if (Object.keys(patch).length > 0 && !DRY) {
-        await pb.collection("menuva_categories").update(category.id, patch);
+        await pb.collection("buyur_categories").update(category.id, patch);
         console.log(`  ~ kategori bilgileri tamamlandı: ${Object.keys(patch).join(", ")}`);
       }
     }
@@ -245,7 +245,7 @@ async function main() {
     const pool = REUSE_IMAGES && !DRY ? await imagePool(category.id) : [];
     const existingProducts = DRY
       ? []
-      : await pb.collection("menuva_products").getFullList({ filter: pb.filter("category = {:c}", { c: category.id }) });
+      : await pb.collection("buyur_products").getFullList({ filter: pb.filter("category = {:c}", { c: category.id }) });
     let productOrder = existingProducts.length;
 
     for (const productSpec of categorySpec.products) {

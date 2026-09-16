@@ -7,7 +7,7 @@ import { listPosts } from "@/lib/blog";
 async function getActiveBusinessUrls(): Promise<MetadataRoute.Sitemap> {
   const pb = createServerPB();
   try {
-    const businesses = await pb.collection("menuva_businesses").getFullList<{
+    const businesses = await pb.collection("buyur_businesses").getFullList<{
       slug: string;
       updated: string;
     }>({

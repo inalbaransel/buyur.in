@@ -47,13 +47,13 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      await pb.collection("menuva_users").create({
+      await pb.collection("buyur_users").create({
         name,
         email,
         password,
         passwordConfirm: password,
       });
-      await pb.collection("menuva_users").authWithPassword(email, password);
+      await pb.collection("buyur_users").authWithPassword(email, password);
       trackMarketingEvent("signup_completed", { plan_intent: intent ?? "freemium" });
       router.replace("/panel");
     } catch (err) {

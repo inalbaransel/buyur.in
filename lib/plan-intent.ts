@@ -10,7 +10,7 @@ export interface PlanIntent {
   at: string;
 }
 
-const KEY = "menuva-plan-intent";
+const KEY = "buyur-plan-intent";
 
 export function parsePlanIntent(search: string): { plan: IntentPlan; billing: IntentBilling } | null {
   const params = new URLSearchParams(search);

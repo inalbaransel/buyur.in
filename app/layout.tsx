@@ -16,7 +16,7 @@ import { ScrollReveal } from "@/components/scroll-reveal";
 import { ROOT_DOMAIN } from "@/lib/site";
 
 const SITE_URL = `https://${ROOT_DOMAIN}`;
-const SITE_TITLE = "menuva — Dijital QR Menü";
+const SITE_TITLE = "buyur — Dijital QR Menü";
 const SITE_DESCRIPTION =
   "Restoran, kafe, pastane ve oteller için QR menü. Menünüzü dakikalar içinde kurun, fiyatları anında değiştirin, ürünleri öne çıkarın ve müşterinin seçimini garsona eksiksiz gösterin.";
 const SHARE_DESCRIPTION = "Menünüzü güncel tutun, müşterinin seçimini kolaylaştırın. Kredi kartı yok, 5 dakikada kurulum.";
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: SITE_TITLE,
-    template: "%s | menuva",
+    template: "%s | buyur",
   },
   description: SITE_DESCRIPTION,
   keywords: [
@@ -38,10 +38,10 @@ export const metadata: Metadata = {
     "menü oluşturma",
     "restoran yönetim yazılımı",
   ],
-  applicationName: "menuva",
-  authors: [{ name: "menuva" }],
-  creator: "menuva",
-  publisher: "menuva",
+  applicationName: "buyur",
+  authors: [{ name: "buyur" }],
+  creator: "buyur",
+  publisher: "buyur",
   category: "business",
   alternates: {
     canonical: "/",
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     title: SITE_TITLE,
     description: SHARE_DESCRIPTION,
     url: SITE_URL,
-    siteName: "menuva",
+    siteName: "buyur",
     locale: "tr_TR",
     type: "website",
   },

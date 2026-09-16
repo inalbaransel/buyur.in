@@ -32,11 +32,11 @@ export default function CategoriesPage() {
     if (!business) return;
     setLoading(true);
     const [list, products] = await Promise.all([
-      pb.collection("menuva_categories").getFullList<Category>({
+      pb.collection("buyur_categories").getFullList<Category>({
         filter: pb.filter("business = {:id}", { id: business.id }),
         sort: "order,created",
       }),
-      pb.collection("menuva_products").getFullList<{ id: string; category: string }>({
+      pb.collection("buyur_products").getFullList<{ id: string; category: string }>({
         filter: pb.filter("business = {:id}", { id: business.id }),
         fields: "id,category",
         batch: 500,
@@ -71,7 +71,7 @@ export default function CategoriesPage() {
     if (!ok) return;
 
     try {
-      await pb.collection("menuva_categories").delete(category.id);
+      await pb.collection("buyur_categories").delete(category.id);
       await load();
       toast(count > 0 ? `Kategori ve ${count} ürün silindi` : "Kategori silindi");
     } catch {
@@ -103,7 +103,7 @@ export default function CategoriesPage() {
     next.splice(index, 0, moved);
     setCategories(next);
     handleDragEnd();
-    await Promise.all(next.map((c, i) => pb.collection("menuva_categories").update(c.id, { order: i })));
+    await Promise.all(next.map((c, i) => pb.collection("buyur_categories").update(c.id, { order: i })));
   }
 
   if (businessLoading || loading) {

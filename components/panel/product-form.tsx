@@ -162,8 +162,8 @@ export function ProductForm({ business, categories, initial, onSaved, onCancel }
     setSaving(true);
     try {
       const record = initial
-        ? await pb.collection("menuva_products").update<Product>(initial.id, payload)
-        : await pb.collection("menuva_products").create<Product>({ ...payload, order: 999 });
+        ? await pb.collection("buyur_products").update<Product>(initial.id, payload)
+        : await pb.collection("buyur_products").create<Product>({ ...payload, order: 999 });
       draft.clear();
       setLastSavedAt(Date.now());
       toast(initial ? "Ürün güncellendi" : "Ürün eklendi");

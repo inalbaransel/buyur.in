@@ -25,7 +25,7 @@ describe("trafik kaynağı atfı", () => {
   });
 
   it("kendi host'undan gelen trafiği doğrudan sayar", () => {
-    expect(normalizeSource({ referrer: "https://vezirhan.menuvaapp.com/menu", selfHost: "vezirhan.menuvaapp.com" })).toBe(
+    expect(normalizeSource({ referrer: "https://vezirhan.buyur.in/menu", selfHost: "vezirhan.buyur.in" })).toBe(
       "direct"
     );
   });

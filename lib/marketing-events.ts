@@ -24,7 +24,7 @@ declare global {
 
 type EventProps = Record<string, string | number | boolean | null | undefined>;
 
-const ATTRIBUTION_KEY = "menuva-attribution";
+const ATTRIBUTION_KEY = "buyur-attribution";
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
 
 export type Attribution = Partial<Record<(typeof UTM_KEYS)[number], string>> & {

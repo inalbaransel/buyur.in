@@ -16,14 +16,14 @@ vi.mock("@/lib/pocketbase-server", () => ({
       `${expression}::${JSON.stringify(params ?? {})}`,
     collection: (name: string) => ({
       getFirstListItem: async () => {
-        if (name === "menuva_businesses") return { id: "biz_000000000001" };
+        if (name === "buyur_businesses") return { id: "biz_000000000001" };
         throw Object.assign(new Error("not found"), { status: 404 });
       },
       getList: async () => ({ totalItems: 0, items: [] }),
       create: async (data: Record<string, unknown>) => {
         created.push({ collection: name, data });
         const record = { id: `rec_${created.length}`, ...data };
-        if (name === "menuva_sessions") sessionRecords.push(record);
+        if (name === "buyur_sessions") sessionRecords.push(record);
         return record;
       },
       update: async (id: string, data: Record<string, unknown>) => ({ id, ...data }),
@@ -34,7 +34,7 @@ vi.mock("@/lib/pocketbase-server", () => ({
 const { POST } = await import("@/app/api/track/route");
 
 function trackRequest(body: unknown, headers: Record<string, string> = {}): NextRequest {
-  return new NextRequest("https://vezirhan.menuvaapp.com/api/track", {
+  return new NextRequest("https://vezirhan.buyur.in/api/track", {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -101,14 +101,14 @@ describe("/api/track sunucu tarafı zenginleştirme", () => {
 
     expect(response.status).toBe(204);
 
-    const session = created.find((item) => item.collection === "menuva_sessions")!;
+    const session = created.find((item) => item.collection === "buyur_sessions")!;
     // QR parametresi referrer'ın önüne geçer.
     expect(session.data.source).toBe("qr");
     expect(session.data.device).toBe("mobile");
     expect(session.data.country).toBe("TR");
     expect(session.data.city).toBe("İstanbul");
 
-    const events = created.filter((item) => item.collection === "menuva_events");
+    const events = created.filter((item) => item.collection === "buyur_events");
     const types = events.map((item) => item.data.type);
     expect(types).toContain("session_start");
     expect(types).toContain("qr_scan");
@@ -139,7 +139,7 @@ describe("/api/track sunucu tarafı zenginleştirme", () => {
     );
 
     const searchEvent = created.find(
-      (item) => item.collection === "menuva_events" && item.data.type === "search"
+      (item) => item.collection === "buyur_events" && item.data.type === "search"
     )!;
     const meta = searchEvent.data.meta as Record<string, unknown>;
     expect(meta.results).toBe(3);

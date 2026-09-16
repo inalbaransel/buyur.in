@@ -35,11 +35,11 @@ vi.mock("@/lib/pocketbase-server", () => ({
       `${expression}::${JSON.stringify(params ?? {})}`,
     collection: (name: string) => ({
       getFullList: async () => {
-        if (name === "menuva_businesses") return ownedBusinesses;
+        if (name === "buyur_businesses") return ownedBusinesses;
         return [];
       },
       getFirstListItem: async () => {
-        if (name === "menuva_plans") return { key: ownedBusinesses[0]?.plan ?? "freemium", limits: {} };
+        if (name === "buyur_plans") return { key: ownedBusinesses[0]?.plan ?? "freemium", limits: {} };
         throw new Error("not found");
       },
     }),
@@ -49,7 +49,7 @@ vi.mock("@/lib/pocketbase-server", () => ({
 const { AccessError, clearAnalyticsContextCache, resolveAnalyticsContext } = await import("@/lib/analytics/access");
 
 function request(token = "test-token"): Request {
-  return new Request("https://menuvaapp.com/api/analytics/overview", {
+  return new Request("https://buyur.in/api/analytics/overview", {
     headers: { authorization: `Bearer ${token}` },
   });
 }
@@ -64,7 +64,7 @@ beforeEach(() => {
 
 describe("kimlik doğrulama", () => {
   it("token yoksa 401", async () => {
-    const anonymous = new Request("https://menuvaapp.com/api/analytics/overview");
+    const anonymous = new Request("https://buyur.in/api/analytics/overview");
     await expect(resolveAnalyticsContext(anonymous)).rejects.toMatchObject({ status: 401 });
   });
 

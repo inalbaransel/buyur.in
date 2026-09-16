@@ -20,11 +20,11 @@ export const revalidate = 600;
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "menuva",
+  name: "buyur",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   url: `https://${ROOT_DOMAIN}`,
-  logo: `https://${ROOT_DOMAIN}/menuva-icon.png`,
+  logo: `https://${ROOT_DOMAIN}/buyur-icon.png`,
   description:
     "Restoran, kafe, pastane ve oteller için QR menü: menünüzü dakikalar içinde kurun, fiyatları anında değiştirin, ürünleri öne çıkarın ve müşterinin seçimini garsona eksiksiz gösterin.",
   offers: {

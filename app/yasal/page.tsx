@@ -7,7 +7,7 @@ import { LEGAL_DOCS, formatLegalDate, legalPath } from "@/lib/legal";
 export const metadata: Metadata = {
   title: "Yasal metinler",
   description:
-    "menuva'nın gizlilik politikası, KVKK aydınlatma metni, kullanım koşulları, abonelik ve iptal koşulları, ödeme koşulları ve faturalandırma bilgileri.",
+    "buyur'un gizlilik politikası, KVKK aydınlatma metni, kullanım koşulları, abonelik ve iptal koşulları, ödeme koşulları ve faturalandırma bilgileri.",
   alternates: { canonical: "/yasal" },
 };
 

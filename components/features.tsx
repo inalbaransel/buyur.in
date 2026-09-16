@@ -5,7 +5,7 @@ import { CheckCircleIcon, QrCodeIcon, WhatsappIcon } from "@/components/icons";
 
 /* ─── Sorun → çözüm ───────────────────────────────────────────
    Uzun özellik listesi yerine satın alma kararını etkileyen üç sonuç. Her
-   satır: işletmenin sorunu, menuva'nın çözümü ve bunun gerçekte nasıl
+   satır: işletmenin sorunu, buyur'un çözümü ve bunun gerçekte nasıl
    göründüğü. Diğer detaylar (hazırlanma süresi, özel URL…) sayfanın
    altındaki karşılaştırmada. */
 
@@ -48,7 +48,7 @@ function PriceUpdateProof() {
   );
 }
 
-/** Menuva'nın gerçek sepet sayfasının birebir kopyası (app/[slug]/cart). */
+/** Buyur'un gerçek sepet sayfasının birebir kopyası (app/[slug]/cart). */
 function CartProof() {
   const lines = [
     { name: "Izgara Köfte", note: "Acılı", qty: 2, price: "570₺" },
@@ -176,12 +176,12 @@ export function ProblemSolution() {
     <section id="neden" className="border-b border-line bg-crema/40">
       <div className="mx-auto max-w-6xl px-5 py-24">
         <div className="max-w-2xl">
-          <p className="font-mono text-[13px] uppercase tracking-[0.2em] text-paprika">Neden menuva</p>
+          <p className="font-mono text-[13px] uppercase tracking-[0.2em] text-paprika">Neden buyur</p>
           <h2 className="mt-3 font-display text-4xl font-extrabold tracking-tight md:text-5xl">
             Basılı menünün çözemediği üç sorun
           </h2>
           <p className="mt-4 text-ink-soft">
-            Uzun bir özellik listesi değil: menuva&apos;nın işletmenize kazandırdığı üç sonuç ve her birinin ekranda nasıl
+            Uzun bir özellik listesi değil: buyur&apos;nın işletmenize kazandırdığı üç sonuç ve her birinin ekranda nasıl
             göründüğü.
           </p>
         </div>
@@ -198,7 +198,7 @@ export function ProblemSolution() {
                   <span className="text-paprika">0{index + 1}</span> Sorun
                 </p>
                 <p className="mt-1.5 text-lg text-ink-soft">{row.problem}</p>
-                <p className="mt-6 font-mono text-[11px] uppercase tracking-wider text-herb">menuva çözümü</p>
+                <p className="mt-6 font-mono text-[11px] uppercase tracking-wider text-herb">buyur çözümü</p>
                 <h3 className="mt-1.5 font-display text-2xl font-extrabold tracking-tight md:text-3xl">{row.solution}</h3>
                 <p className="mt-3 leading-relaxed text-ink-soft">{row.body}</p>
                 <ul className="mt-5 space-y-2 text-sm">

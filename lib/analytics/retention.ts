@@ -3,7 +3,7 @@ import { businessTimezone, dayKey } from "@/lib/analytics/time";
 import { STATS_COLLECTION } from "@/lib/analytics/rollup";
 import type { Business, PlanRecord } from "@/lib/types";
 
-// Ham event saklama süresi. Agregatlar (menuva_stats_daily) hiç silinmez:
+// Ham event saklama süresi. Agregatlar (buyur_stats_daily) hiç silinmez:
 // plan düşse bile geçmiş kaybolmasın, tekrar yükseltmede geri gelsin (§6).
 // Silinen yalnızca ham event akışı — agregatlar zaten hesaplanmış olur.
 
@@ -24,7 +24,7 @@ export function retentionDaysFor(plan: PlanRecord | null): number {
  *
  *  Değişmez kural: **agregata dönüşmemiş bir gün silinmez.** Ham event'i
  *  aggregate etmeden silmek veriyi geri dönüşsüz kaybettirir (ilk kurulumda
- *  tam olarak bu oldu). Bu yüzden yalnızca `menuva_stats_daily` içinde o güne
+ *  tam olarak bu oldu). Bu yüzden yalnızca `buyur_stats_daily` içinde o güne
  *  ait `total` satırı bulunan event'ler temizleniyor. */
 export async function pruneEvents(pb: PocketBase, business: Business, retentionDays: number): Promise<number> {
   const timezone = businessTimezone(business);
@@ -46,7 +46,7 @@ export async function pruneEvents(pb: PocketBase, business: Business, retentionD
   const safeDays = new Set(aggregated.map((row) => row.date));
   if (safeDays.size === 0) return 0;
 
-  const stale = await pb.collection("menuva_events").getList<{ id: string; occurred_at: string }>(
+  const stale = await pb.collection("buyur_events").getList<{ id: string; occurred_at: string }>(
     1,
     MAX_DELETES_PER_RUN,
     {
@@ -60,7 +60,7 @@ export async function pruneEvents(pb: PocketBase, business: Business, retentionD
   for (const record of stale.items) {
     if (!record.occurred_at) continue; // occurred_at'i olmayan eski kayıt: önce backfill edilmeli
     if (!safeDays.has(dayKey(new Date(record.occurred_at.replace(" ", "T")), timezone))) continue;
-    await pb.collection("menuva_events").delete(record.id, { requestKey: null });
+    await pb.collection("buyur_events").delete(record.id, { requestKey: null });
     deleted += 1;
   }
 
@@ -72,14 +72,14 @@ export async function pruneEvents(pb: PocketBase, business: Business, retentionD
 export async function pruneSessions(pb: PocketBase, business: Business, retentionDays: number): Promise<number> {
   const cutoff = new Date(Date.now() - (retentionDays * 2 + GRACE_DAYS) * 86_400_000);
 
-  const stale = await pb.collection("menuva_sessions").getList(1, MAX_DELETES_PER_RUN, {
+  const stale = await pb.collection("buyur_sessions").getList(1, MAX_DELETES_PER_RUN, {
     filter: pb.filter("business = {:business} && started_at < {:cutoff}", { business: business.id, cutoff }),
     fields: "id",
     requestKey: null,
   });
 
   for (const record of stale.items) {
-    await pb.collection("menuva_sessions").delete(record.id, { requestKey: null });
+    await pb.collection("buyur_sessions").delete(record.id, { requestKey: null });
   }
 
   return stale.items.length;

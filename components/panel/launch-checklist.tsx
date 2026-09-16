@@ -30,7 +30,7 @@ function hasBusinessInfo(business: Business): boolean {
 }
 
 function dismissedKey(businessId: string) {
-  return `menuva-checklist-dismissed-${businessId}`;
+  return `buyur-checklist-dismissed-${businessId}`;
 }
 
 export function LaunchChecklist({

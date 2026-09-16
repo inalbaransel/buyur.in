@@ -26,7 +26,7 @@ function fakePb(options: { aggregatedDays: string[]; events: { id: string; occur
       `${expression}::${JSON.stringify(params ?? {})}`,
     collection: (name: string) => ({
       getFullList: async () => {
-        if (name === "menuva_stats_daily") return options.aggregatedDays.map((date) => ({ date }));
+        if (name === "buyur_stats_daily") return options.aggregatedDays.map((date) => ({ date }));
         return [];
       },
       getList: async () => ({

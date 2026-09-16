@@ -1,8 +1,8 @@
 // Analitik altyapısı göçü (Faz 1). Mevcut bir kurulumu yeni event şemasına taşır:
 //
-//   1) menuva_events.type select listesini yeni event sözlüğüne genişletir
+//   1) buyur_events.type select listesini yeni event sözlüğüne genişletir
 //      (getOrCreate var olan bir alanın değer listesini güncellemez).
-//   2) menuva_events üzerindeki analitik indekslerini ekler.
+//   2) buyur_events üzerindeki analitik indekslerini ekler.
 //   3) Plan kayıtlarındaki limits'e yeni analitik yetkilerini yazar.
 //   4) Saat dilimi boş olan işletmelere varsayılanı yazar.
 //
@@ -44,10 +44,10 @@ const EVENT_TYPES = [
 ];
 
 const EVENT_INDEXES = [
-  "CREATE INDEX `idx_events_business_time` ON `menuva_events` (`business`, `occurred_at`)",
-  "CREATE INDEX `idx_events_business_type_time` ON `menuva_events` (`business`, `type`, `occurred_at`)",
-  "CREATE INDEX `idx_events_business_session` ON `menuva_events` (`business`, `session`)",
-  "CREATE INDEX `idx_events_business_product` ON `menuva_events` (`business`, `product`, `occurred_at`)",
+  "CREATE INDEX `idx_events_business_time` ON `buyur_events` (`business`, `occurred_at`)",
+  "CREATE INDEX `idx_events_business_type_time` ON `buyur_events` (`business`, `type`, `occurred_at`)",
+  "CREATE INDEX `idx_events_business_session` ON `buyur_events` (`business`, `session`)",
+  "CREATE INDEX `idx_events_business_product` ON `buyur_events` (`business`, `product`, `occurred_at`)",
 ];
 
 // Plan bazlı analitik yetkileri — docs/analytics-architecture.md §6 ile aynı.
@@ -82,9 +82,9 @@ const PLAN_ANALYTICS = {
 };
 
 async function widenEventTypes() {
-  const collection = await pb.collections.getOne("menuva_events");
+  const collection = await pb.collections.getOne("buyur_events");
   const field = collection.fields.find((f) => f.name === "type");
-  if (!field) throw new Error("menuva_events içinde 'type' alanı bulunamadı.");
+  if (!field) throw new Error("buyur_events içinde 'type' alanı bulunamadı.");
 
   const missing = EVENT_TYPES.filter((value) => !field.values.includes(value));
   if (missing.length === 0) {
@@ -101,7 +101,7 @@ async function widenEventTypes() {
 }
 
 async function addEventIndexes() {
-  const collection = await pb.collections.getOne("menuva_events");
+  const collection = await pb.collections.getOne("buyur_events");
   const existing = collection.indexes ?? [];
   const nameOf = (sql) => sql.match(/`([^`]+)`\s+ON/)?.[1] ?? sql;
   const existingNames = new Set(existing.map(nameOf));
@@ -117,7 +117,7 @@ async function addEventIndexes() {
 }
 
 async function updatePlanLimits() {
-  const plans = await pb.collection("menuva_plans").getFullList();
+  const plans = await pb.collection("buyur_plans").getFullList();
 
   for (const plan of plans) {
     const wanted = PLAN_ANALYTICS[plan.key];
@@ -133,7 +133,7 @@ async function updatePlanLimits() {
       continue;
     }
 
-    await pb.collection("menuva_plans").update(plan.id, { limits: { ...limits, ...wanted } });
+    await pb.collection("buyur_plans").update(plan.id, { limits: { ...limits, ...wanted } });
     console.log(`~ plans/${plan.key}: ${changed.map(([f, v]) => `${f}=${v}`).join(", ")}`);
   }
 }
@@ -149,7 +149,7 @@ async function backfillOccurredAt() {
   let migrated = 0;
 
   for (;;) {
-    const batch = await pb.collection("menuva_events").getList(1, 200, {
+    const batch = await pb.collection("buyur_events").getList(1, 200, {
       filter: "occurred_at = ''",
       fields: "id,created",
       sort: "created",
@@ -158,7 +158,7 @@ async function backfillOccurredAt() {
     if (batch.items.length === 0) break;
 
     for (const event of batch.items) {
-      await pb.collection("menuva_events").update(event.id, { occurred_at: event.created });
+      await pb.collection("buyur_events").update(event.id, { occurred_at: event.created });
       migrated += 1;
     }
 
@@ -173,7 +173,7 @@ async function backfillOccurredAt() {
 }
 
 async function backfillTimezones() {
-  const businesses = await pb.collection("menuva_businesses").getFullList({
+  const businesses = await pb.collection("buyur_businesses").getFullList({
     filter: "timezone = ''",
     fields: "id",
   });
@@ -184,7 +184,7 @@ async function backfillTimezones() {
   }
 
   for (const business of businesses) {
-    await pb.collection("menuva_businesses").update(business.id, { timezone: DEFAULT_TIMEZONE });
+    await pb.collection("buyur_businesses").update(business.id, { timezone: DEFAULT_TIMEZONE });
   }
   console.log(`~ ${businesses.length} işletmeye saat dilimi yazıldı: ${DEFAULT_TIMEZONE}`);
 }
@@ -195,7 +195,7 @@ async function backfillTimezones() {
  *  - ücretli plandaki işletmelerde kalmış limit alanlarını temizler
  *  (bkz. lib/entitlements.ts — limitler yalnızca Freemium'a aittir). */
 async function backfillPlanUsage() {
-  const businesses = await pb.collection("menuva_businesses").getFullList({
+  const businesses = await pb.collection("buyur_businesses").getFullList({
     fields: "id,name,plan,created,plan_expires_at,freemium_started_at,menu_views",
   });
 
@@ -212,7 +212,7 @@ async function backfillPlanUsage() {
       }
 
       // Gerçek görüntülenme: günlük agregatların "page_views" toplamı.
-      const stats = await pb.collection("menuva_stats_daily").getFullList({
+      const stats = await pb.collection("buyur_stats_daily").getFullList({
         filter: pb.filter("business = {:b} && dimension = {:d}", { b: business.id, d: "total" }),
         fields: "metrics",
         batch: 500,
@@ -226,7 +226,7 @@ async function backfillPlanUsage() {
     }
 
     if (Object.keys(patch).length > 0) {
-      await pb.collection("menuva_businesses").update(business.id, patch);
+      await pb.collection("buyur_businesses").update(business.id, patch);
       console.log(`~ ${business.name} (${business.plan}): ${Object.keys(patch).join(", ")}`);
       updated += 1;
     }

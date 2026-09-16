@@ -145,7 +145,7 @@ async function resolveBusinessId(
 
   try {
     const business = await pb
-      .collection("menuva_businesses")
+      .collection("buyur_businesses")
       .getFirstListItem<{ id: string }>(pb.filter("slug = {:slug} && is_active = true", { slug }), {
         fields: "id",
         requestKey: null,
@@ -172,7 +172,7 @@ async function resolveQrId(
   let id: string | null = null;
   try {
     const record = await pb
-      .collection("menuva_qr_codes")
+      .collection("buyur_qr_codes")
       .getFirstListItem<{ id: string }>(
         pb.filter("business = {:business} && code = {:code} && is_active = true", { business: businessId, code }),
         { fields: "id", requestKey: null }
@@ -264,7 +264,7 @@ async function ensureSession(args: {
 
     try {
       const existing = await pb
-        .collection("menuva_sessions")
+        .collection("buyur_sessions")
         .getFirstListItem<MenuSession>(pb.filter("business = {:business} && key = {:key}", { business: businessId, key: cookieSid }), {
           requestKey: null,
         });
@@ -313,7 +313,7 @@ async function ensureSession(args: {
 
   let isReturning = false;
   try {
-    const previous = await pb.collection("menuva_sessions").getList(1, 1, {
+    const previous = await pb.collection("buyur_sessions").getList(1, 1, {
       filter: pb.filter("business = {:business} && visitor = {:visitor}", { business: businessId, visitor }),
       fields: "id",
       requestKey: null,
@@ -324,7 +324,7 @@ async function ensureSession(args: {
   }
 
   const nowIso = new Date(now).toISOString();
-  const created = await pb.collection("menuva_sessions").create<MenuSession>(
+  const created = await pb.collection("buyur_sessions").create<MenuSession>(
     {
       business: businessId,
       key,
@@ -410,7 +410,7 @@ async function writeEvent(
   session: SessionContext,
   input: EventInput
 ): Promise<void> {
-  await pb.collection("menuva_events").create(
+  await pb.collection("buyur_events").create(
     {
       business: businessId,
       type: input.type,
@@ -456,7 +456,7 @@ async function touchSession(
   if (type === "product_view" || type === "product_detail_view") patch["product_views+"] = 1;
   if (type === "add_to_cart") patch["cart_adds+"] = 1;
 
-  await pb.collection("menuva_sessions").update(session.recordId, patch, { requestKey: null });
+  await pb.collection("buyur_sessions").update(session.recordId, patch, { requestKey: null });
 }
 
 function noContent(cookies?: { sid: string; secure: boolean }): NextResponse {
@@ -535,7 +535,7 @@ export async function POST(req: NextRequest) {
     // (sepete ekleme, arama…) sayaca girmez. Yanıtı bloklamıyoruz.
     if (type === "page_view" && !isBotAgent(req.headers.get("user-agent") ?? "")) {
       void pb
-        .collection("menuva_businesses")
+        .collection("buyur_businesses")
         .update(businessId, { "menu_views+": 1 }, { requestKey: null })
         .catch(() => undefined);
     }

@@ -62,7 +62,7 @@ export const PLAN_SEEDS = [
       "Süre ve görüntülenme sınırı yok",
       "Kampanyalar ve açılış pop-up'ı",
       "Gelişmiş analizler ve otomatik içgörüler",
-      "menuva markasını kaldırma",
+      "buyur markasını kaldırma",
       "Özel alan adı",
       "Standart web sitesi (menüden otomatik)",
     ],

@@ -29,10 +29,10 @@ export function MenuUnavailable({ business }: { business: Business }) {
       )}
 
       <Link
-        href="https://menuvaapp.com"
+        href="https://buyur.in"
         className="font-mono text-[11px] uppercase tracking-wider text-ink-soft/70 transition-colors hover:text-paprika"
       >
-        menuva ile hazırlandı
+        buyur ile hazırlandı
       </Link>
     </main>
   );

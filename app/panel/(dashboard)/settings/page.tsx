@@ -203,7 +203,7 @@ function SettingsForm({ business, onSaved }: { business: Business; onSaved: (b: 
     }
     setSaving(true);
     try {
-      const updated = await pb.collection("menuva_businesses").update<Business>(business.id, {
+      const updated = await pb.collection("buyur_businesses").update<Business>(business.id, {
         name,
         slug: slugify(slug),
         description,

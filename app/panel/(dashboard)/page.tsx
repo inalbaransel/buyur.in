@@ -61,7 +61,7 @@ function Onboarding() {
       let defaultPlan: Plan = "freemium";
       let trialMonths = 0;
       try {
-        const plan = await pb.collection("menuva_plans").getFirstListItem<PlanRecord>("is_default = true");
+        const plan = await pb.collection("buyur_plans").getFirstListItem<PlanRecord>("is_default = true");
         defaultPlan = plan.key;
         trialMonths = plan.trial_months ?? 0;
       } catch {
@@ -71,7 +71,7 @@ function Onboarding() {
         // süresiz kabul etmek daha az zararlı.
       }
 
-      const business = await pb.collection("menuva_businesses").create<Business>({
+      const business = await pb.collection("buyur_businesses").create<Business>({
         owner: user.id,
         name,
         slug,
@@ -89,7 +89,7 @@ function Onboarding() {
       // Ürünü olmayan kategori müşteri menüsünde görünmez; bir tanesi açılamazsa kurulum durmaz.
       for (const [order, categoryData] of template.categories.entries()) {
         try {
-          const categoryRecord = await pb.collection("menuva_categories").create({
+          const categoryRecord = await pb.collection("buyur_categories").create({
             business: business.id,
             name: categoryData.name,
             order,
@@ -98,7 +98,7 @@ function Onboarding() {
 
           for (const [productOrder, productData] of categoryData.products.entries()) {
             try {
-              await pb.collection("menuva_products").create({
+              await pb.collection("buyur_products").create({
                 business: business.id,
                 category: categoryRecord.id,
                 name: productData.name,
@@ -358,11 +358,11 @@ function Overview({ business }: { business: Business }) {
     async function loadCounts() {
       try {
         const [categories, products] = await Promise.all([
-          pb.collection("menuva_categories").getList(1, 1, {
+          pb.collection("buyur_categories").getList(1, 1, {
             filter: pb.filter("business = {:id}", { id: business.id }),
             requestKey: null,
           }),
-          pb.collection("menuva_products").getList(1, 1, {
+          pb.collection("buyur_products").getList(1, 1, {
             filter: pb.filter("business = {:id}", { id: business.id }),
             requestKey: null,
           }),

@@ -22,8 +22,8 @@ export default function ProductDetailPage() {
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      pb.collection("menuva_products").getOne<Product>(id, { requestKey: null }),
-      pb.collection("menuva_product_options").getFullList<ProductOption>({
+      pb.collection("buyur_products").getOne<Product>(id, { requestKey: null }),
+      pb.collection("buyur_product_options").getFullList<ProductOption>({
         filter: pb.filter("product = {:id}", { id }),
         requestKey: null,
         sort: "order,created",

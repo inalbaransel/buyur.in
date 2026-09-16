@@ -1,4 +1,4 @@
-// Grafik paleti. Değerler elle seçilmedi: menuva'nın sıcak yüzeyi (#fbf5ea)
+// Grafik paleti. Değerler elle seçilmedi: buyur'un sıcak yüzeyi (#fbf5ea)
 // üzerinde dataviz doğrulayıcısıyla sınandı ve geçti —
 //   kategorik : parlaklık bandı ✓ · kroma ✓ · CVD komşu ΔE 12.6 (protan) /
 //               14.9 (tritan) · normal görüş ΔE 19.6 · kontrast hepsi ≥ 3:1

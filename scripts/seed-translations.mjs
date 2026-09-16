@@ -166,13 +166,13 @@ const productTranslations = {
 };
 
 async function main() {
-  const business = await pb.collection("menuva_businesses").getFirstListItem(pb.filter("slug = {:slug}", { slug: SLUG }));
+  const business = await pb.collection("buyur_businesses").getFirstListItem(pb.filter("slug = {:slug}", { slug: SLUG }));
   console.log(`İşletme bulundu: ${business.name} (${business.id})`);
 
-  await pb.collection("menuva_businesses").update(business.id, { translations: businessTranslations });
+  await pb.collection("buyur_businesses").update(business.id, { translations: businessTranslations });
   console.log("~ İşletme açıklaması çevirileri yazıldı");
 
-  const categories = await pb.collection("menuva_categories").getFullList({
+  const categories = await pb.collection("buyur_categories").getFullList({
     filter: pb.filter("business = {:id}", { id: business.id }),
   });
   for (const cat of categories) {
@@ -181,11 +181,11 @@ async function main() {
       console.log(`? Kategori çevirisi yok, atlandı: ${cat.name}`);
       continue;
     }
-    await pb.collection("menuva_categories").update(cat.id, { translations: tr });
+    await pb.collection("buyur_categories").update(cat.id, { translations: tr });
     console.log(`~ Kategori: ${cat.name}`);
   }
 
-  const products = await pb.collection("menuva_products").getFullList({
+  const products = await pb.collection("buyur_products").getFullList({
     filter: pb.filter("business = {:id}", { id: business.id }),
   });
   let missing = 0;
@@ -196,7 +196,7 @@ async function main() {
       missing++;
       continue;
     }
-    await pb.collection("menuva_products").update(p.id, { translations: tr });
+    await pb.collection("buyur_products").update(p.id, { translations: tr });
     console.log(`~ Ürün: ${p.name}`);
   }
 

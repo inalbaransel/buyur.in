@@ -3,13 +3,13 @@ import { businessTimezone, dayBoundsUtc, dayKey, zonedParts } from "@/lib/analyt
 import type { Business, DailyStat, MenuEvent, MenuSession, StatDimension } from "@/lib/types";
 
 // Günlük agregasyon. Panel sorguları ham event taramaz; her işletme-günü için
-// burada üretilen menuva_stats_daily kayıtlarını okur (docs/analytics-architecture.md §8).
+// burada üretilen buyur_stats_daily kayıtlarını okur (docs/analytics-architecture.md §8).
 //
 // Hesap idempotenttir: aynı gün tekrar çalıştırıldığında kayıtlar üzerine yazılır,
 // artık üretilmeyen satırlar silinir. Bugünün verisi STALE_MS'ten eskiyse tembel
 // olarak yeniden hesaplanır.
 
-export const STATS_COLLECTION = "menuva_stats_daily";
+export const STATS_COLLECTION = "buyur_stats_daily";
 
 /** Bugünün agregatı bu süreden eskiyse yeniden hesaplanır. */
 export const STALE_MS = 15 * 60_000;

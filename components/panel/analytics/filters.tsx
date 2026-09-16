@@ -25,7 +25,7 @@ export interface AnalyticsFilters {
 
 const DEFAULT_FILTERS: AnalyticsFilters = { preset: "last_30", compare: "previous_period" };
 
-const STORAGE_KEY = "menuva-analytics-filters";
+const STORAGE_KEY = "buyur-analytics-filters";
 
 export const RANGE_OPTIONS: { value: string; label: string }[] = [
   { value: "today", label: "Bugün" },

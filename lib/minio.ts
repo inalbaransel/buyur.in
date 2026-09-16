@@ -3,7 +3,7 @@ import { Client } from "minio";
 // Ürün görselleri, logo ve kapak fotoğrafları burada saklanır.
 // Pocketbase kayıtları sadece dönen public URL'i tutar.
 const endpoint = new URL(process.env.MINIO_ENDPOINT ?? "https://s3.harbidigital.com");
-const bucket = process.env.MINIO_BUCKET ?? "menuva";
+const bucket = process.env.MINIO_BUCKET ?? "buyur";
 
 export const minioClient = new Client({
   endPoint: endpoint.hostname,

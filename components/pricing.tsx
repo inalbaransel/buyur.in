@@ -83,7 +83,7 @@ const elite = PLAN_PRICING.elite;
 
 const faqs = [
   {
-    q: "menuva sipariş alıyor mu?",
+    q: "buyur sipariş alıyor mu?",
     a: "Bugün sipariş ya da ödeme almıyor. Müşteri beğendiklerini sepette toplar, toplamı görür ve ekranı garsona gösterir; siparişi garsonunuz alır. Yanlış ya da eksik sipariş azalır, mevcut düzeniniz değişmez.",
   },
   {
@@ -96,7 +96,7 @@ const faqs = [
   },
   {
     q: "Premium ve Elite arasındaki fark nedir?",
-    a: "Premium; kampanyalar, gelişmiş analizler, menuva markası olmadan profesyonel menü, özel alan adı ve menünüzden otomatik oluşan standart web sitesi içerir. Elite bunlara gelişmiş web sitesi deneyimini (animasyonlu tanıtım, menü slider'ı, galeri), kurulumunu bizim yaptığımız hediye kurumsal web sitesini, rapor merkezini (PDF ve CSV dışa aktarma) ve öncelikli teknik desteği ekler.",
+    a: "Premium; kampanyalar, gelişmiş analizler, buyur markası olmadan profesyonel menü, özel alan adı ve menünüzden otomatik oluşan standart web sitesi içerir. Elite bunlara gelişmiş web sitesi deneyimini (animasyonlu tanıtım, menü slider'ı, galeri), kurulumunu bizim yaptığımız hediye kurumsal web sitesini, rapor merkezini (PDF ve CSV dışa aktarma) ve öncelikli teknik desteği ekler.",
   },
   {
     q: "Elite'teki hediye web sitesi neyi kapsıyor?",
@@ -160,7 +160,7 @@ export function FAQ() {
             Yazın, gerçek bir insan cevaplasın. Satış konuşması değil — sadece merak ettiğinizi öğrenin.
           </p>
           <a
-            href={whatsappLink("Merhaba, menuva hakkında bir sorum var:")}
+            href={whatsappLink("Merhaba, buyur hakkında bir sorum var:")}
             target="_blank"
             rel="noopener noreferrer"
             data-track="whatsapp_lead"

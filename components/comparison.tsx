@@ -5,18 +5,18 @@ import { CheckCircleIcon } from "@/components/icons";
 // üç sonuç sayfanın üstünde; buradaki detaylar ikna değil, kontrol listesi.
 
 const rows = [
-  { label: "Fiyat değişikliği", paper: "Yeniden baskı, günlerce bekleme", menuva: "Panelden anında, tüm masalarda" },
-  { label: "Tükenen ürün", paper: "Garson masada söyler", menuva: "Tek dokunuşla menüden kalkar" },
+  { label: "Fiyat değişikliği", paper: "Yeniden baskı, günlerce bekleme", buyur: "Panelden anında, tüm masalarda" },
+  { label: "Tükenen ürün", paper: "Garson masada söyler", buyur: "Tek dokunuşla menüden kalkar" },
   {
     label: "Maliyet",
     paper: "Her zamda yeni baskı",
-    menuva: `Ücretsiz başlar · Premium ayda ${formatTL(PLAN_PRICING.premium.yearlyMonthly)}'den`,
+    buyur: `Ücretsiz başlar · Premium ayda ${formatTL(PLAN_PRICING.premium.yearlyMonthly)}'den`,
   },
-  { label: "Yabancı misafir", paper: "Tek dil", menuva: "TR · EN · AR · RU" },
-  { label: "Alerjen ve kalori", paper: "Çoğunlukla yok", menuva: "Her üründe gösterilebilir" },
-  { label: "Sipariş", paper: "Garson not alır, karışabilir", menuva: "Müşteri seçimini sepette garsona gösterir" },
-  { label: "Hangi ürün ilgi görüyor?", paper: "Bilinmez", menuva: "Panelde ürün ve QR bazında" },
-  { label: "Hijyen", paper: "Elden ele dolaşır", menuva: "Müşterinin kendi telefonunda" },
+  { label: "Yabancı misafir", paper: "Tek dil", buyur: "TR · EN · AR · RU" },
+  { label: "Alerjen ve kalori", paper: "Çoğunlukla yok", buyur: "Her üründe gösterilebilir" },
+  { label: "Sipariş", paper: "Garson not alır, karışabilir", buyur: "Müşteri seçimini sepette garsona gösterir" },
+  { label: "Hangi ürün ilgi görüyor?", paper: "Bilinmez", buyur: "Panelde ürün ve QR bazında" },
+  { label: "Hijyen", paper: "Elden ele dolaşır", buyur: "Müşterinin kendi telefonunda" },
 ];
 
 const features = [
@@ -40,7 +40,7 @@ export function Comparison() {
       <div className="mx-auto max-w-6xl px-5 py-24">
         <div className="max-w-2xl">
           <p className="font-mono text-[13px] uppercase tracking-[0.2em] text-paprika">Karşılaştırın</p>
-          <h2 className="mt-3 font-display text-4xl font-extrabold tracking-tight md:text-5xl">Kâğıt menü mü, menuva mı?</h2>
+          <h2 className="mt-3 font-display text-4xl font-extrabold tracking-tight md:text-5xl">Kâğıt menü mü, buyur mı?</h2>
         </div>
 
         <div className="mt-12 overflow-x-auto rounded-2xl border border-line bg-paper">
@@ -54,7 +54,7 @@ export function Comparison() {
                   Kâğıt menü
                 </th>
                 <th className="px-5 py-3 font-display text-base font-bold text-paprika" scope="col">
-                  menuva
+                  buyur
                 </th>
               </tr>
             </thead>
@@ -70,7 +70,7 @@ export function Comparison() {
                       <span className="mt-0.5 shrink-0 text-herb" aria-hidden>
                         <CheckCircleIcon size={15} />
                       </span>
-                      {row.menuva}
+                      {row.buyur}
                     </span>
                   </td>
                 </tr>

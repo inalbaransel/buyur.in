@@ -16,7 +16,7 @@ export type Permission =
   | "reports.view"
   | "reports.export";
 
-/** Menuva'da bir kullanıcı bir işletmeyi yönetir: rol/ekip kavramı yok.
+/** Buyur'da bir kullanıcı bir işletmeyi yönetir: rol/ekip kavramı yok.
  *  İzinler yalnızca plana bağlıdır. */
 const ALL_PERMISSIONS: Permission[] = [
   "analytics.view",
@@ -105,7 +105,7 @@ async function authenticate(token: string): Promise<string> {
   pb.authStore.save(token, null);
 
   try {
-    const auth = await pb.collection("menuva_users").authRefresh({ requestKey: null });
+    const auth = await pb.collection("buyur_users").authRefresh({ requestKey: null });
     const userId = auth.record?.id;
     if (!userId) throw new AccessError(401, "unauthenticated");
     return userId;
@@ -115,11 +115,11 @@ async function authenticate(token: string): Promise<string> {
   }
 }
 
-/** Kullanıcının işletmesini bulur. Menuva'da tek ilişki geçerli: bir kullanıcı,
+/** Kullanıcının işletmesini bulur. Buyur'da tek ilişki geçerli: bir kullanıcı,
  *  sahibi olduğu işletmeyi yönetir. `requestedId` verilmişse yalnızca sahiplik
  *  doğrulamasında kullanılır — istemciden gelen kimliğe asla güvenilmez. */
 async function resolveBusiness(service: PocketBase, userId: string, requestedId: string | null) {
-  const owned = await service.collection("menuva_businesses").getFullList<Business>({
+  const owned = await service.collection("buyur_businesses").getFullList<Business>({
     filter: service.filter("owner = {:owner}", { owner: userId }),
     sort: "created",
     batch: 50,
@@ -160,7 +160,7 @@ export async function resolveAnalyticsContext(request: Request, requestedBusines
   let plan: PlanRecord | null = null;
   try {
     plan = await service
-      .collection("menuva_plans")
+      .collection("buyur_plans")
       .getFirstListItem<PlanRecord>(service.filter("key = {:key}", { key: business.plan }), { requestKey: null });
   } catch {
     // Plan kaydı okunamazsa güvenli tarafta kalıp temel yetkilerle devam ediyoruz.

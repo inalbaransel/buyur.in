@@ -21,18 +21,18 @@ const UNRESTRICTED_LIMITS: PlanLimits = {
 export async function fetchPlan(planKey: Plan): Promise<PlanRecord | null> {
   try {
     return await pb
-      .collection("menuva_plans")
+      .collection("buyur_plans")
       .getFirstListItem<PlanRecord>(pb.filter("key = {:key}", { key: planKey }), { requestKey: null });
   } catch {
     return null;
   }
 }
 
-/** İşletmenin planına ait koşul/kısıtlama setini `menuva_plans` koleksiyonundan getirir. */
+/** İşletmenin planına ait koşul/kısıtlama setini `buyur_plans` koleksiyonundan getirir. */
 export async function fetchPlanLimits(planKey: Plan): Promise<PlanLimits> {
   try {
     const record = await pb
-      .collection("menuva_plans")
+      .collection("buyur_plans")
       .getFirstListItem<PlanRecord>(pb.filter("key = {:key}", { key: planKey }), { requestKey: null });
     return record.limits;
   } catch {

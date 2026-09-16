@@ -16,14 +16,14 @@ export const LEGAL_COMPANY = {
   /** Ticaret sicilindeki tam unvan (ör. "... Bilişim A.Ş."). */
   legalName: "[ŞİRKET TİCARİ UNVANI]",
   /** Markanın kamuya görünen adı. */
-  brand: "menuva",
+  brand: "buyur",
   address: "[ŞİRKET AÇIK ADRESİ]",
   taxOffice: "[VERGİ DAİRESİ]",
   taxNumber: "[VERGİ KİMLİK NUMARASI]",
   mersis: "[MERSİS NUMARASI]",
   /** KVKK Veri Sorumluları Sicili kaydı; yükümlülük doğmuyorsa "Muaf" yazın. */
   verbis: "[VERBİS KAYIT NUMARASI]",
-  email: "merhaba@menuva.app",
+  email: "merhaba@buyur.in",
   phone: "+90 535 763 19 08",
   /** Ödeme altyapısı sağlayıcısı (ör. iyzico, PayTR). */
   paymentProvider: "[ÖDEME KURULUŞU]",
@@ -90,7 +90,7 @@ const PRIVACY: LegalDoc = {
   title: "Gizlilik Politikası",
   navLabel: "Gizlilik Politikası",
   summary:
-    "menuva'nın hangi verileri topladığı, neden topladığı, ne kadar sakladığı ve kiminle paylaştığı.",
+    "buyur'un hangi verileri topladığı, neden topladığı, ne kadar sakladığı ve kiminle paylaştığı.",
   updated: WRITTEN_ON,
   intro: [
     `Bu politika, ${C.brand} platformunda (${ROOT_DOMAIN} ve işletmelere ait alt alan adları) hangi verilerin işlendiğini anlatır. İki farklı kişi grubundan söz ediyoruz: platforma kayıt olan işletme sahipleri ve menüyü telefonundan açan misafirler.`,
@@ -101,7 +101,7 @@ const PRIVACY: LegalDoc = {
       heading: "1. Veri sorumlusu",
       paragraphs: [
         `Platformun veri sorumlusu ${C.legalName} (${C.address}) şirketidir. Sorularınız için ${C.email} adresine yazabilirsiniz.`,
-        "İşletmeler kendi menülerine ait içeriğin ve kendi müşteri iletişiminin sorumlusudur; menuva bu içerik bakımından veri işleyen konumundadır.",
+        "İşletmeler kendi menülerine ait içeriğin ve kendi müşteri iletişiminin sorumlusudur; buyur bu içerik bakımından veri işleyen konumundadır.",
       ],
     },
     {
@@ -173,7 +173,7 @@ const PRIVACY: LegalDoc = {
       list: [
         `Barındırma ve depolama altyapısı: uygulama, veritabanı ve görsel depolama hizmetleri ${C.hostingLocation} konumundaki sunucularda çalışır.`,
         "Ölçüm sağlayıcıları: Google Analytics ve Vercel Analytics.",
-        `Ödeme altyapısı: ${C.paymentProvider}. Kart bilgileri menuva sunucularına hiçbir aşamada gelmez ve saklanmaz.`,
+        `Ödeme altyapısı: ${C.paymentProvider}. Kart bilgileri buyur sunucularına hiçbir aşamada gelmez ve saklanmaz.`,
         "Yasal talep: yetkili kamu kurumlarının mevzuata uygun talepleri.",
       ],
       footnotes: [
@@ -305,8 +305,8 @@ const TERMS: LegalDoc = {
     {
       heading: "1. Hizmetin kapsamı",
       paragraphs: [
-        "menuva; işletmelerin dijital menü oluşturmasını, QR kod ve web adresi üzerinden yayınlamasını, menü performansını ölçmesini ve paketine göre otomatik web sitesi, kampanya ve raporlama özelliklerinden yararlanmasını sağlayan bir yazılım hizmetidir (SaaS).",
-        "menuva bir sipariş veya ödeme aracısı değildir; misafirin sepetteki seçimi işletmeye gösterilmek üzere kendi cihazında tutulur.",
+        "buyur; işletmelerin dijital menü oluşturmasını, QR kod ve web adresi üzerinden yayınlamasını, menü performansını ölçmesini ve paketine göre otomatik web sitesi, kampanya ve raporlama özelliklerinden yararlanmasını sağlayan bir yazılım hizmetidir (SaaS).",
+        "buyur bir sipariş veya ödeme aracısı değildir; misafirin sepetteki seçimi işletmeye gösterilmek üzere kendi cihazında tutulur.",
       ],
     },
     {
@@ -322,7 +322,7 @@ const TERMS: LegalDoc = {
       heading: "3. İçerik sorumluluğu",
       paragraphs: [
         "Menüye girdiğiniz ürün adları, açıklamalar, görseller, fiyatlar, alerjen ve kalori bilgileri dâhil tüm içerik size aittir ve sorumluluğu size aittir. Özellikle alerjen bilgisinin doğruluğu ve mevzuata uygunluğu işletmenin yükümlülüğündedir.",
-        "Yüklediğiniz görseller üzerinde kullanım hakkına sahip olduğunuzu beyan edersiniz. menuva, içeriği yalnızca hizmeti sunmak amacıyla barındırır ve gösterir.",
+        "Yüklediğiniz görseller üzerinde kullanım hakkına sahip olduğunuzu beyan edersiniz. buyur, içeriği yalnızca hizmeti sunmak amacıyla barındırır ve gösterir.",
         "Hukuka aykırı olduğu bildirilen içeriği, bildirim üzerine yayından kaldırma hakkımız saklıdır.",
       ],
     },
@@ -338,7 +338,7 @@ const TERMS: LegalDoc = {
     {
       heading: "5. Fikri mülkiyet",
       paragraphs: [
-        "Platformun yazılımı, arayüz tasarımı, markası ve dokümantasyonu menuva'ya aittir. Aboneliğiniz size hizmeti kullanma hakkı verir; yazılım üzerinde mülkiyet hakkı devri anlamına gelmez.",
+        "Platformun yazılımı, arayüz tasarımı, markası ve dokümantasyonu buyur'a aittir. Aboneliğiniz size hizmeti kullanma hakkı verir; yazılım üzerinde mülkiyet hakkı devri anlamına gelmez.",
         "Menü içeriğiniz ve işletme görselleriniz size aittir; aboneliğiniz sona erdiğinde bu içerik üzerindeki haklarınız devam eder.",
       ],
     },
@@ -352,7 +352,7 @@ const TERMS: LegalDoc = {
     {
       heading: "7. Sorumluluğun sınırı",
       paragraphs: [
-        "menuva'nın sorumluluğu, zararın doğduğu tarihten önceki 12 ayda ödediğiniz abonelik bedeliyle sınırlıdır. Dolaylı zararlar, kâr kaybı ve veri kaybından doğan talepler kapsam dışıdır.",
+        "buyur'un sorumluluğu, zararın doğduğu tarihten önceki 12 ayda ödediğiniz abonelik bedeliyle sınırlıdır. Dolaylı zararlar, kâr kaybı ve veri kaybından doğan talepler kapsam dışıdır.",
         "Menüdeki fiyat, içerik ve alerjen bilgisinin doğruluğundan doğan uyuşmazlıklarda muhatap işletmedir.",
       ],
     },
@@ -382,7 +382,7 @@ const SUBSCRIPTION: LegalDoc = {
     "Aboneliğin başlaması, yenilenmesi, iptali, cayma hakkı ve iade kuralları.",
   updated: WRITTEN_ON,
   intro: [
-    "Bu sayfa, menuva aboneliğinin nasıl başladığını, ne zaman yenilendiğini, nasıl iptal edildiğini ve hangi hâllerde iade yapıldığını açıklar.",
+    "Bu sayfa, buyur aboneliğinin nasıl başladığını, ne zaman yenilendiğini, nasıl iptal edildiğini ve hangi hâllerde iade yapıldığını açıklar.",
   ],
   sections: [
     {
@@ -456,7 +456,7 @@ const PAYMENT: LegalDoc = {
   summary: "Fiyatlar, ödeme yöntemleri, tahsilat zamanı, başarısız ödeme ve güvenlik.",
   updated: WRITTEN_ON,
   intro: [
-    "Bu sayfa, menuva abonelik bedellerinin nasıl belirlendiğini ve nasıl tahsil edildiğini açıklar. Fiyat değişikliği kuralları için İptal ve Abonelik Koşulları sayfasına bakınız.",
+    "Bu sayfa, buyur abonelik bedellerinin nasıl belirlendiğini ve nasıl tahsil edildiğini açıklar. Fiyat değişikliği kuralları için İptal ve Abonelik Koşulları sayfasına bakınız.",
   ],
   sections: [
     {
@@ -474,7 +474,7 @@ const PAYMENT: LegalDoc = {
         "Havale/EFT ile ödeme — kurumsal aboneler için talep üzerine.",
       ],
       footnotes: [
-        "Kart bilgileriniz ödeme kuruluşunun güvenli altyapısında işlenir; menuva sunucularına iletilmez ve saklanmaz.",
+        "Kart bilgileriniz ödeme kuruluşunun güvenli altyapısında işlenir; buyur sunucularına iletilmez ve saklanmaz.",
         `Ücretli paketlere geçiş şu anda ${C.email} ve WhatsApp üzerinden başlatılmakta; ödeme bağlantısı tarafımızdan iletilmektedir. Site içi online ödeme akışı devreye alındığında bu sayfa güncellenecektir.`,
       ],
     },
@@ -497,7 +497,7 @@ const PAYMENT: LegalDoc = {
       list: [
         "Ödeme sayfası ve tüm trafik SSL/TLS ile şifrelenir.",
         "3D Secure doğrulaması, kartınızın ve bankanızın desteklediği ölçüde uygulanır.",
-        "menuva kart numarası, son kullanma tarihi ve CVV bilgisini hiçbir aşamada görmez ve saklamaz.",
+        "buyur kart numarası, son kullanma tarihi ve CVV bilgisini hiçbir aşamada görmez ve saklamaz.",
       ],
     },
     {

@@ -373,7 +373,7 @@ export function SiteFooter({ content, menuHref }: { content: SiteContent; menuHr
         >
           {t("openDigitalMenu")}
         </Link>
-        <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/60">{t("poweredByMenuva")}</p>
+        <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/60">{t("poweredByBuyur")}</p>
       </div>
     </footer>
   );

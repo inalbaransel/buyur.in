@@ -6,7 +6,7 @@ import type { Business, Plan } from "@/lib/types";
 // hepsi buradan okur. Plan kontrolü hiçbir yerde elle yazılmaz; böylece
 // "landing'de yazan ile panelde uygulanan" ayrışamaz.
 //
-// Menuva'da tek ilişki geçerlidir: bir kullanıcı → bir işletme. Ekip/rol yok,
+// Buyur'da tek ilişki geçerlidir: bir kullanıcı → bir işletme. Ekip/rol yok,
 // dolayısıyla yetki yalnızca plana bağlıdır.
 
 export const PLAN_ORDER: Plan[] = ["freemium", "premium", "elite"];
@@ -256,7 +256,7 @@ export const FEATURE_MATRIX: FeatureMatrixRow[] = [
   { label: "Gelişmiş analizler", values: { freemium: false, premium: true, elite: true } },
   { label: "Otomatik içgörüler & performans skoru", values: { freemium: false, premium: true, elite: true } },
   { label: "Kampanyalar", values: { freemium: false, premium: true, elite: true } },
-  { label: "menuva markasını kaldırma", values: { freemium: false, premium: true, elite: true } },
+  { label: "buyur markasını kaldırma", values: { freemium: false, premium: true, elite: true } },
   { label: "Özel alan adı", values: { freemium: false, premium: true, elite: true } },
   {
     label: "Standart web sitesi (menü verisinden otomatik)",

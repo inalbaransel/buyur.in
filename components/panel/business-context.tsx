@@ -31,7 +31,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     try {
       // Tek ilişki: bir kullanıcı → bir işletme. Ekip/üyelik kavramı yok.
       const record = await pb
-        .collection("menuva_businesses")
+        .collection("buyur_businesses")
         .getFirstListItem<Business>(pb.filter("owner = {:id}", { id: user.id }), { requestKey: null });
       setBusinessState(record);
     } catch (err) {

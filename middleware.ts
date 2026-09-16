@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { RESERVED_SLUGS } from "@/lib/slug";
 
-const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "menuvaapp.com";
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "buyur.in";
 
-const ADMIN_COOKIE_NAME = "menuva_admin_auth";
+const ADMIN_COOKIE_NAME = "buyur_admin_auth";
 
 function getSubdomain(hostname: string): string | null {
   if (hostname === "localhost" || hostname === "127.0.0.1") return null;
@@ -45,7 +45,7 @@ export function middleware(req: NextRequest) {
   const port = host.includes(":") ? `:${host.split(":")[1]}` : "";
   const rootHost = `${hostname.endsWith(".localhost") ? "localhost" : ROOT_DOMAIN}${port}`;
 
-  // admin.menuvaapp.com kendi başına bir uygulama: panel/menü gibi kök alan adına
+  // admin.buyur.in kendi başına bir uygulama: panel/menü gibi kök alan adına
   // yönlendirilmez. Uygulamanın tüm Link/redirect'leri zaten /admin önekiyle
   // yazıldığı için (menü sisteminin slug rewrite'ının aksine burada değişken
   // bir segment yok) subdomain'de de path olduğu gibi bırakılıyor — sadece kök
@@ -88,7 +88,7 @@ export function middleware(req: NextRequest) {
   }
 
   // Otomatik web sitesi ayrı bir rota ağacında yaşar (menü kabuğunu miras
-  // almasın diye): {slug}.menuvaapp.com/site → /site/{slug}
+  // almasın diye): {slug}.buyur.in/site → /site/{slug}
   if (url.pathname === "/site" || url.pathname.startsWith("/site/")) {
     url.pathname = `/site/${sub}`;
     return NextResponse.rewrite(url);
@@ -97,7 +97,7 @@ export function middleware(req: NextRequest) {
   url.pathname = url.pathname === "/" ? `/${sub}/welcome` : `/${sub}${url.pathname}`;
 
   const requestHeaders = new Headers(req.headers);
-  requestHeaders.set("x-menuva-rewrite", "subdomain");
+  requestHeaders.set("x-buyur-rewrite", "subdomain");
   return NextResponse.rewrite(url, { request: { headers: requestHeaders } });
 }
 

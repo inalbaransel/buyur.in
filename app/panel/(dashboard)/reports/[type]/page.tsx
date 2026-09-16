@@ -47,7 +47,7 @@ export default function ReportDetailPage() {
         `${data.business.name} — ${data.title}`,
         `Dönem: ${formatDateRange(data.range.from, data.range.to)}`,
         `Oluşturulma: ${formatDayLong(data.generatedAt.slice(0, 10))}`,
-        "menuva analiz raporu",
+        "buyur analiz raporu",
       ]
     );
     downloadCsv(`${data.business.slug}-${data.type}-${data.range.from}_${data.range.to}`, content);
@@ -107,7 +107,7 @@ export default function ReportDetailPage() {
           <header className="rounded-2xl border border-line bg-paper p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-paprika">menuva analiz raporu</p>
+                <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-paprika">buyur analiz raporu</p>
                 <h1 className="mt-1 font-display text-2xl font-extrabold tracking-tight">{data.title}</h1>
                 <p className="mt-1 text-sm text-ink-soft">{data.business.name}</p>
               </div>
@@ -241,9 +241,9 @@ export default function ReportDetailPage() {
 
               <footer className="flex items-center justify-between gap-3 border-t border-line pt-4 font-mono text-[10px] uppercase tracking-wider text-ink-soft">
                 <span className="flex items-center gap-1.5">
-                  <FileTextIcon size={12} /> menuva · {data.business.name}
+                  <FileTextIcon size={12} /> buyur · {data.business.name}
                 </span>
-                <span>{data.business.slug}.menuvaapp.com</span>
+                <span>{data.business.slug}.buyur.in</span>
               </footer>
             </>
           )}

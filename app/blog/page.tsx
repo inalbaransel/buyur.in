@@ -36,7 +36,7 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
           </picture>
         ) : (
           <span className="absolute inset-0 flex items-center justify-center font-display text-5xl font-extrabold text-paprika/30">
-            menuva
+            buyur
           </span>
         )}
       </div>

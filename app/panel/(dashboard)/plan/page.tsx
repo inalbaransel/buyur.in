@@ -157,13 +157,13 @@ export default function PlanPage() {
     if (!user || !business) return;
     setRequesting(plan);
     try {
-      const ticket = await pb.collection("menuva_support_tickets").create<SupportTicket>({
+      const ticket = await pb.collection("buyur_support_tickets").create<SupportTicket>({
         business: business.id,
         user: user.id,
         subject: `${PLAN_LABELS[plan]} planına geçiş talebi`,
         status: "open",
       });
-      await pb.collection("menuva_ticket_messages").create({
+      await pb.collection("buyur_ticket_messages").create({
         ticket: ticket.id,
         sender: "user",
         body: `Merhaba, ${business.name} (${menuHost(business.slug)}) için ${PLAN_LABELS[plan]} planını başlatmak istiyorum. Tercih ettiğim ödeme dönemi: ${billing === "yearly" ? "yıllık" : "aylık"}.`,
@@ -243,7 +243,7 @@ export default function PlanPage() {
             <p className="font-mono text-[11px] uppercase tracking-wider text-paper/60">En üst seviye</p>
             <p className="font-display text-xl font-bold sm:text-2xl">Elite plandasınız</p>
             <p className="max-w-md text-sm leading-relaxed text-paper/70">
-              menuva&apos;nın tüm özellikleri sizde açık: sınırsız kullanım, gelişmiş analizler, otomatik web
+              buyur&apos;nın tüm özellikleri sizde açık: sınırsız kullanım, gelişmiş analizler, otomatik web
               sitesi, gelişmiş raporlar ve dışa aktarma. Yükseltilecek başka bir plan yok.
             </p>
             <Link

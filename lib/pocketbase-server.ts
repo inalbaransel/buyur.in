@@ -2,7 +2,7 @@ import PocketBase from "pocketbase";
 import { PB_URL } from "@/lib/pocketbase";
 
 // Sunucu tarafı servis istemcisi. Menü ziyaretçileri artık PocketBase'e doğrudan
-// yazmıyor (menuva_events createRule kapalı) — event'leri ve agregatları bu
+// yazmıyor (buyur_events createRule kapalı) — event'leri ve agregatları bu
 // hesap yazar. Kimlik bilgileri yalnızca sunucu ortamında bulunur; NEXT_PUBLIC_
 // öneki bilinçli olarak yok.
 //
@@ -47,7 +47,7 @@ export async function getServicePB(): Promise<PocketBase> {
     // Aynı anda gelen isteklerin her biri ayrı ayrı authWithPassword çağırmasın.
     if (!authPromise) {
       authPromise = pb
-        .collection("menuva_admins")
+        .collection("buyur_admins")
         .authWithPassword(SERVICE_EMAIL, SERVICE_PASSWORD, { requestKey: null })
         .then(() => undefined)
         .finally(() => {

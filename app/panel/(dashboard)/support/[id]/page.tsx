@@ -28,8 +28,8 @@ export default function SupportTicketPage() {
 
   const load = useCallback(async () => {
     const [t, msgs] = await Promise.all([
-      pb.collection("menuva_support_tickets").getOne<SupportTicket>(ticketId, { requestKey: null }),
-      pb.collection("menuva_ticket_messages").getFullList<TicketMessage>({
+      pb.collection("buyur_support_tickets").getOne<SupportTicket>(ticketId, { requestKey: null }),
+      pb.collection("buyur_ticket_messages").getFullList<TicketMessage>({
         filter: pb.filter("ticket = {:id}", { id: ticketId }),
         sort: "created",
         requestKey: null,
@@ -50,11 +50,11 @@ export default function SupportTicketPage() {
     setSending(true);
     setError("");
     try {
-      await pb.collection("menuva_ticket_messages").create({ ticket: ticket.id, sender: "user", body: body.trim() });
+      await pb.collection("buyur_ticket_messages").create({ ticket: ticket.id, sender: "user", body: body.trim() });
       // Kullanıcı yanıtlayınca talep tekrar "open"a döner — admin'in tekrar
       // bakması gerektiğinin işareti.
       if (ticket.status !== "open") {
-        await pb.collection("menuva_support_tickets").update(ticket.id, { status: "open" });
+        await pb.collection("buyur_support_tickets").update(ticket.id, { status: "open" });
       }
       setBody("");
       await load();
@@ -89,7 +89,7 @@ export default function SupportTicketPage() {
         {messages.map((m) => (
           <Card key={m.id} className={m.sender === "admin" ? "border-paprika/30 bg-paprika/5" : ""}>
             <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">
-              {m.sender === "admin" ? "menuva ekibi" : "Sen"} · {new Date(m.created).toLocaleString("tr-TR")}
+              {m.sender === "admin" ? "buyur ekibi" : "Sen"} · {new Date(m.created).toLocaleString("tr-TR")}
             </p>
             <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink">{m.body}</p>
           </Card>

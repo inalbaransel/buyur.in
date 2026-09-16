@@ -44,17 +44,17 @@ async function loadEntry(entry: ShowcaseEntry): Promise<ShowcaseItem | null> {
   const pb = createServerPB();
   try {
     const business = await pb
-      .collection("menuva_businesses")
+      .collection("buyur_businesses")
       .getFirstListItem<Business>(pb.filter("slug = {:slug} && is_active = true", { slug: entry.slug }), {
         requestKey: null,
       });
     const [categories, products] = await Promise.all([
-      pb.collection("menuva_categories").getList(1, 1, {
+      pb.collection("buyur_categories").getList(1, 1, {
         filter: pb.filter("business = {:id} && is_active = true", { id: business.id }),
         fields: "id",
         requestKey: null,
       }),
-      pb.collection("menuva_products").getList(1, 1, {
+      pb.collection("buyur_products").getList(1, 1, {
         filter: pb.filter("business = {:id} && is_available = true", { id: business.id }),
         fields: "id",
         requestKey: null,

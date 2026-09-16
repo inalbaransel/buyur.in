@@ -54,8 +54,8 @@ export default async function BlogPostPage({ params }: { params: Params }) {
     image: post.cover_url || undefined,
     datePublished: post.published_at || post.created,
     dateModified: post.updated,
-    author: { "@type": "Organization", name: post.author || "menuva" },
-    publisher: { "@type": "Organization", name: "menuva", logo: `https://${ROOT_DOMAIN}/menuva-icon.png` },
+    author: { "@type": "Organization", name: post.author || "buyur" },
+    publisher: { "@type": "Organization", name: "buyur", logo: `https://${ROOT_DOMAIN}/buyur-icon.png` },
     mainEntityOfPage: `https://${ROOT_DOMAIN}/blog/${post.slug}`,
   };
 
@@ -94,7 +94,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
         </article>
 
         <aside className="mt-16 rounded-3xl bg-ink p-8 text-paper sm:p-10">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-paprika">menuva</p>
+          <p className="font-mono text-[11px] uppercase tracking-wider text-paprika">buyur</p>
           <p className="mt-2 font-display text-2xl font-bold">Menünüzü güncel tutun, müşterinin seçimini kolaylaştırın.</p>
           <p className="mt-2 text-sm text-paper/70">Kredi kartı yok · 5 dakikada kurulum · İstediğin an bırak</p>
           <Link

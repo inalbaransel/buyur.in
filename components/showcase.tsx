@@ -7,7 +7,7 @@ import type { ShowcaseItem } from "@/lib/showcase";
 // (bkz. lib/showcase.ts). Demo menüler "Demo menü" diye açıkça etiketlenir.
 
 function ShowcaseCard({ item }: { item: ShowcaseItem }) {
-  const url = `https://${menuHost(item.slug)}/?utm_source=menuva&utm_medium=landing&utm_campaign=showcase`;
+  const url = `https://${menuHost(item.slug)}/?utm_source=buyur&utm_medium=landing&utm_campaign=showcase`;
   return (
     <article data-reveal className="flex flex-col rounded-2xl border border-line bg-paper p-6">
       <div className="flex items-center gap-3">
@@ -23,7 +23,7 @@ function ShowcaseCard({ item }: { item: ShowcaseItem }) {
         <div className="min-w-0">
           <p className="truncate font-display text-lg font-bold">{item.name}</p>
           <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft">
-            {item.kind === "customer" ? "menuva müşterisi" : "Demo menü"}
+            {item.kind === "customer" ? "buyur müşterisi" : "Demo menü"}
             {item.city ? ` · ${item.city}` : ""}
           </p>
         </div>
@@ -72,7 +72,7 @@ export function Showcase({ items }: { items: ShowcaseItem[] }) {
         <div className="max-w-2xl">
           <p className="font-mono text-[13px] uppercase tracking-[0.2em] text-paprika">Canlı menüler</p>
           <h2 className="mt-3 font-display text-4xl font-extrabold tracking-tight md:text-5xl">
-            {hasCustomers ? "menuva kullanan işletmeler" : "Satın almadan önce menüleri kendiniz inceleyin"}
+            {hasCustomers ? "buyur kullanan işletmeler" : "Satın almadan önce menüleri kendiniz inceleyin"}
           </h2>
           <p className="mt-4 text-ink-soft">
             Ekran görüntüsü değil, yayındaki menüler: açın, dil değiştirin, sepete ekleyin.

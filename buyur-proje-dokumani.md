@@ -1,12 +1,12 @@
-# 🍽️ menuva — Online QR Menü ve Daha Fazlası
+# 🍽️ buyur — Online QR Menü ve Daha Fazlası
 
-> **menuva**, restoran, kafe ve yeme-içme işletmeleri için geliştirilmiş modern bir dijital menü yönetim platformudur. QR kod tabanlı menü sisteminin ötesine geçerek işletmelere tam kapsamlı bir menü yönetimi, müşteri deneyimi ve pazarlama aracı sunar.
+> **buyur**, restoran, kafe ve yeme-içme işletmeleri için geliştirilmiş modern bir dijital menü yönetim platformudur. QR kod tabanlı menü sisteminin ötesine geçerek işletmelere tam kapsamlı bir menü yönetimi, müşteri deneyimi ve pazarlama aracı sunar.
 
 ---
 
 ## 📌 Proje Vizyonu
 
-Geleneksel basılı menülerin en büyük sorunları: güncellemenin maliyetli olması, fiyat değişikliklerinin gecikmesi, hijyen kaygıları ve müşteriye sınırlı bilgi sunması. menuva bu sorunların tamamını dijital, anlık ve özelleştirilebilir bir çözümle ortadan kaldırır.
+Geleneksel basılı menülerin en büyük sorunları: güncellemenin maliyetli olması, fiyat değişikliklerinin gecikmesi, hijyen kaygıları ve müşteriye sınırlı bilgi sunması. buyur bu sorunların tamamını dijital, anlık ve özelleştirilebilir bir çözümle ortadan kaldırır.
 
 **Slogan önerisi:** *"Menünüz artık farklı."* / *"Farkı hisset, menünü dijitalleştir."*
 
@@ -34,7 +34,7 @@ Değişiklikleriniz anında yayınlanır. Müşteriler her zaman güncel menüy�
 Benzersiz QR kodunuz ve özel URL'nizle menünüzü anında paylaşın.
 
 - Her işletmeye özel QR kod otomatik oluşturulur.
-- Özel URL formatı: `menuvaapp.com/isletme-adi` (veya özel domain desteği).
+- Özel URL formatı: `buyur.in/isletme-adi` (veya özel domain desteği).
 - QR kod masalara, vitrine, paket servis poşetlerine, sosyal medyaya konabilir.
 - **Kullanım senaryosu:** Instagram bio'suna menü linki, masalara QR sticker.
 
@@ -43,7 +43,7 @@ Markanıza özel renkler, görseller ve düzenlemeler yapın.
 
 - İşletmenin kurumsal kimliğine uygun **renk paleti, logo ve kapak görselleri**.
 - Farklı menü görünüm şablonları (liste, grid/kart görünümü vb.).
-- Beyaz etiket (white-label) hissi: müşteri "menuva menüsü" değil, "işletmenin kendi menüsü" olarak algılar.
+- Beyaz etiket (white-label) hissi: müşteri "buyur menüsü" değil, "işletmenin kendi menüsü" olarak algılar.
 - **Kullanım senaryosu:** Bir burger dükkanı ile bir fine-dining restoranın menüsü tamamen farklı görünebilir.
 
 ### 05 — Hazırlanma Süreleri
@@ -110,7 +110,7 @@ Admin panelinde işletme sahiplerine sunulan araçlar:
 
 | Plan | İçerik | Önerilen Fiyat |
 |---|---|---|
-| **Ücretsiz** | 1 menü, sınırlı ürün (ör. 20), menuva markası görünür | 0₺ |
+| **Ücretsiz** | 1 menü, sınırlı ürün (ör. 20), buyur markası görünür | 0₺ |
 | **Başlangıç** | Sınırsız ürün, özelleştirme, rozetler | Aylık abonelik |
 | **Pro** | Kampanyalar, pop-up, analitik, alerjen/kalori, sepet | Aylık abonelik |
 | **İşletme** | Çoklu şube, özel domain, API erişimi, öncelikli destek | Aylık/yıllık |
@@ -157,7 +157,7 @@ Admin panelinde işletme sahiplerine sunulan araçlar:
 
 ## 🎯 Rakiplerden Farklılaşma Noktaları
 
-Türkiye'de Finedine, Menulux, Adisyo gibi rakipler mevcut. menuva'in öne çıkabileceği alanlar:
+Türkiye'de Finedine, Menulux, Adisyo gibi rakipler mevcut. buyur'un öne çıkabileceği alanlar:
 
 1. **Fiyat/performans:** Rakiplerin çoğu KOBİ için pahalı — agresif giriş fiyatı ile pazar payı alınabilir.
 2. **Kurulum hızı:** "5 dakikada menünüz hazır" vaadi — onboarding'i olabildiğince basitleştirin.
@@ -179,4 +179,4 @@ Türkiye'de Finedine, Menulux, Adisyo gibi rakipler mevcut. menuva'in öne çık
 
 ---
 
-*Bu doküman menuva projesinin mevcut özelliklerini ve gelişim önerilerini kapsar. — Son güncelleme: Temmuz 2026*
+*Bu doküman buyur projesinin mevcut özelliklerini ve gelişim önerilerini kapsar. — Son güncelleme: Temmuz 2026*

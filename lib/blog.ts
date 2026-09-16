@@ -1,11 +1,7 @@
 import { createServerPB } from "@/lib/pocketbase";
 import type { BlogPost } from "@/lib/types";
 
-// menuva blogu. Yazılar PocketBase yönetim ekranından `menuva_blog_posts`
-// koleksiyonuna girilir (şema: scripts/setup-pocketbase.mjs). Koleksiyon henüz
-// kurulmamışsa ya da erişilemiyorsa blog boş görünür, site bozulmaz.
-
-export const BLOG_COLLECTION = "menuva_blog_posts";
+export const BLOG_COLLECTION = "buyur_blog_posts";
 
 const LIST_FIELDS = "id,title,slug,excerpt,cover_url,author,tags,published_at,updated";
 

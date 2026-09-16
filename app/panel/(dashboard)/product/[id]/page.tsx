@@ -32,8 +32,8 @@ export default function EditProductPage() {
       // çalıştırması bu isteklerin SDK tarafından otomatik iptal edilmesine
       // yol açabilir; iptal edilen isteği "kayıt bulunamadı" sanmayalım.
       const [prod, cats] = await Promise.all([
-        pb.collection("menuva_products").getOne<Product>(id, { requestKey: null }),
-        pb.collection("menuva_categories").getFullList<Category>({
+        pb.collection("buyur_products").getOne<Product>(id, { requestKey: null }),
+        pb.collection("buyur_categories").getFullList<Category>({
           filter: pb.filter("business = {:id}", { id: business.id }),
           requestKey: null,
           sort: "order,created",

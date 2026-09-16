@@ -26,7 +26,7 @@ export function ProductOptionsEditor({ business, productId }: { business: Busine
 
   async function load() {
     setLoading(true);
-    const list = await pb.collection("menuva_product_options").getFullList<ProductOption>({
+    const list = await pb.collection("buyur_product_options").getFullList<ProductOption>({
       filter: pb.filter("product = {:id}", { id: productId }),
       sort: "order,created",
     });
@@ -66,9 +66,9 @@ export function ProductOptionsEditor({ business, productId }: { business: Busine
       };
       const editing = editingId && editingId !== "new";
       if (editing) {
-        await pb.collection("menuva_product_options").update(editingId, payload);
+        await pb.collection("buyur_product_options").update(editingId, payload);
       } else {
-        await pb.collection("menuva_product_options").create({ ...payload, product: productId, order: options.length });
+        await pb.collection("buyur_product_options").create({ ...payload, product: productId, order: options.length });
       }
       setEditingId(null);
       setForm(emptyForm);
@@ -81,7 +81,7 @@ export function ProductOptionsEditor({ business, productId }: { business: Busine
 
   async function handleDelete(id: string) {
     if (!confirm("Bu seçeneği silmek istediğine emin misin?")) return;
-    await pb.collection("menuva_product_options").delete(id);
+    await pb.collection("buyur_product_options").delete(id);
     await load();
     toast("Seçenek silindi");
   }

@@ -67,7 +67,7 @@ export default function ProductAnalyticsPage() {
 
   useEffect(() => {
     if (!business) return;
-    pb.collection("menuva_categories")
+    pb.collection("buyur_categories")
       .getFullList<Category>({
         filter: pb.filter("business = {:id}", { id: business.id }),
         sort: "order,created",

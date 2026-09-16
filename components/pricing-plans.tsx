@@ -11,7 +11,7 @@ import type { Plan } from "@/lib/types";
 
 // Fiyat kartlarının içeriği (ad, açıklama, özellikler) veritabanına yazılan
 // paket kataloğuyla AYNI kaynaktan, rakamlar ilan fiyatının tek kaynağından
-// (lib/pricing.ts) geliyor. Canlı `menuva_plans` kaydı bayat kalsa bile (göç
+// (lib/pricing.ts) geliyor. Canlı `buyur_plans` kaydı bayat kalsa bile (göç
 // çalıştırılmamış olsa bile) sitede çelişkili bir paket metni görünmez —
 // toplantıdaki "30 ürün / sınırsız ürün" çelişkisi tam olarak buradan doğmuştu.
 
@@ -175,7 +175,7 @@ function PlanCta({ card, billing }: { card: PlanCard; billing: Billing }) {
   return (
     <>
       <a
-        href={whatsappLink("Merhaba! menuva Elite paketi için demo görmek istiyorum.")}
+        href={whatsappLink("Merhaba! buyur Elite paketi için demo görmek istiyorum.")}
         target="_blank"
         rel="noopener noreferrer"
         data-track="plan_cta"
@@ -238,7 +238,7 @@ export function PlanGrid() {
       <p className="mt-8 text-center text-sm text-ink-soft">
         Karar vermeden önce sormak mı istiyorsunuz?{" "}
         <a
-          href={whatsappLink("Merhaba, menuva paketleri hakkında bir sorum var:")}
+          href={whatsappLink("Merhaba, buyur paketleri hakkında bir sorum var:")}
           target="_blank"
           rel="noopener noreferrer"
           data-track="whatsapp_lead"

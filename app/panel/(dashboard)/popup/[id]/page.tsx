@@ -22,7 +22,7 @@ export default function EditAnnouncementPage() {
     // requestKey: null -> React StrictMode'un dev'de effect'i iki kez
     // çalıştırması bu isteği SDK'nın otomatik iptal etmesine yol açabilir;
     // iptal edilen isteği "kayıt bulunamadı" sanıp listeye atmayalım.
-    pb.collection("menuva_popups")
+    pb.collection("buyur_popups")
       .getOne<Popup>(id, { requestKey: null })
       .then(setPopup)
       .catch((err) => {

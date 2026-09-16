@@ -7,8 +7,8 @@ import { menuHost } from "@/lib/site";
 const DEMO_URL = `https://${menuHost(DEMO_SLUG)}`;
 // Landing'den açılan demo ziyaretleri, demo işletmenin analizinde kampanya
 // kaynağı olarak ayrışsın (hero QR'ı ile "Canlı örneği incele" ayrı ölçülür).
-const DEMO_QR_URL = `${DEMO_URL}/?utm_source=menuva&utm_medium=landing&utm_campaign=hero_qr`;
-const DEMO_LINK_URL = `${DEMO_URL}/?utm_source=menuva&utm_medium=landing&utm_campaign=hero_cta`;
+const DEMO_QR_URL = `${DEMO_URL}/?utm_source=buyur&utm_medium=landing&utm_campaign=hero_qr`;
+const DEMO_LINK_URL = `${DEMO_URL}/?utm_source=buyur&utm_medium=landing&utm_campaign=hero_cta`;
 
 const demoItems = [
   {
@@ -65,7 +65,7 @@ function PhoneMock() {
       <div className="h-[480px] overflow-hidden rounded-[1.8rem] bg-[#171310] pt-8 sm:h-[520px]">
         {/* menü başlığı */}
         <div className="px-4 pb-3">
-          <p className="font-mono text-[9px] uppercase tracking-widest text-paprika">alpha.menuvaapp.com</p>
+          <p className="font-mono text-[9px] uppercase tracking-widest text-paprika">alpha.buyur.in</p>
           <p className="font-display text-lg font-bold text-paper">Alpha Cafe</p>
           <div className="mt-2 flex gap-1.5 font-mono text-[9px]">
             <span className="rounded-full bg-paprika px-2.5 py-1 text-paper">Ana Yemek</span>
@@ -230,7 +230,7 @@ export async function Hero({ proof }: { proof: ShowcaseItem | null }) {
             </h1>
 
             <p className="rise rise-3 mt-6 max-w-xl text-base leading-relaxed text-ink-soft sm:text-lg">
-              menuva ile QR menünüzü dakikalar içinde kurun; fiyatları anında değiştirin, ürünleri öne çıkarın ve
+              buyur ile QR menünüzü dakikalar içinde kurun; fiyatları anında değiştirin, ürünleri öne çıkarın ve
               müşterinin seçimlerini garsona eksiksiz göstermesini sağlayın.
             </p>
 

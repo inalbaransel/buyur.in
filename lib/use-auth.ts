@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // requestKey: null -> React StrictMode'un dev'de effect'i iki kez
             // çalıştırması gibi durumlarda SDK'nın bu isteği "aynı isteğin
             // tekrarı" sanıp otomatik iptal etmesini engeller.
-            refreshPromise = pb.collection("menuva_users").authRefresh({ requestKey: null })
+            refreshPromise = pb.collection("buyur_users").authRefresh({ requestKey: null })
               .finally(() => {
                 refreshPromise = null;
               });

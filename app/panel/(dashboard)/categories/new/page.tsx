@@ -15,7 +15,7 @@ export default function NewCategoryPage() {
 
   useEffect(() => {
     if (!business) return;
-    pb.collection("menuva_categories")
+    pb.collection("buyur_categories")
       .getList(1, 1, { filter: pb.filter("business = {:id}", { id: business.id }) })
       .then((res) => {
         setNextOrder(res.totalItems);

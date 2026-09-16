@@ -52,7 +52,7 @@ type AddSource = "menu" | "upsell";
 
 interface MenuContextValue {
   business: Business;
-  /** Link tabanı: subdomain'de "" (vezirhan.menuvaapp.com), path erişiminde "/vezirhan". */
+  /** Link tabanı: subdomain'de "" (vezirhan.buyur.in), path erişiminde "/vezirhan". */
   base: string;
   cartLines: CartLine[];
   addProduct: (product: Product) => void;
@@ -374,7 +374,7 @@ export function MenuProvider({
 
   useEffect(() => {
     if (!popup) return;
-    const key = `menuva-popup-${business.slug}-${popup.id}`;
+    const key = `buyur-popup-${business.slug}-${popup.id}`;
     if (!sessionStorage.getItem(key) && isPopupInWindow(popup)) {
       setPopupDismissed(false);
     }
@@ -382,7 +382,7 @@ export function MenuProvider({
 
   function dismissPopup() {
     if (popup) {
-      sessionStorage.setItem(`menuva-popup-${business.slug}-${popup.id}`, "1");
+      sessionStorage.setItem(`buyur-popup-${business.slug}-${popup.id}`, "1");
       // Kampanya modalındaki tek aksiyon "menüyü gör" — kapatma bu yüzden
       // tıklama sayılıyor (gösterim campaign_view ile ayrı kaydediliyor).
       trackEvent(business.slug, {
@@ -439,7 +439,7 @@ export function MenuProvider({
   /** "Yanına içecek" önerisi: oturum başına en fazla bir kez, yalnızca menüde
    *  içecek kategorisi varsa ve sepette henüz içecek yoksa. */
   function offerUpsell(product: Product, lines: CartLine[]) {
-    const storageKey = `menuva-upsell-${business.slug}`;
+    const storageKey = `buyur-upsell-${business.slug}`;
     try {
       if (window.sessionStorage.getItem(storageKey)) return;
     } catch {
@@ -465,7 +465,7 @@ export function MenuProvider({
   }
 
   async function addProduct(product: Product, source: AddSource = "menu") {
-    const options = await pb.collection("menuva_product_options").getFullList<ProductOption>({
+    const options = await pb.collection("buyur_product_options").getFullList<ProductOption>({
       filter: pb.filter("product = {:id}", { id: product.id }),
       requestKey: null,
       sort: "order,created",

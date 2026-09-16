@@ -26,11 +26,11 @@ import type { Business, Category, Product } from "@/lib/types";
 
 // Otomatik Custom Website (Premium & Elite).
 //
-// Sunucuda render edilir; içerik tamamen mevcut menuva verisinden türetilir
+// Sunucuda render edilir; içerik tamamen mevcut buyur verisinden türetilir
 // (bkz. lib/site-content.ts). Site kurucu, bölüm editörü ya da ikinci bir ürün
 // yönetimi yoktur — işletme paneli tek kaynaktır.
 //
-// Adres: {slug}.menuvaapp.com/site (middleware /site/{slug}'a yazar).
+// Adres: {slug}.buyur.in/site (middleware /site/{slug}'a yazar).
 // Menü adresi değişmedi: basılı QR kodları etkilenmez.
 
 export const revalidate = 300;
@@ -39,7 +39,7 @@ const getBusiness = cache(async (slug: string): Promise<Business | null> => {
   const pb = createServerPB();
   try {
     return await pb
-      .collection("menuva_businesses")
+      .collection("buyur_businesses")
       .getFirstListItem<Business>(pb.filter("slug = {:slug} && is_active = true", { slug }), { requestKey: null });
   } catch {
     return null;
@@ -49,12 +49,12 @@ const getBusiness = cache(async (slug: string): Promise<Business | null> => {
 const getMenu = cache(async (businessId: string) => {
   const pb = createServerPB();
   const [categories, products] = await Promise.all([
-    pb.collection("menuva_categories").getFullList<Category>({
+    pb.collection("buyur_categories").getFullList<Category>({
       filter: pb.filter("business = {:id} && is_active = true", { id: businessId }),
       sort: "order,created",
       requestKey: null,
     }),
-    pb.collection("menuva_products").getFullList<Product>({
+    pb.collection("buyur_products").getFullList<Product>({
       filter: pb.filter("business = {:id} && is_available = true", { id: businessId }),
       sort: "order,created",
       requestKey: null,

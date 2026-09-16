@@ -175,7 +175,7 @@ export default function ImportMenuPage() {
     setSaving(true);
 
     try {
-      const existingCats = await pb.collection("menuva_categories").getFullList({
+      const existingCats = await pb.collection("buyur_categories").getFullList({
         filter: pb.filter("business = {:id}", { id: business.id }),
         sort: "-order",
       });
@@ -185,7 +185,7 @@ export default function ImportMenuPage() {
         // Boş kategorileri ekleme
         if (cat.products.length === 0) continue;
 
-        const catRecord = await pb.collection("menuva_categories").create({
+        const catRecord = await pb.collection("buyur_categories").create({
           business: business.id,
           name: cat.name,
           order: baseCatOrder++,
@@ -194,7 +194,7 @@ export default function ImportMenuPage() {
 
         let prodOrder = 0;
         for (const prod of cat.products) {
-          await pb.collection("menuva_products").create({
+          await pb.collection("buyur_products").create({
             business: business.id,
             category: catRecord.id,
             name: prod.name,

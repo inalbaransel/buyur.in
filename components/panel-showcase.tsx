@@ -219,7 +219,7 @@ function PanelWindow({ tab }: { tab: TabKey }) {
         <span className="h-2.5 w-2.5 rounded-full bg-[#e6b453]" aria-hidden />
         <span className="h-2.5 w-2.5 rounded-full bg-[#7fb069]" aria-hidden />
         <span className="ml-3 truncate rounded-md bg-crema/70 px-3 py-1 font-mono text-[10px] text-ink-soft">
-          menuvaapp.com/panel
+          buyur.in/panel
         </span>
       </div>
       <div className="flex">

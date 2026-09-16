@@ -1,4 +1,4 @@
-// menuva Pocketbase şema kurulumu.
+// buyur Pocketbase şema kurulumu.
 // Kullanım: POCKETBASE_API_URL=... POCKETBASE_ADMIN_TOKEN=... node scripts/setup-pocketbase.mjs
 // Idempotent: koleksiyon zaten varsa dokunmadan atlar.
 
@@ -169,9 +169,9 @@ async function getOrCreate(spec) {
 
 async function main() {
   // 1) users (auth) — işletme sahibi hesapları
-  const adminBypass = '@request.auth.collectionName = "menuva_admins"';
+  const adminBypass = '@request.auth.collectionName = "buyur_admins"';
   const users = await getOrCreate({
-    name: "menuva_users",
+    name: "buyur_users",
     type: "auth",
     listRule: `id = @request.auth.id || ${adminBypass}`,
     viewRule: `id = @request.auth.id || ${adminBypass}`,
@@ -185,11 +185,11 @@ async function main() {
     fields: [text("name", { required: true, max: 120 }), ...stamps()],
   });
 
-  // 2) admins (auth) — menuva yönetim paneli hesapları (işletme sahiplerinden
+  // 2) admins (auth) — buyur yönetim paneli hesapları (işletme sahiplerinden
   // ayrı bir auth koleksiyonu; role diğer koleksiyonların kurallarında
-  // `@request.auth.collectionName = "menuva_admins"` ile ayırt edilir).
+  // `@request.auth.collectionName = "buyur_admins"` ile ayırt edilir).
   const admins = await getOrCreate({
-    name: "menuva_admins",
+    name: "buyur_admins",
     type: "auth",
     // Bir admin sadece kendini görebilir; super_admin herkesi.
     listRule: `id = @request.auth.id || (${adminBypass} && @request.auth.role = "super_admin")`,
@@ -209,7 +209,7 @@ async function main() {
 
   // 3) businesses — işletmeler
   const businesses = await getOrCreate({
-    name: "menuva_businesses",
+    name: "buyur_businesses",
     type: "base",
     listRule: `is_active = true || owner = @request.auth.id || ${adminBypass}`,
     viewRule: `is_active = true || owner = @request.auth.id || ${adminBypass}`,
@@ -295,12 +295,12 @@ async function main() {
       json("activation"),
       ...stamps(),
     ],
-    indexes: ["CREATE UNIQUE INDEX `idx_businesses_slug` ON `menuva_businesses` (`slug`)"],
+    indexes: ["CREATE UNIQUE INDEX `idx_businesses_slug` ON `buyur_businesses` (`slug`)"],
   });
 
   // 4) categories — kategoriler
   const categories = await getOrCreate({
-    name: "menuva_categories",
+    name: "buyur_categories",
     type: "base",
     listRule: `business.is_active = true || business.owner = @request.auth.id || ${adminBypass}`,
     viewRule: `business.is_active = true || business.owner = @request.auth.id || ${adminBypass}`,
@@ -317,12 +317,12 @@ async function main() {
       json("translations"),
       ...stamps(),
     ],
-    indexes: ["CREATE INDEX `idx_categories_business` ON `menuva_categories` (`business`)"],
+    indexes: ["CREATE INDEX `idx_categories_business` ON `buyur_categories` (`business`)"],
   });
 
   // 5) products — ürünler
   const products = await getOrCreate({
-    name: "menuva_products",
+    name: "buyur_products",
     type: "base",
     listRule: `business.is_active = true || business.owner = @request.auth.id || ${adminBypass}`,
     viewRule: `business.is_active = true || business.owner = @request.auth.id || ${adminBypass}`,
@@ -368,14 +368,14 @@ async function main() {
       ...stamps(),
     ],
     indexes: [
-      "CREATE INDEX `idx_products_business` ON `menuva_products` (`business`)",
-      "CREATE INDEX `idx_products_category` ON `menuva_products` (`category`)",
+      "CREATE INDEX `idx_products_business` ON `buyur_products` (`business`)",
+      "CREATE INDEX `idx_products_category` ON `buyur_products` (`category`)",
     ],
   });
 
   // 6) product_options — varyant/seçenekler (Boy, Ekstra vb.)
   await getOrCreate({
-    name: "menuva_product_options",
+    name: "buyur_product_options",
     type: "base",
     listRule: "product.business.is_active = true || product.business.owner = @request.auth.id",
     viewRule: "product.business.is_active = true || product.business.owner = @request.auth.id",
@@ -391,12 +391,12 @@ async function main() {
       json("translations"),
       ...stamps(),
     ],
-    indexes: ["CREATE INDEX `idx_product_options_product` ON `menuva_product_options` (`product`)"],
+    indexes: ["CREATE INDEX `idx_product_options_product` ON `buyur_product_options` (`product`)"],
   });
 
   // 7) popups — menü açılışında duyuru/kampanya
   const popups = await getOrCreate({
-    name: "menuva_popups",
+    name: "buyur_popups",
     type: "base",
     listRule: "business.is_active = true || business.owner = @request.auth.id",
     viewRule: "business.is_active = true || business.owner = @request.auth.id",
@@ -414,13 +414,13 @@ async function main() {
       json("translations"),
       ...stamps(),
     ],
-    indexes: ["CREATE INDEX `idx_popups_business` ON `menuva_popups` (`business`)"],
+    indexes: ["CREATE INDEX `idx_popups_business` ON `buyur_popups` (`business`)"],
   });
 
   // 8) reviews — müşteri değerlendirme anketi (giriş gerektirmez, herkes gönderebilir).
   // update/delete kilitli: işletme sahibi dahil kimse API'den değiştiremez/silemez (salt görüntüleme).
   await getOrCreate({
-    name: "menuva_reviews",
+    name: "buyur_reviews",
     type: "base",
     listRule: `business.owner = @request.auth.id || ${adminBypass}`,
     viewRule: `business.owner = @request.auth.id || ${adminBypass}`,
@@ -436,13 +436,13 @@ async function main() {
       text("comment", { max: 1000 }),
       ...stamps(),
     ],
-    indexes: ["CREATE INDEX `idx_reviews_business` ON `menuva_reviews` (`business`)"],
+    indexes: ["CREATE INDEX `idx_reviews_business` ON `buyur_reviews` (`business`)"],
   });
 
   // 8.5) qr_codes — etiketli QR'lar (masa/vitrin/Instagram…). Menü linkine
   // `?qr=<code>` olarak eklenir; ingestion bu kodu QR kaydına bağlar.
   const qrCodes = await getOrCreate({
-    name: "menuva_qr_codes",
+    name: "buyur_qr_codes",
     type: "base",
     // Ziyaretçi tarafı QR kaydını okumaz (çözümlemeyi sunucu yapar); okuma
     // işletme sahibine ve admin'e açık.
@@ -459,7 +459,7 @@ async function main() {
       boolField("is_active"),
       ...stamps(),
     ],
-    indexes: ["CREATE UNIQUE INDEX `idx_qr_business_code` ON `menuva_qr_codes` (`business`, `code`)"],
+    indexes: ["CREATE UNIQUE INDEX `idx_qr_business_code` ON `buyur_qr_codes` (`business`, `code`)"],
   });
 
   // 9) events — ham analitik event akışı. Artık ziyaretçi tarayıcısı değil,
@@ -471,7 +471,7 @@ async function main() {
   // mevcut kurulumlarda EVENT_TYPES/QR/cihaz listeleri scripts/migrate-analytics.mjs
   // ile genişletilir. Buradaki liste lib/analytics/events.ts ile aynı kalmalı.
   await getOrCreate({
-    name: "menuva_events",
+    name: "buyur_events",
     type: "base",
     listRule: `business.owner = @request.auth.id || ${adminBypass}`,
     viewRule: `business.owner = @request.auth.id || ${adminBypass}`,
@@ -502,18 +502,18 @@ async function main() {
       ...stamps(),
     ],
     indexes: [
-      "CREATE INDEX `idx_events_business` ON `menuva_events` (`business`)",
-      "CREATE INDEX `idx_events_business_time` ON `menuva_events` (`business`, `occurred_at`)",
-      "CREATE INDEX `idx_events_business_type_time` ON `menuva_events` (`business`, `type`, `occurred_at`)",
-      "CREATE INDEX `idx_events_business_session` ON `menuva_events` (`business`, `session`)",
-      "CREATE INDEX `idx_events_business_product` ON `menuva_events` (`business`, `product`, `occurred_at`)",
+      "CREATE INDEX `idx_events_business` ON `buyur_events` (`business`)",
+      "CREATE INDEX `idx_events_business_time` ON `buyur_events` (`business`, `occurred_at`)",
+      "CREATE INDEX `idx_events_business_type_time` ON `buyur_events` (`business`, `type`, `occurred_at`)",
+      "CREATE INDEX `idx_events_business_session` ON `buyur_events` (`business`, `session`)",
+      "CREATE INDEX `idx_events_business_product` ON `buyur_events` (`business`, `product`, `occurred_at`)",
     ],
   });
 
   // 9.1) sessions — oturum özeti. Unique ziyaretçi, süre, bounce ve yeni/dönen
   // oranı ham event taramadan buradan hesaplanır. Yalnızca servis hesabı yazar.
   await getOrCreate({
-    name: "menuva_sessions",
+    name: "buyur_sessions",
     type: "base",
     listRule: `business.owner = @request.auth.id || ${adminBypass}`,
     viewRule: `business.owner = @request.auth.id || ${adminBypass}`,
@@ -546,16 +546,16 @@ async function main() {
       ...stamps(),
     ],
     indexes: [
-      "CREATE UNIQUE INDEX `idx_sessions_business_key` ON `menuva_sessions` (`business`, `key`)",
-      "CREATE INDEX `idx_sessions_business_started` ON `menuva_sessions` (`business`, `started_at`)",
-      "CREATE INDEX `idx_sessions_business_visitor` ON `menuva_sessions` (`business`, `visitor`)",
+      "CREATE UNIQUE INDEX `idx_sessions_business_key` ON `buyur_sessions` (`business`, `key`)",
+      "CREATE INDEX `idx_sessions_business_started` ON `buyur_sessions` (`business`, `started_at`)",
+      "CREATE INDEX `idx_sessions_business_visitor` ON `buyur_sessions` (`business`, `visitor`)",
     ],
   });
 
   // 9.2) stats_daily — rollup çıktısı: gün × boyut × anahtar → metrikler.
   // Panel sorguları ham event yerine buradan beslenir.
   await getOrCreate({
-    name: "menuva_stats_daily",
+    name: "buyur_stats_daily",
     type: "base",
     listRule: `business.owner = @request.auth.id || ${adminBypass}`,
     viewRule: `business.owner = @request.auth.id || ${adminBypass}`,
@@ -573,16 +573,16 @@ async function main() {
       ...stamps(),
     ],
     indexes: [
-      "CREATE UNIQUE INDEX `idx_stats_unique` ON `menuva_stats_daily` (`business`, `date`, `dimension`, `key`)",
-      "CREATE INDEX `idx_stats_business_date` ON `menuva_stats_daily` (`business`, `date`)",
-      "CREATE INDEX `idx_stats_business_dim_date` ON `menuva_stats_daily` (`business`, `dimension`, `date`)",
+      "CREATE UNIQUE INDEX `idx_stats_unique` ON `buyur_stats_daily` (`business`, `date`, `dimension`, `key`)",
+      "CREATE INDEX `idx_stats_business_date` ON `buyur_stats_daily` (`business`, `date`)",
+      "CREATE INDEX `idx_stats_business_dim_date` ON `buyur_stats_daily` (`business`, `dimension`, `date`)",
     ],
   });
 
   // 10) plans — abonelik paketleri (fiyat/özellik/limit). Landing sayfası ve
   // panel kayıt akışı bu koleksiyondan besleniyor; admin dışında kimse yazamaz.
   await getOrCreate({
-    name: "menuva_plans",
+    name: "buyur_plans",
     type: "base",
     listRule: `is_active = true || ${adminBypass}`,
     viewRule: `is_active = true || ${adminBypass}`,
@@ -610,12 +610,12 @@ async function main() {
       num("order", { onlyInt: true }),
       ...stamps(),
     ],
-    indexes: ["CREATE UNIQUE INDEX `idx_plans_key` ON `menuva_plans` (`key`)"],
+    indexes: ["CREATE UNIQUE INDEX `idx_plans_key` ON `buyur_plans` (`key`)"],
   });
 
   // 11) support_tickets — işletme sahibinin admin'e açtığı destek talepleri.
   const supportTickets = await getOrCreate({
-    name: "menuva_support_tickets",
+    name: "buyur_support_tickets",
     type: "base",
     listRule: `user = @request.auth.id || ${adminBypass}`,
     viewRule: `user = @request.auth.id || ${adminBypass}`,
@@ -630,15 +630,15 @@ async function main() {
       ...stamps(),
     ],
     indexes: [
-      "CREATE INDEX `idx_support_tickets_user` ON `menuva_support_tickets` (`user`)",
-      "CREATE INDEX `idx_support_tickets_business` ON `menuva_support_tickets` (`business`)",
+      "CREATE INDEX `idx_support_tickets_user` ON `buyur_support_tickets` (`user`)",
+      "CREATE INDEX `idx_support_tickets_business` ON `buyur_support_tickets` (`business`)",
     ],
   });
 
   // 12) ticket_messages — destek talebi mesaj akışı (kullanıcı <-> admin).
   // Gönderilmiş bir mesaj değiştirilemez/silinemez (audit trail).
   await getOrCreate({
-    name: "menuva_ticket_messages",
+    name: "buyur_ticket_messages",
     type: "base",
     listRule: `ticket.user = @request.auth.id || ${adminBypass}`,
     viewRule: `ticket.user = @request.auth.id || ${adminBypass}`,
@@ -652,16 +652,16 @@ async function main() {
       text("body", { required: true, max: 2000 }),
       ...stamps(),
     ],
-    indexes: ["CREATE INDEX `idx_ticket_messages_ticket` ON `menuva_ticket_messages` (`ticket`)"],
+    indexes: ["CREATE INDEX `idx_ticket_messages_ticket` ON `buyur_ticket_messages` (`ticket`)"],
   });
 
   // 13) notifications — admin'in gönderdiği toplu/tekil duyurular.
   // audience = "all" | "freemium" | "premium" | "elite" | "user" (bu durumda `user` dolu).
   const notifications = await getOrCreate({
-    name: "menuva_notifications",
+    name: "buyur_notifications",
     type: "base",
-    listRule: `audience = "all" || user = @request.auth.id || audience ?= @request.auth.menuva_businesses_via_owner.plan || ${adminBypass}`,
-    viewRule: `audience = "all" || user = @request.auth.id || audience ?= @request.auth.menuva_businesses_via_owner.plan || ${adminBypass}`,
+    listRule: `audience = "all" || user = @request.auth.id || audience ?= @request.auth.buyur_businesses_via_owner.plan || ${adminBypass}`,
+    viewRule: `audience = "all" || user = @request.auth.id || audience ?= @request.auth.buyur_businesses_via_owner.plan || ${adminBypass}`,
     createRule: adminBypass,
     updateRule: null,
     deleteRule: null,
@@ -677,7 +677,7 @@ async function main() {
 
   // 14) notification_reads — kullanıcı bazında okundu takibi (bildirim zili sayacı).
   await getOrCreate({
-    name: "menuva_notification_reads",
+    name: "buyur_notification_reads",
     type: "base",
     listRule: `user = @request.auth.id || ${adminBypass}`,
     viewRule: `user = @request.auth.id || ${adminBypass}`,
@@ -690,8 +690,8 @@ async function main() {
       ...stamps(),
     ],
     indexes: [
-      "CREATE UNIQUE INDEX `idx_notification_reads_unique` ON `menuva_notification_reads` (`notification`,`user`)",
-      "CREATE INDEX `idx_notification_reads_user` ON `menuva_notification_reads` (`user`)",
+      "CREATE UNIQUE INDEX `idx_notification_reads_unique` ON `buyur_notification_reads` (`notification`,`user`)",
+      "CREATE INDEX `idx_notification_reads_user` ON `buyur_notification_reads` (`user`)",
     ],
   });
 
@@ -700,7 +700,7 @@ async function main() {
   // olmadan da kaydedebilsin diye. Kabul edilen risk: düşük değerli spam yazımı;
   // list/view sadece super_admin'e açık, satırlar hiçbir zaman API'den değiştirilemez/silinemez.
   await getOrCreate({
-    name: "menuva_admin_logs",
+    name: "buyur_admin_logs",
     type: "base",
     listRule: `${adminBypass} && @request.auth.role = "super_admin"`,
     viewRule: `${adminBypass} && @request.auth.role = "super_admin"`,
@@ -717,8 +717,8 @@ async function main() {
       ...stamps(),
     ],
     indexes: [
-      "CREATE INDEX `idx_admin_logs_admin` ON `menuva_admin_logs` (`admin`)",
-      "CREATE INDEX `idx_admin_logs_action` ON `menuva_admin_logs` (`action`)",
+      "CREATE INDEX `idx_admin_logs_admin` ON `buyur_admin_logs` (`admin`)",
+      "CREATE INDEX `idx_admin_logs_action` ON `buyur_admin_logs` (`action`)",
     ],
   });
 

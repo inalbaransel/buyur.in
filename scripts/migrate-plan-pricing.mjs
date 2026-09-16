@@ -1,5 +1,5 @@
 // Paket kararlarını (fiyat, süre, özellik listesi, limitler) canlı
-// `menuva_plans` kayıtlarına yazar. Tek doğruluk kaynağı
+// `buyur_plans` kayıtlarına yazar. Tek doğruluk kaynağı
 // scripts/plan-catalog.mjs — burada rakam/metin elle yazılmaz.
 //
 //   Freemium  0₺        · 3 ay veya 10.000 görüntülenme · ÜRÜN LİMİTİ YOK
@@ -64,7 +64,7 @@ function addMonths(date, months) {
 }
 
 async function syncPlans() {
-  const plans = await pb.collection("menuva_plans").getFullList();
+  const plans = await pb.collection("buyur_plans").getFullList();
 
   for (const plan of plans) {
     const spec = PLAN_SEEDS.find((seed) => seed.key === plan.key);
@@ -92,7 +92,7 @@ async function syncPlans() {
     const payload = Object.fromEntries(changed);
     if (limitPatch.length > 0) payload.limits = { ...limits, ...Object.fromEntries(limitPatch) };
 
-    await pb.collection("menuva_plans").update(plan.id, payload);
+    await pb.collection("buyur_plans").update(plan.id, payload);
 
     const describe = ([field, value]) => `${field} → ${Array.isArray(value) ? `${value.length} madde` : value ?? "sınırsız"}`;
     console.log(`~ plans/${plan.key}: ${[...changed, ...limitPatch].map(describe).join(", ")}`);
@@ -101,7 +101,7 @@ async function syncPlans() {
 
 async function backfillTrialExpiry() {
   // Süreli plandaki (ücretsiz) işletmelerden bitiş tarihi boş olanlar.
-  const businesses = await pb.collection("menuva_businesses").getFullList({
+  const businesses = await pb.collection("buyur_businesses").getFullList({
     filter: pb.filter("plan = {:plan} && plan_expires_at = ''", { plan: "freemium" }),
   });
 
@@ -112,7 +112,7 @@ async function backfillTrialExpiry() {
 
   const expiresAt = addMonths(new Date(), TRIAL_MONTHS).toISOString();
   for (const business of businesses) {
-    await pb.collection("menuva_businesses").update(business.id, { plan_expires_at: expiresAt });
+    await pb.collection("buyur_businesses").update(business.id, { plan_expires_at: expiresAt });
   }
   console.log(`~ ${businesses.length} Freemium işletmeye deneme bitişi yazıldı: ${expiresAt}`);
 }

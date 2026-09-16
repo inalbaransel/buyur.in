@@ -17,7 +17,7 @@ const EVENT_NAMES: Record<Step, string> = {
 };
 
 function localKey(businessId: string): string {
-  return `menuva-activation-${businessId}`;
+  return `buyur-activation-${businessId}`;
 }
 
 function readLocal(businessId: string): BusinessActivation {
@@ -57,7 +57,7 @@ export async function markActivation(
 /** Aktivasyon nesnesini işletme kaydına yazar (sektör seçimi gibi ek bilgiler için de). */
 export async function saveActivation(business: Business, activation: BusinessActivation): Promise<Business | null> {
   try {
-    return await pb.collection("menuva_businesses").update<Business>(business.id, { activation });
+    return await pb.collection("buyur_businesses").update<Business>(business.id, { activation });
   } catch {
     return null;
   }

@@ -4,12 +4,12 @@ import { join } from "node:path";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "menuva — Dijital QR Menü";
+export const alt = "buyur — Dijital QR Menü";
 
 const LOGO_RATIO = 831 / 723;
 
 export default function Image() {
-  const logoBuf = readFileSync(join(process.cwd(), "public/menuva-logo-og.png"));
+  const logoBuf = readFileSync(join(process.cwd(), "public/buyur-logo-og.png"));
   const logo = `data:image/png;base64,${logoBuf.toString("base64")}`;
   const logoHeight = 300;
   const logoWidth = Math.round(logoHeight * LOGO_RATIO);
@@ -65,7 +65,7 @@ export default function Image() {
             color: "#e8491f",
           }}
         >
-          QR MENÜ · MENUVA
+          QR MENÜ · BUYUR
         </div>
         <div style={{ ...bar, bottom: 0 }} />
       </div>

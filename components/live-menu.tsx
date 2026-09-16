@@ -22,7 +22,7 @@ export function LiveMenu({
 }) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [embed, setEmbed] = useState(false);
-  const [url, setUrl] = useState(`https://${slug}.menuvaapp.com`);
+  const [url, setUrl] = useState(`https://${slug}.buyur.in`);
 
   useEffect(() => {
     setUrl(menuUrl(slug));
@@ -45,7 +45,7 @@ export function LiveMenu({
     return () => observer.disconnect();
   }, []);
 
-  const openUrl = `${url}/?utm_source=menuva&utm_medium=landing&utm_campaign=live_section`;
+  const openUrl = `${url}/?utm_source=buyur&utm_medium=landing&utm_campaign=live_section`;
 
   return (
     <section
@@ -96,7 +96,7 @@ export function LiveMenu({
             </a>
           </div>
           <p className="mt-4 font-mono text-[11px] uppercase tracking-wider text-paper/40">
-            Kendi menünüz de bu adreste yayında olur: {slug}.menuvaapp.com → sizin-adiniz.menuvaapp.com
+            Kendi menünüz de bu adreste yayında olur: {slug}.buyur.in → sizin-adiniz.buyur.in
           </p>
         </div>
 

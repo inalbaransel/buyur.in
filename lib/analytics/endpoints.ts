@@ -274,7 +274,7 @@ const categories: Handler = async (args) => {
 
   const rows = await loadStats(args.context.service, args.context.business, args.range, ["category"]);
   const entries = groupDimension(rows, "category");
-  const labels = await resolveLabels(args.context.service, "menuva_categories", entries.map((entry) => entry.key));
+  const labels = await resolveLabels(args.context.service, "buyur_categories", entries.map((entry) => entry.key));
 
   const items = sortByMetric(entries, "views").map((entry) => {
     const views = entry.metrics.views ?? 0;
@@ -365,7 +365,7 @@ const qr: Handler = async (args) => {
 
   const rows = await loadStats(args.context.service, args.context.business, args.range, ["qr", "hour", "total"]);
   const entries = sortByMetric(groupDimension(rows, "qr"), "scans");
-  const labels = await resolveLabels(args.context.service, "menuva_qr_codes", entries.map((entry) => entry.key));
+  const labels = await resolveLabels(args.context.service, "buyur_qr_codes", entries.map((entry) => entry.key));
   const totals = totalMetrics(rows);
 
   return {
@@ -451,7 +451,7 @@ const campaigns: Handler = async (args) => {
 
   const rows = await loadStats(args.context.service, args.context.business, args.range, ["campaign"]);
   const entries = sortByMetric(groupDimension(rows, "campaign"), "views");
-  const labels = await resolveLabels(args.context.service, "menuva_popups", entries.map((entry) => entry.key), "title");
+  const labels = await resolveLabels(args.context.service, "buyur_popups", entries.map((entry) => entry.key), "title");
 
   return {
     data: {
@@ -504,7 +504,7 @@ export const productDetail: Handler = async (args) => {
 
   // Ürünün gerçekten bu işletmeye ait olduğunu doğruluyoruz (tenant izolasyonu).
   const product = await args.context.service
-    .collection("menuva_products")
+    .collection("buyur_products")
     .getFirstListItem<{ id: string; name: string; category: string }>(
       args.context.service.filter("id = {:id} && business = {:business}", {
         id: productId,
@@ -619,7 +619,7 @@ const insights: Handler = async (args) => {
   ]);
 
   // Menüdeki toplam ürün sayısı — skorun "ürün kapsamı" bileşeni için.
-  const productList = await args.context.service.collection("menuva_products").getList(1, 1, {
+  const productList = await args.context.service.collection("buyur_products").getList(1, 1, {
     filter: args.context.service.filter("business = {:business}", { business: args.context.business.id }),
     fields: "id",
     requestKey: null,

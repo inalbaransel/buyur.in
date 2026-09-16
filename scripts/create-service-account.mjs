@@ -1,5 +1,5 @@
 // Next sunucusunun PocketBase'e yazmak için kullandığı servis hesabını oluşturur.
-// Bu hesap menuva_admins koleksiyonunda durur (koleksiyon kuralları admin'e açık),
+// Bu hesap buyur_admins koleksiyonunda durur (koleksiyon kuralları admin'e açık),
 // event/oturum/agregat yazma işlerini yapar. Kimlik bilgileri yalnızca sunucu
 // ortamına konur — NEXT_PUBLIC_ öneki ASLA kullanılmamalı.
 //
@@ -25,7 +25,7 @@ if (!PB_URL || !PB_TOKEN) {
 const pb = new PocketBase(PB_URL);
 pb.authStore.save(PB_TOKEN, null);
 
-const EMAIL = process.env.PB_SERVICE_EMAIL ?? "analytics-service@menuva.local";
+const EMAIL = process.env.PB_SERVICE_EMAIL ?? "analytics@buyur.in";
 const RESET = process.argv.includes("--reset");
 
 function generatePassword() {
@@ -38,7 +38,7 @@ async function main() {
   let existing = null;
   try {
     existing = await pb
-      .collection("menuva_admins")
+      .collection("buyur_admins")
       .getFirstListItem(pb.filter("email = {:email}", { email: EMAIL }));
   } catch (err) {
     if (err?.status !== 404) throw err;
@@ -51,13 +51,13 @@ async function main() {
   }
 
   if (existing) {
-    await pb.collection("menuva_admins").update(existing.id, {
+    await pb.collection("buyur_admins").update(existing.id, {
       password,
       passwordConfirm: password,
     });
     console.log(`~ servis hesabının şifresi yenilendi: ${EMAIL}`);
   } else {
-    await pb.collection("menuva_admins").create({
+    await pb.collection("buyur_admins").create({
       name: "Analytics Service",
       email: EMAIL,
       emailVisibility: false,

@@ -106,7 +106,7 @@ export interface BusinessActivation {
   checklist_completed_at?: string;
 }
 
-/** menuva blog yazısı — içerik PocketBase yönetim ekranından girilir. */
+/** buyur blog yazısı — içerik PocketBase yönetim ekranından girilir. */
 export interface BlogPost {
   id: string;
   title: string;

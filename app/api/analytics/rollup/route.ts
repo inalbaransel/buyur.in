@@ -45,8 +45,8 @@ async function handle(req: NextRequest) {
   try {
     const pb = await getServicePB();
     const [businesses, plans] = await Promise.all([
-      pb.collection("menuva_businesses").getFullList<Business>({ batch: 200, requestKey: null }),
-      pb.collection("menuva_plans").getFullList<PlanRecord>({ batch: 50, requestKey: null }),
+      pb.collection("buyur_businesses").getFullList<Business>({ batch: 200, requestKey: null }),
+      pb.collection("buyur_plans").getFullList<PlanRecord>({ batch: 50, requestKey: null }),
     ]);
 
     const planByKey = new Map(plans.map((plan) => [plan.key, plan]));

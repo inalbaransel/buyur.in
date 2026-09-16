@@ -18,7 +18,7 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      await pb.collection("menuva_users").authWithPassword(email, password);
+      await pb.collection("buyur_users").authWithPassword(email, password);
       router.replace("/panel");
     } catch {
       setError("E-posta veya şifre hatalı.");

@@ -48,8 +48,8 @@ export function PopupForm({
         translations,
       };
       const record = initial
-        ? await pb.collection("menuva_popups").update<Popup>(initial.id, payload)
-        : await pb.collection("menuva_popups").create<Popup>(payload);
+        ? await pb.collection("buyur_popups").update<Popup>(initial.id, payload)
+        : await pb.collection("buyur_popups").create<Popup>(payload);
       toast(initial ? "Kampanya güncellendi" : "Kampanya eklendi");
       onSaved(record);
     } catch {

@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "menuva — Dijital QR Menü",
-    short_name: "menuva",
+    name: "buyur — Dijital QR Menü",
+    short_name: "buyur",
     description:
       "Restoranlar ve kafeler için dijital QR menü platformu. Menünüzü dakikalar içinde dijitalleştirin.",
     start_url: "/",

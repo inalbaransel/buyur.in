@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 // "Kaydet" ile yayınlanınca taslak silinir.
 
 const DEBOUNCE_MS = 800;
-const PREFIX = "menuva-draft:";
+const PREFIX = "buyur-draft:";
 
 interface StoredDraft<T> {
   value: T;

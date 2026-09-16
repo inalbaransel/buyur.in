@@ -45,13 +45,13 @@ function NewTicketForm({
     setError("");
     setSaving(true);
     try {
-      const ticket = await pb.collection("menuva_support_tickets").create<SupportTicket>({
+      const ticket = await pb.collection("buyur_support_tickets").create<SupportTicket>({
         business: businessId,
         user: userId,
         subject: subject.trim(),
         status: "open",
       });
-      await pb.collection("menuva_ticket_messages").create({
+      await pb.collection("buyur_ticket_messages").create({
         ticket: ticket.id,
         sender: "user",
         body: body.trim(),
@@ -99,7 +99,7 @@ export default function SupportPage() {
 
   useEffect(() => {
     if (!user) return;
-    pb.collection("menuva_support_tickets")
+    pb.collection("buyur_support_tickets")
       .getFullList<SupportTicket>({
         filter: pb.filter("user = {:id}", { id: user.id }),
         sort: "-created",
@@ -117,7 +117,7 @@ export default function SupportPage() {
     <div>
       <PageHeader
         title="Destek"
-        description="menuva ekibine soru sor, talep aç."
+        description="buyur ekibine soru sor, talep aç."
         action={
           <Button variant={showForm ? "outline" : "primary"} onClick={() => setShowForm((v) => !v)}>
             {showForm ? "Vazgeç" : "Yeni talep"}

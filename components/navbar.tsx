@@ -6,7 +6,7 @@ import { Logo } from "@/components/chrome";
 
 // Kök önekli çapalar: navbar blog sayfalarında da kullanılıyor.
 const links = [
-  { href: "/#neden", label: "Neden menuva" },
+  { href: "/#neden", label: "Neden buyur" },
   { href: "/#canli-menu", label: "Canlı demo" },
   { href: "/#nasil", label: "Nasıl çalışır" },
   { href: "/#fiyat", label: "Fiyatlar" },
@@ -81,7 +81,7 @@ export function Navbar() {
           scrolled ? "py-3" : "py-4"
         }`}
       >
-        <Link href="/" aria-label="menuva ana sayfa" className="shrink-0">
+        <Link href="/" aria-label="buyur ana sayfa" className="shrink-0">
           <Logo />
         </Link>
 

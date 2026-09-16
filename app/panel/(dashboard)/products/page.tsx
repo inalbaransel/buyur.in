@@ -27,11 +27,11 @@ export default function ProductsPage() {
     if (!business) return;
     setLoading(true);
     const [cats, prods] = await Promise.all([
-      pb.collection("menuva_categories").getFullList<Category>({
+      pb.collection("buyur_categories").getFullList<Category>({
         filter: pb.filter("business = {:id}", { id: business.id }),
         sort: "order,created",
       }),
-      pb.collection("menuva_products").getFullList<Product>({
+      pb.collection("buyur_products").getFullList<Product>({
         filter: pb.filter("business = {:id}", { id: business.id }),
         sort: "order,created",
       }),
@@ -44,7 +44,7 @@ export default function ProductsPage() {
   async function toggleAvailable(product: Product) {
     const next = !product.is_available;
     setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, is_available: next } : p)));
-    await pb.collection("menuva_products").update(product.id, { is_available: next });
+    await pb.collection("buyur_products").update(product.id, { is_available: next });
     toast(next ? "Ürün satışa açıldı" : "Ürün satıştan kaldırıldı");
   }
 
@@ -52,7 +52,7 @@ export default function ProductsPage() {
     // Silinecek bağımlılıklar: ürünün varyant/seçenekleri (cascade).
     let optionCount = 0;
     try {
-      const options = await pb.collection("menuva_product_options").getList(1, 1, {
+      const options = await pb.collection("buyur_product_options").getList(1, 1, {
         filter: pb.filter("product = {:id}", { id: product.id }),
         fields: "id",
         requestKey: null,
@@ -79,7 +79,7 @@ export default function ProductsPage() {
     if (!ok) return;
 
     try {
-      await pb.collection("menuva_products").delete(product.id);
+      await pb.collection("buyur_products").delete(product.id);
       setProducts((prev) => prev.filter((p) => p.id !== product.id));
       toast("Ürün silindi");
     } catch {

@@ -36,7 +36,7 @@ const OLD_TO_NEW = {
 const NEW_VALUES = ["freemium", "premium", "elite"];
 
 async function migrateBusinessPlanValues() {
-  const collection = await pb.collections.getOne("menuva_businesses");
+  const collection = await pb.collections.getOne("buyur_businesses");
   const planField = collection.fields.find((f) => f.name === "plan");
   if (!planField) throw new Error("businesses koleksiyonunda 'plan' alanı bulunamadı.");
 
@@ -57,11 +57,11 @@ async function migrateBusinessPlanValues() {
   let page = 1;
   let migrated = 0;
   for (;;) {
-    const result = await pb.collection("menuva_businesses").getList(page, 200);
+    const result = await pb.collection("buyur_businesses").getList(page, 200);
     for (const biz of result.items) {
       const mapped = OLD_TO_NEW[biz.plan];
       if (mapped) {
-        await pb.collection("menuva_businesses").update(biz.id, { plan: mapped });
+        await pb.collection("buyur_businesses").update(biz.id, { plan: mapped });
         migrated += 1;
       }
     }
@@ -71,7 +71,7 @@ async function migrateBusinessPlanValues() {
   console.log(`~ ${migrated} işletme kaydı yeni plan anahtarına taşındı.`);
 
   // 3) Daralt: sadece nihai değerler kalsın.
-  const fresh = await pb.collections.getOne("menuva_businesses");
+  const fresh = await pb.collections.getOne("buyur_businesses");
   await pb.collections.update(fresh.id, {
     fields: fresh.fields.map((f) => (f.name === "plan" ? { ...f, values: NEW_VALUES } : f)),
   });
@@ -82,7 +82,7 @@ async function seedPlans() {
   for (const spec of PLAN_SEEDS) {
     let existing;
     try {
-      existing = await pb.collection("menuva_plans").getFirstListItem(pb.filter("key = {:key}", { key: spec.key }));
+      existing = await pb.collection("buyur_plans").getFirstListItem(pb.filter("key = {:key}", { key: spec.key }));
     } catch (err) {
       if (err?.status !== 404) throw err;
     }
@@ -92,7 +92,7 @@ async function seedPlans() {
       );
       continue;
     }
-    const created = await pb.collection("menuva_plans").create(spec);
+    const created = await pb.collection("buyur_plans").create(spec);
     console.log(`+ plans/${spec.key} oluşturuldu (id: ${created.id})`);
   }
 }

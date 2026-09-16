@@ -22,8 +22,8 @@ export function NotificationBell() {
 
     async function load() {
       const [notifs, reads] = await Promise.all([
-        pb.collection("menuva_notifications").getFullList<Notification>({ sort: "-created", requestKey: null }),
-        pb.collection("menuva_notification_reads").getFullList<{ notification: string }>({
+        pb.collection("buyur_notifications").getFullList<Notification>({ sort: "-created", requestKey: null }),
+        pb.collection("buyur_notification_reads").getFullList<{ notification: string }>({
           filter: pb.filter("user = {:id}", { id: user!.id }),
           fields: "notification",
           requestKey: null,
@@ -52,7 +52,7 @@ export function NotificationBell() {
     if (!user || readIds.has(notificationId)) return;
     setReadIds((prev) => new Set(prev).add(notificationId));
     try {
-      await pb.collection("menuva_notification_reads").create({ notification: notificationId, user: user.id });
+      await pb.collection("buyur_notification_reads").create({ notification: notificationId, user: user.id });
     } catch {
       // Muhtemelen unique index çakışması (başka bir sekmeden zaten okunmuş) — sessizce yut.
     }

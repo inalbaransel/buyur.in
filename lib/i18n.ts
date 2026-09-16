@@ -93,7 +93,7 @@ export function activeNonMainLocales(config: LangConfig): Locale[] {
   return activeLocales(config).filter((l) => l !== main);
 }
 
-const LOCALE_STORAGE_KEY = "menuva-locale";
+const LOCALE_STORAGE_KEY = "buyur-locale";
 
 // Ziyaretçinin seçtiği dili tarayıcıda hatırlar; SSR'da her zaman varsayılana düşer.
 export function getStoredLocale(): Locale {
@@ -328,11 +328,11 @@ const UI_STRINGS = {
     ar: "افتح القائمة الرقمية",
     ru: "Открыть цифровое меню",
   },
-  poweredByMenuva: {
-    tr: "menuva ile hazırlandı",
-    en: "made with menuva",
-    ar: "صُنع بواسطة menuva",
-    ru: "сделано с menuva",
+  poweredByBuyur: {
+    tr: "buyur ile hazırlandı",
+    en: "made with buyur",
+    ar: "صُنع بواسطة buyur",
+    ru: "сделано с buyur",
   },
 } as const satisfies Record<string, Record<Locale, string>>;
 

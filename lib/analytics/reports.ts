@@ -227,8 +227,8 @@ export async function buildReport(
   const [productLabels, categoryLabels, qrLabels, campaignLabels] = await Promise.all([
     businessProductNames(context.service, context.business.id),
     businessCategoryNames(context.service, context.business.id),
-    resolveLabels(context.service, "menuva_qr_codes", qrCodes.map((entry) => entry.key)),
-    resolveLabels(context.service, "menuva_popups", campaigns.map((entry) => entry.key), "title"),
+    resolveLabels(context.service, "buyur_qr_codes", qrCodes.map((entry) => entry.key)),
+    resolveLabels(context.service, "buyur_popups", campaigns.map((entry) => entry.key), "title"),
   ]);
 
   const changes: Record<string, number | null> = {};
@@ -265,7 +265,7 @@ export async function buildReport(
 
   const topProduct = productStats.slice().sort((a, b) => b.views - a.views)[0]?.label ?? null;
 
-  const productList = await context.service.collection("menuva_products").getList(1, 1, {
+  const productList = await context.service.collection("buyur_products").getList(1, 1, {
     filter: context.service.filter("business = {:business}", { business: context.business.id }),
     fields: "id",
     requestKey: null,

@@ -3,7 +3,7 @@ import type { Plan } from "@/lib/types";
 // İlan edilen fiyatların TEK KAYNAĞI (₺, KDV hariç/dahil ayrımı için bkz.
 // lib/legal.ts → Ödeme Koşulları).
 //
-// Canlı fiyat `menuva_plans` koleksiyonundan okunur; burası hem PocketBase'e
+// Canlı fiyat `buyur_plans` koleksiyonundan okunur; burası hem PocketBase'e
 // ulaşılamadığında kullanılan yedek, hem de fiyatın metin içinde geçtiği
 // yerlerin (yasal sayfalar, SSS) beslendiği yer. Rakam değişince önce burası,
 // sonra scripts/migrate-plan-pricing.mjs ile canlı kayıtlar güncellenir.

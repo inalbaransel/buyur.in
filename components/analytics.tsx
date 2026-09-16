@@ -603,7 +603,7 @@ export function Analytics() {
             Hangi ürünün satıldığını tahmin etmeyin, görün
           </h2>
           <p className="mt-4 text-ink-soft">
-            Kâğıt menü size hiçbir şey söylemez. menuva, müşterinin neye baktığını ve
+            Kâğıt menü size hiçbir şey söylemez. buyur, müşterinin neye baktığını ve
             neyi sepete eklediğini gösterir; şefin önerisini, kampanyayı ve fiyatı
             buna göre ayarlarsınız.
           </p>
