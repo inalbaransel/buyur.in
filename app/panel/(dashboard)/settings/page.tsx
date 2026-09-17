@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { ClientResponseError } from "pocketbase";
 import { pb } from "@/lib/pocketbase";
 import { useBusiness } from "@/components/panel/business-context";
@@ -26,6 +26,13 @@ import {
   type Locale,
   type Translations,
 } from "@/lib/i18n";
+import {
+  applyRebasePatches,
+  buildRebasePatches,
+  BUSINESS_REBASE_FIELDS,
+  rebaseEntity,
+  type RebasePatch,
+} from "@/lib/language-rebase";
 import type { Business, Highlight, Template } from "@/lib/types";
 
 const ALL_HIGHLIGHTS = Object.keys(highlightLabels.tr) as Highlight[];
@@ -176,10 +183,24 @@ function SettingsForm({ business, onSaved }: { business: Business; onSaved: (b: 
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const { toast } = useToast();
 
-  // Ana dili değiştirince, o dil ek diller listesinden çıkarılır.
+  // Kaydedilmiş (veritabanındaki) ana dil — içerik taşımasının kaynağı budur.
+  const savedMainLang = mainLocale(business);
+  const mainLangChanged = mainLang !== savedMainLang;
+
+  // Yarıda kalan bir taşımadan artan güncellemeler. Yeniden hesaplamak yerine
+  // bunları tekrar denemek gerekir; aksi hâlde taşınmış kayıtlar ikinci kez taşınır.
+  const pendingRebase = useRef<{ from: Locale; to: Locale; patches: RebasePatch[] } | null>(null);
+
+  // Ana dili değiştirince o dil ek diller listesinden çıkar, eski ana dil ise
+  // ek dil olarak açık kalır (metinleri oraya taşınacağı için erişilebilir olmalı).
   function changeMainLang(next: Locale) {
+    if (next === mainLang) return;
+    const previous = mainLang;
     setMainLang(next);
-    setLanguages((prev) => prev.filter((l) => l !== next));
+    setLanguages((prev) => {
+      const kept = prev.filter((l) => l !== next);
+      return kept.includes(previous) ? kept : [...kept, previous];
+    });
   }
 
   function toggleLanguage(l: Locale) {
@@ -203,10 +224,38 @@ function SettingsForm({ business, onSaved }: { business: Business; onSaved: (b: 
     }
     setSaving(true);
     try {
+      // Ana dil değiştiyse önce menü içeriği (kategori/ürün/seçenek/popup) yeni
+      // baz dile taşınır; ancak hepsi başarılı olursa main_language yazılır.
+      // Böylece taşıma yarıda kalırsa kayıtlar eski ana dille tutarlı kalır.
+      let baseDescription = description;
+      let baseTranslations = translations;
+
+      if (mainLangChanged) {
+        const cached = pendingRebase.current;
+        const patches =
+          cached && cached.from === savedMainLang && cached.to === mainLang
+            ? cached.patches
+            : await buildRebasePatches(pb, business.id, savedMainLang, mainLang);
+
+        const failed = await applyRebasePatches(pb, patches);
+        if (failed.length > 0) {
+          pendingRebase.current = { from: savedMainLang, to: mainLang, patches: failed };
+          const message = `${failed.length} kayıt yeni ana dile taşınamadı. Ana dil değişmedi; tekrar kaydet.`;
+          setError(message);
+          toast(message, "error");
+          return;
+        }
+        pendingRebase.current = null;
+
+        const rebased = rebaseEntity({ description, translations }, BUSINESS_REBASE_FIELDS, savedMainLang, mainLang);
+        baseDescription = rebased.base.description ?? "";
+        baseTranslations = rebased.translations;
+      }
+
       const updated = await pb.collection("buyur_businesses").update<Business>(business.id, {
         name,
         slug: slugify(slug),
-        description,
+        description: baseDescription,
         email,
         phone,
         address,
@@ -229,11 +278,14 @@ function SettingsForm({ business, onSaved }: { business: Business; onSaved: (b: 
         cover_url: coverUrl,
         main_language: mainLang,
         languages,
-        translations,
+        translations: baseTranslations,
       });
+      // Taşıma sonrası form da yeni baz dile göre görünmeli.
+      setDescription(baseDescription);
+      setTranslations(baseTranslations);
       onSaved(updated);
       setSavedAt(Date.now());
-      toast("Ayarlar kaydedildi");
+      toast(mainLangChanged ? "Ayarlar kaydedildi, içerik yeni ana dile taşındı" : "Ayarlar kaydedildi");
     } catch (err) {
       if (err instanceof ClientResponseError && err.response?.data?.slug) {
         setError("Bu adres başka bir işletme tarafından kullanılıyor.");
@@ -381,6 +433,17 @@ function SettingsForm({ business, onSaved }: { business: Business; onSaved: (b: 
                 );
               })}
             </div>
+            {mainLangChanged && (
+              <div className="rounded-2xl border border-paprika/40 bg-paprika/5 p-4 text-xs text-ink">
+                <p className="font-semibold">Ana dil {localeLabels[savedMainLang]} → {localeLabels[mainLang]} olarak değişecek.</p>
+                <p className="mt-1 text-ink-soft">
+                  Kaydedince menüdeki tüm metinler taşınır: şu anki {localeLabels[savedMainLang]} metinleri{" "}
+                  {localeLabels[savedMainLang]} çevirisi olarak saklanır, girdiğin {localeLabels[mainLang]} çevirileri ana
+                  metin olur. {localeLabels[mainLang]} çevirisi olmayan alanlarda mevcut metin olduğu gibi kalır —
+                  hiçbir içerik silinmez.
+                </p>
+              </div>
+            )}
             <p className="text-xs text-ink-soft">
               Açıklama çevirilerini &ldquo;Genel bilgiler&rdquo; sekmesindeki dil sekmelerinden girebilirsin.
             </p>
