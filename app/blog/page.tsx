@@ -5,15 +5,29 @@ import { Footer } from "@/components/chrome";
 import { LandingTracker } from "@/components/landing-tracker";
 import { formatPostDate, listPosts } from "@/lib/blog";
 import type { BlogPost } from "@/lib/types";
+import { OG_IMAGE, SITE_NAME, absoluteUrl } from "@/lib/seo";
 
 // Yazılar PocketBase'den okunuyor; liste 5 dakikada bir tazelenir.
 export const revalidate = 300;
 
+const BLOG_TITLE = "QR Menü ve Restoran Teknolojileri Blogu";
+const BLOG_DESCRIPTION =
+  "Restoran, kafe ve pastaneler için dijital menü, QR menü, menü mühendisliği ve satış artırma üzerine pratik yazılar.";
+
 export const metadata: Metadata = {
-  title: "Blog",
-  description:
-    "Restoran, kafe ve pastaneler için dijital menü, QR menü ve menü mühendisliği üzerine pratik yazılar.",
+  title: BLOG_TITLE,
+  description: BLOG_DESCRIPTION,
   alternates: { canonical: "/blog" },
+  openGraph: {
+    type: "website",
+    title: BLOG_TITLE,
+    description: BLOG_DESCRIPTION,
+    url: absoluteUrl("/blog"),
+    siteName: SITE_NAME,
+    locale: "tr_TR",
+    images: [OG_IMAGE],
+  },
+  twitter: { card: "summary_large_image", title: BLOG_TITLE, description: BLOG_DESCRIPTION, images: [OG_IMAGE] },
 };
 
 function PostCard({ post, featured = false }: { post: BlogPost; featured?: boolean }) {

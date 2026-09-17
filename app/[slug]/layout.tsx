@@ -7,6 +7,7 @@ import { MenuProvider } from "@/components/menu/menu-provider";
 import { MenuUnavailable } from "@/app/[slug]/unavailable";
 import { isSubscriptionActive } from "@/lib/entitlements";
 import { menuUrl } from "@/lib/site";
+import { SITE_NAME, shareImages } from "@/lib/seo";
 import type { Business, Category, Popup, Product } from "@/lib/types";
 
 const getBusiness = cache(async (slug: string): Promise<Business | null> => {
@@ -27,7 +28,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const title = `${business.name} — Menü | buyur`;
   const description = business.description || `${business.name} dijital menüsü — güncel fiyatlar, kategoriler ve ürünler.`;
+  // Kapak yoksa markalı paylaşım görseli: WhatsApp'ta paylaşılan menü linki
+  // hiçbir koşulda görselsiz kalmasın.
+  const images = shareImages(business.cover_url);
 
+  // Not: canonical burada verilemez — layout metadata'sı alt sayfalara
+  // (ürün, kategori, sepet) da miras kalır ve hepsini menü köküne eşitler.
   return {
     title,
     description,
@@ -35,16 +41,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title,
       description,
       url: menuUrl(business.slug),
-      siteName: "buyur",
-      images: business.cover_url ? [business.cover_url] : undefined,
+      siteName: SITE_NAME,
+      images,
       locale: "tr_TR",
       type: "website",
     },
     twitter: {
-      card: business.cover_url ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title,
       description,
-      images: business.cover_url ? [business.cover_url] : undefined,
+      images,
     },
     icons: business.logo_url ? { icon: business.logo_url } : undefined,
   };

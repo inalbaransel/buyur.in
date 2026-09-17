@@ -6,7 +6,7 @@ import { Footer } from "@/components/chrome";
 import { LandingTracker } from "@/components/landing-tracker";
 import { ArrowLeftIcon } from "@/components/icons";
 import { formatPostDate, getPost, readingMinutes, sanitizeHtml } from "@/lib/blog";
-import { ROOT_DOMAIN } from "@/lib/site";
+import { BRAND_ICON, OG_IMAGE, SITE_NAME, absoluteUrl, breadcrumbJsonLd, jsonLdScript, shareImages } from "@/lib/seo";
 
 export const revalidate = 300;
 
@@ -19,6 +19,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
   const title = post.seo_title || post.title;
   const description = post.seo_description || post.excerpt || undefined;
+  // Kapak görseli yoksa markalı paylaşım görseline düşüyoruz: openGraph alanı
+  // kök layout'takini tamamen değiştirdiği için burada boş bırakılamaz.
+  const images = shareImages(post.cover_url);
+
   return {
     title,
     description,
@@ -27,15 +31,20 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       type: "article",
       title,
       description,
-      url: `https://${ROOT_DOMAIN}/blog/${post.slug}`,
+      url: absoluteUrl(`/blog/${post.slug}`),
+      siteName: SITE_NAME,
+      locale: "tr_TR",
       publishedTime: post.published_at || undefined,
-      images: post.cover_url ? [post.cover_url] : undefined,
+      modifiedTime: post.updated || undefined,
+      authors: post.author ? [post.author] : undefined,
+      tags: post.tags?.length ? post.tags : undefined,
+      images,
     },
     twitter: {
-      card: post.cover_url ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title,
       description,
-      images: post.cover_url ? [post.cover_url] : undefined,
+      images,
     },
   };
 }
@@ -46,22 +55,37 @@ export default async function BlogPostPage({ params }: { params: Params }) {
   if (!post) notFound();
 
   const html = sanitizeHtml(post.content ?? "");
+  const url = absoluteUrl(`/blog/${post.slug}`);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    headline: post.title,
+    headline: post.title.slice(0, 110),
     description: post.excerpt || undefined,
-    image: post.cover_url || undefined,
+    image: post.cover_url || absoluteUrl(OG_IMAGE.url),
     datePublished: post.published_at || post.created,
     dateModified: post.updated,
-    author: { "@type": "Organization", name: post.author || "buyur" },
-    publisher: { "@type": "Organization", name: "buyur", logo: `https://${ROOT_DOMAIN}/buyur-icon.png` },
-    mainEntityOfPage: `https://${ROOT_DOMAIN}/blog/${post.slug}`,
+    inLanguage: "tr-TR",
+    keywords: post.tags?.length ? post.tags.join(", ") : undefined,
+    wordCount: html.replace(/<[^>]+>/g, " ").trim().split(/\s+/).length,
+    author: { "@type": "Organization", name: post.author || SITE_NAME },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      logo: { "@type": "ImageObject", url: BRAND_ICON, width: 512, height: 512 },
+    },
+    mainEntityOfPage: { "@type": "WebPage", "@id": url },
+    url,
   };
+
+  const breadcrumbs = breadcrumbJsonLd([
+    { name: "Blog", path: "/blog" },
+    { name: post.title, path: `/blog/${post.slug}` },
+  ]);
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(jsonLd)} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(breadcrumbs)} />
       <Navbar />
       <main className="mx-auto max-w-3xl px-5 py-14 md:py-20">
         <Link

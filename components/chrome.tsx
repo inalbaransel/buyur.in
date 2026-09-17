@@ -4,24 +4,28 @@ import { whatsappLink } from "@/lib/site";
 import { LEGAL_DOCS, legalPath } from "@/lib/legal";
 import { WhatsappIcon } from "@/components/icons";
 
-export function Logo({ light = false }: { light?: boolean }) {
+/**
+ * Marka kelime logosu. Kaynak dosyalar kare tuvalde bol boşlukla geldiği için
+ * scripts/build-brand-assets.mjs bunları kırpıp public/assets/ altına yazar.
+ *
+ * `light` koyu zeminler (footer, panel girişi) içindir.
+ */
+export function Logo({
+  light = false,
+  className = "h-8 sm:h-9",
+}: {
+  light?: boolean;
+  className?: string;
+}) {
   return (
-    <span className="inline-flex items-center gap-2">
-      <Image
-        src="/buyur-icon.png"
-        alt=""
-        width={32}
-        height={32}
-        className="h-7 w-7 sm:h-8 sm:w-8"
-        priority={!light}
-      />
-      <span
-        className={`font-display text-2xl font-extrabold tracking-tight ${light ? "text-paper" : "text-ink"
-          }`}
-      >
-        buyur<span className="text-paprika">.</span>in
-      </span>
-    </span>
+    <Image
+      src={light ? "/assets/wordmark-light.png" : "/assets/wordmark-dark.png"}
+      alt="buyur"
+      width={468}
+      height={200}
+      priority={!light}
+      className={`w-auto ${className}`}
+    />
   );
 }
 
@@ -66,14 +70,36 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative overflow-hidden bg-ink text-paper/60">
-      {/* Üst kenarda ince marka çizgisi */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-paprika to-transparent" />
+    <footer className="relative isolate overflow-hidden bg-ink text-paper/70">
+      {/* Arka plan — gece sahnesi. Sanat yönetimi <picture> ile: tarayıcı mobilde
+          dikey, masaüstünde geniş kareyi indirir; ikisini birden değil. */}
+      <picture>
+        <source media="(min-width: 768px)" type="image/webp" srcSet="/assets/footer-desktop.webp" />
+        <source media="(min-width: 768px)" srcSet="/assets/footer-desktop.jpg" />
+        <source type="image/webp" srcSet="/assets/footer-mobile.webp" />
+        <img
+          src="/assets/footer-mobile.jpg"
+          alt=""
+          aria-hidden
+          width={1440}
+          height={601}
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 -z-20 h-full w-full object-cover"
+        />
+      </picture>
 
-      <div className="mx-auto max-w-6xl px-5 py-16">
+      {/* Okunabilirlik perdesi: üstte turuncu CTA'dan geçişi kapatır, ortada
+          sahnenin ışığını gösterecek kadar açılır. */}
+      <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-b from-ink/95 via-ink/70 to-ink/90" />
+
+      {/* Üst kenarda ince marka çizgisi */}
+      <div className="relative h-px w-full bg-gradient-to-r from-transparent via-paprika to-transparent" />
+
+      <div className="relative mx-auto max-w-6xl px-5 py-16">
         <div className="grid gap-12 md:grid-cols-[1.3fr_2fr]">
           <div className="max-w-sm space-y-5">
-            <Logo light />
+            <Logo light className="h-10 sm:h-11" />
             <p className="text-sm leading-relaxed">
               Restoranlar ve kafeler için dijital QR menü platformu. Menünü bir
               kez kur, her masada güncel kalsın.
@@ -122,17 +148,14 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-paper/10">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-5 py-6 text-center font-mono text-xs text-paper/45 sm:flex-row sm:justify-between sm:text-left">
-          <p>© {year} buyur· Tüm hakları saklıdır.</p>
+      <div className="relative border-t border-paper/15 bg-ink/40 backdrop-blur-[2px]">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-5 py-6 text-center font-mono text-xs text-paper/55 sm:flex-row sm:justify-between sm:text-left">
+          <p>© {year} buyur · Tüm hakları saklıdır.</p>
           <p className="flex items-center gap-1.5">
-            <span className="text-paprika" aria-hidden>
-              ❤
-            </span>
-            <span>
+            <Link href="https://www.harbidigital.com" target="_blank" rel="noopener noreferrer">
               <span className="font-semibold text-paper/70">Harbi</span>{" "}
               tarafından tasarlandı ve geliştirildi
-            </span>
+            </Link>
           </p>
         </div>
       </div>

@@ -13,36 +13,32 @@ import "@fontsource-variable/playfair-display";
 import "./globals.css";
 import { AuthProvider } from "@/lib/use-auth";
 import { ScrollReveal } from "@/components/scroll-reveal";
-import { ROOT_DOMAIN } from "@/lib/site";
-
-const SITE_URL = `https://${ROOT_DOMAIN}`;
-const SITE_TITLE = "buyur — Dijital QR Menü";
-const SITE_DESCRIPTION =
-  "Restoran, kafe, pastane ve oteller için QR menü. Menünüzü dakikalar içinde kurun, fiyatları anında değiştirin, ürünleri öne çıkarın ve müşterinin seçimini garsona eksiksiz gösterin.";
-const SHARE_DESCRIPTION = "Menünüzü güncel tutun, müşterinin seçimini kolaylaştırın. Kredi kartı yok, 5 dakikada kurulum.";
+import {
+  OG_IMAGE,
+  SHARE_DESCRIPTION,
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_URL,
+  jsonLdScript,
+  siteJsonLd,
+} from "@/lib/seo";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: SITE_TITLE,
-    template: "%s | buyur",
+    template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
-  keywords: [
-    "qr menü",
-    "dijital menü",
-    "restoran menü",
-    "kafe menü",
-    "online menü",
-    "qr kod menü",
-    "menü oluşturma",
-    "restoran yönetim yazılımı",
-  ],
-  applicationName: "buyur",
-  authors: [{ name: "buyur" }],
-  creator: "buyur",
-  publisher: "buyur",
+  keywords: SITE_KEYWORDS,
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
   category: "business",
+  referrer: "origin-when-cross-origin",
   alternates: {
     canonical: "/",
   },
@@ -61,17 +57,29 @@ export const metadata: Metadata = {
     title: SITE_TITLE,
     description: SHARE_DESCRIPTION,
     url: SITE_URL,
-    siteName: "buyur",
+    siteName: SITE_NAME,
     locale: "tr_TR",
     type: "website",
+    images: [OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_TITLE,
     description: SHARE_DESCRIPTION,
+    images: [OG_IMAGE],
+  },
+  // Menü ekrana eklendiğinde tam ekran açılsın, adres çubuğu marka rengini alsın.
+  appleWebApp: {
+    capable: true,
+    title: SITE_NAME,
+    statusBarStyle: "default",
   },
   formatDetection: {
     telephone: false,
+  },
+  // Search Console doğrulaması ortam değişkeniyle verilir; yoksa etiket basılmaz.
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
 };
 
@@ -85,6 +93,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="tr">
+      <head>
+        {/* Kurum + site kimliği: arama motorları site adını ve logoyu buradan okur. */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(siteJsonLd())} />
+      </head>
       <body>
         <AuthProvider>{children}</AuthProvider>
         <ScrollReveal />

@@ -44,7 +44,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         <div className="relative hidden aspect-square w-full max-w-2xl flex-1 overflow-hidden rounded-[2rem] lg:block">
           <video
-            src="/animated.mp4"
+            src="/assets/animated.mp4"
             autoPlay
             loop
             muted

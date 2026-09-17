@@ -90,14 +90,14 @@ export function AiButton({ className = "", children = "AI İle Tara", ...rest }:
         className={`group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-md bg-gradient-to-br from-paprika to-paprika-deep px-5 py-2.5 font-mono text-[13px] uppercase tracking-wider text-white shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
       >
         <div className="absolute inset-0 w-full h-full pointer-events-none">
-           <div className="absolute top-0 bottom-0 w-12 bg-white/20 blur-[2px]" style={{ animation: "ai-shimmer 2.5s infinite linear" }} />
+          <div className="absolute top-0 bottom-0 w-12 bg-white/20 blur-[2px]" style={{ animation: "ai-shimmer 2.5s infinite linear" }} />
         </div>
         <div className="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100" />
-        
+
         <div style={{ animation: "ai-sparkle 2s infinite ease-in-out" }} className="relative z-10 drop-shadow-md">
           <SparklesIcon size={18} />
         </div>
-        
+
         <span className="relative z-10 font-bold drop-shadow-sm">{children}</span>
       </button>
 
@@ -107,7 +107,7 @@ export function AiButton({ className = "", children = "AI İle Tara", ...rest }:
         </p>
         <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-crema border border-line/50">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/ai-scan.jpg" alt="AI Demo" className="absolute inset-0 h-full w-full object-cover" />
+          <img src="/assets/ai-scan.jpg" alt="AI Demo" className="absolute inset-0 h-full w-full object-cover" />
         </div>
         <div className="absolute -top-[8px] left-1/2 h-0 w-0 -translate-x-1/2 border-l-[8px] border-r-[8px] border-b-[8px] border-transparent border-b-line">
           <div className="absolute top-[2px] left-1/2 h-0 w-0 -translate-x-1/2 border-l-[7px] border-r-[7px] border-b-[7px] border-transparent border-b-paper" />
@@ -246,9 +246,8 @@ export function Tabs<T extends string>({
             key={t.key}
             type="button"
             onClick={() => onChange(t.key)}
-            className={`relative -mb-px whitespace-nowrap border-b-2 pb-3 pt-1 text-[13px] font-semibold uppercase tracking-wide transition-colors ${
-              isActive ? "border-paprika text-paprika" : "border-transparent text-ink-soft hover:text-ink"
-            }`}
+            className={`relative -mb-px whitespace-nowrap border-b-2 pb-3 pt-1 text-[13px] font-semibold uppercase tracking-wide transition-colors ${isActive ? "border-paprika text-paprika" : "border-transparent text-ink-soft hover:text-ink"
+              }`}
           >
             {t.label}
           </button>
@@ -284,14 +283,12 @@ export function Switch({
           aria-checked={checked}
           aria-label={label}
           onClick={() => onChange(!checked)}
-          className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
-            checked ? "bg-herb" : "bg-ink/20"
-          }`}
+          className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-herb" : "bg-ink/20"
+            }`}
         >
           <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-paper shadow transition-transform ${
-              checked ? "translate-x-[1.125rem]" : "translate-x-0.5"
-            }`}
+            className={`inline-block h-4 w-4 transform rounded-full bg-paper shadow transition-transform ${checked ? "translate-x-[1.125rem]" : "translate-x-0.5"
+              }`}
           />
         </button>
       </label>
@@ -310,14 +307,12 @@ export function Switch({
         aria-checked={checked}
         aria-label={label}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-          checked ? "bg-herb" : "bg-ink/20"
-        }`}
+        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-herb" : "bg-ink/20"
+          }`}
       >
         <span
-          className={`inline-block h-5 w-5 transform rounded-full bg-paper shadow transition-transform ${
-            checked ? "translate-x-[1.375rem]" : "translate-x-0.5"
-          }`}
+          className={`inline-block h-5 w-5 transform rounded-full bg-paper shadow transition-transform ${checked ? "translate-x-[1.375rem]" : "translate-x-0.5"
+            }`}
         />
       </button>
     </div>

@@ -81,7 +81,9 @@ function PlanComparison() {
 const premium = PLAN_PRICING.premium;
 const elite = PLAN_PRICING.elite;
 
-const faqs = [
+// Landing sayfası bu listeden FAQPage yapılandırılmış verisi de üretiyor
+// (app/page.tsx) — soru/cevap metinleri tek yerde dursun.
+export const faqs = [
   {
     q: "buyur sipariş alıyor mu?",
     a: "Bugün sipariş ya da ödeme almıyor. Müşteri beğendiklerini sepette toplar, toplamı görür ve ekranı garsona gösterir; siparişi garsonunuz alır. Yanlış ya da eksik sipariş azalır, mevcut düzeniniz değişmez.",

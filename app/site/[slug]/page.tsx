@@ -9,6 +9,7 @@ import { isValidHex, pickReadableOn, visibleFill } from "@/lib/color";
 import { getThemeColor } from "@/lib/themes";
 import { getFontStack } from "@/lib/fonts";
 import { menuUrl } from "@/lib/site";
+import { shareImages } from "@/lib/seo";
 import {
   ProductCards,
   SiteAbout,
@@ -72,15 +73,21 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     business.description ||
     `${business.name} — menü, çalışma saatleri, konum ve rezervasyon bilgileri.`;
 
+  const images = shareImages(business.cover_url);
+
   return {
     title: `${business.name}`,
     description,
     openGraph: {
       title: business.name,
       description,
-      images: business.cover_url ? [business.cover_url] : undefined,
+      url: `${menuUrl(business.slug)}/site`,
+      siteName: business.name,
+      locale: "tr_TR",
+      images,
       type: "website",
     },
+    twitter: { card: "summary_large_image", title: business.name, description, images },
     alternates: { canonical: `${menuUrl(business.slug)}/site` },
   };
 }
