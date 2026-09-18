@@ -23,12 +23,16 @@ import type { Business, Plan, PlanRecord } from "@/lib/types";
 
 /** Karşılama maili kurulumun bir parçası değil, sonrası. Bilerek beklenmiyor
  *  ve hatası yutuluyor: Brevo'ya gidilemediği için kullanıcı menüsünün
- *  açıldığı ekranı görememezlik etmesin. */
+ *  açıldığı ekranı görememezlik etmesin.
+ *
+ *  keepalive şart: hemen ardından setBusiness() onboarding ekranını söküyor ve
+ *  tarayıcı, bekleyen isteği iptal ediyor. Canlıda mail bu yüzden gitmiyordu. */
 function sendWelcomeEmail(businessId: string) {
   void fetch("/api/emails/welcome", {
     method: "POST",
     headers: { "content-type": "application/json", Authorization: pb.authStore.token },
     body: JSON.stringify({ businessId }),
+    keepalive: true,
   }).catch(() => undefined);
 }
 
