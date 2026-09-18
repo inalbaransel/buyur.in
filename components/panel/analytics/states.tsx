@@ -41,7 +41,7 @@ export function PlanLocked({
       <p className="font-display text-lg font-bold">{title}</p>
       <p className="max-w-md text-sm text-ink-soft">{description}</p>
       <Link
-        href="/panel/support"
+        href="/panel/plan"
         className="mt-1 inline-flex items-center gap-2 rounded-md bg-ink px-5 py-2.5 font-mono text-[13px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
       >
         {plan}&apos;a yükselt

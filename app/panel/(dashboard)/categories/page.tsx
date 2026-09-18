@@ -62,10 +62,10 @@ export default function CategoriesPage() {
       details:
         count > 0
           ? [
-              `${count} ürün, varyant ve seçenekleriyle birlikte kalıcı olarak silinir.`,
-              "Menüden hemen kalkar; bu işlem geri alınamaz.",
-              "Geçmiş analiz verileri raporlarda kalır.",
-            ]
+            `${count} ürün, varyant ve seçenekleriyle birlikte kalıcı olarak silinir.`,
+            "Menüden hemen kalkar; bu işlem geri alınamaz.",
+            "Geçmiş analiz verileri raporlarda kalır.",
+          ]
           : ["Kategori boş; hiçbir ürün etkilenmez.", "Bu işlem geri alınamaz."],
     });
     if (!ok) return;
@@ -114,7 +114,7 @@ export default function CategoriesPage() {
     <div>
       <PageHeader
         title="Kategoriler"
-        description="Menünü bölümlere ayır: Kahvaltı, Ana Yemek, Tatlılar… Sırayı değiştirmek için tutup sürükle. Ürünü olmayan kategoriler müşteri menüsünde görünmez."
+        description="Menünü kategorilere ayır."
         action={
           <div className="flex gap-2">
             <Link href="/panel/products/import">
@@ -155,9 +155,8 @@ export default function CategoriesPage() {
               onDragOver={(e) => handleDragOver(e, i)}
               onDrop={() => handleDrop(i)}
               onDragEnd={handleDragEnd}
-              className={`flex items-center justify-between gap-4 transition-colors ${
-                dragIndex === i ? "opacity-40" : ""
-              } ${overIndex === i && dragIndex !== null && dragIndex !== i ? "border-paprika" : ""}`}
+              className={`flex items-center justify-between gap-4 transition-colors ${dragIndex === i ? "opacity-40" : ""
+                } ${overIndex === i && dragIndex !== null && dragIndex !== i ? "border-paprika" : ""}`}
             >
               <div className="flex min-w-0 items-center gap-3">
                 <span

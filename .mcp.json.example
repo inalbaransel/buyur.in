@@ -1,0 +1,24 @@
+{
+  "_aciklama": [
+    "Bu dosyayı '.mcp.json' adıyla kopyalayıp değerleri doldurun.",
+    ".mcp.json .gitignore'dadır — superuser token'ı repoya girmemeli.",
+    "POCKETBASE_ADMIN_TOKEN süreli bir JWT'dir. Süresi dolunca 401 alırsınız;",
+    "kalıcı çözüm için ADMIN_EMAIL/ADMIN_PASSWORD doldurun, sunucu token'ı",
+    "kendi tazeler.",
+    "Yazma araçları (pb_create/pb_update/pb_delete) varsayılan olarak kapalıdır;",
+    "canlı veriye yazmak için POCKETBASE_MCP_ALLOW_WRITE değerini '1' yapın."
+  ],
+  "mcpServers": {
+    "pocketbase": {
+      "command": "node",
+      "args": ["scripts/mcp-pocketbase.mjs"],
+      "env": {
+        "POCKETBASE_API_URL": "https://service.api.harbidigital.com",
+        "POCKETBASE_ADMIN_TOKEN": "",
+        "POCKETBASE_ADMIN_EMAIL": "",
+        "POCKETBASE_ADMIN_PASSWORD": "",
+        "POCKETBASE_MCP_ALLOW_WRITE": "0"
+      }
+    }
+  }
+}

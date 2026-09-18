@@ -7,6 +7,7 @@ import { useMenu } from "@/components/menu/menu-provider";
 import { allergenLabels, badgeLabels } from "@/lib/labels";
 import { formatPrice } from "@/lib/format";
 import { BadgeIcon, CheckCircleIcon, ClockIcon, FlameIcon } from "@/components/icons";
+import { ImageCredit } from "@/components/menu/image-credit";
 import type { Product, ProductOption } from "@/lib/types";
 
 export default function ProductDetailPage() {
@@ -17,6 +18,7 @@ export default function ProductDetailPage() {
   const [options, setOptions] = useState<ProductOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [added, setAdded] = useState(false);
+  const [imageBroken, setImageBroken] = useState(false);
   const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -70,7 +72,7 @@ export default function ProductDetailPage() {
 
   return (
     <div className="pb-10">
-      {image && (
+      {image && !imageBroken && (
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-crema sm:aspect-[2/1]">
           <picture>
             <img
@@ -78,6 +80,9 @@ export default function ProductDetailPage() {
               alt={name}
               loading="eager"
               fetchPriority="high"
+              // Görsel kaynağından gelir; kaynak ölürse kırık ikon yerine
+              // görselsiz düzene düşülür.
+              onError={() => setImageBroken(true)}
               className="ken-burns absolute inset-0 h-full w-full object-cover"
             />
           </picture>
@@ -85,6 +90,7 @@ export default function ProductDetailPage() {
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-paper/60 to-transparent" />
         </div>
       )}
+      {!imageBroken && <ImageCredit product={product} locale={locale} />}
 
       <div className="space-y-4 px-5 pt-5">
         <div className="flex items-start justify-between gap-3">

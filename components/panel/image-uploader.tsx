@@ -12,6 +12,7 @@ export function ImageUploader({
   onChange,
   businessId,
   kind,
+  name,
   aspect = "aspect-square",
   className = "",
 }: {
@@ -19,6 +20,8 @@ export function ImageUploader({
   onChange: (url: string) => void;
   businessId: string;
   kind: UploadKind;
+  /** Dosya adında kullanılacak içerik adı (ürün/kategori/pop-up adı). */
+  name?: string;
   aspect?: string;
   className?: string;
 }) {
@@ -32,7 +35,7 @@ export function ImageUploader({
     setUploading(true);
     setError(false);
     try {
-      const url = await uploadFile(file, businessId, kind);
+      const url = await uploadFile(file, businessId, kind, name);
       onChange(url);
       toast("Görsel yüklendi");
     } catch {

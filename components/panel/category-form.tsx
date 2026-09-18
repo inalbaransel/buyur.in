@@ -6,6 +6,7 @@ import { useToast } from "@/components/panel/toast";
 import { Card, DraftBanner, ErrorText, FormActions, Label, SaveStatus } from "@/components/panel/ui";
 import { ImageUploader } from "@/components/panel/image-uploader";
 import { MultiLangFields } from "@/components/panel/multi-lang-fields";
+import { AiTranslateButton } from "@/components/panel/ai/translate-button";
 import { useFormDraft } from "@/lib/use-draft";
 import { activeLocales, mainLocale, type TranslatableField, type Translations } from "@/lib/i18n";
 import type { Business, Category } from "@/lib/types";
@@ -106,6 +107,15 @@ export function CategoryForm({
           onCancel={onCancel}
           status={<SaveStatus saving={saving} savedAt={lastSavedAt ?? initial?.updated ?? null} draftSavedAt={draft.draftSavedAt} />}
           toggle={{ checked: isActive, onChange: setIsActive, label: "Menüde Göster" }}
+          extra={
+            <AiTranslateButton
+              business={business}
+              kind="category"
+              fields={{ name, description }}
+              translations={translations}
+              onTranslationsChange={setTranslations}
+            />
+          }
         />
         {draft.restorable && (
           <DraftBanner
@@ -122,7 +132,7 @@ export function CategoryForm({
         {/* Üstte solda kare görsel */}
         <div className="w-32">
           <Label>Kategori görseli</Label>
-          <ImageUploader value={imageUrl} onChange={setImageUrl} businessId={business.id} kind="category" aspect="aspect-square" />
+          <ImageUploader value={imageUrl} onChange={setImageUrl} businessId={business.id} kind="category" name={name} aspect="aspect-square" />
         </div>
 
         {/* Altında dil sekmeleri — ana dil ilk sırada ve açık */}

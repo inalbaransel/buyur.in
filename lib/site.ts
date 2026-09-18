@@ -25,3 +25,18 @@ export function planWhatsappLink(plan: string): string {
     `Merhaba! buyur "${plan}" planıyla ilgileniyorum. Detayları ve fiyatı öğrenebilir miyim?`
   );
 }
+
+/** Plan geçiş talebi bağlantısı. Panel içi destek talebi kaldırıldığı için
+ *  yükseltme akışı doğrudan WhatsApp üzerinden yürür; mesaj işletmeyi ve
+ *  tercih edilen ödeme dönemini taşır ki karşı taraf tekrar sormasın. */
+export function planUpgradeWhatsappLink(
+  plan: string,
+  billing: "yearly" | "monthly",
+  businessName: string,
+  slug: string
+): string {
+  return whatsappLink(
+    `Merhaba! ${businessName} (${menuHost(slug)}) için buyur "${plan}" planını başlatmak istiyorum. ` +
+      `Tercih ettiğim ödeme dönemi: ${billing === "yearly" ? "yıllık" : "aylık"}.`
+  );
+}

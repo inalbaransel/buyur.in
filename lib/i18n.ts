@@ -328,6 +328,25 @@ const UI_STRINGS = {
     ar: "افتح القائمة الرقمية",
     ru: "Открыть цифровое меню",
   },
+  imageCreditsTitle: {
+    tr: "Görsel kaynakları",
+    en: "Image credits",
+    ar: "مصادر الصور",
+    ru: "Источники изображений",
+  },
+  imageCreditsIntro: {
+    tr: "Bu menüdeki bazı ürün görselleri açık lisanslı kaynaklardan alınmıştır.",
+    en: "Some product photos in this menu come from openly licensed sources.",
+    ar: "بعض صور المنتجات في هذه القائمة مأخوذة من مصادر ذات ترخيص مفتوح.",
+    ru: "Некоторые фотографии блюд в этом меню взяты из источников со свободной лицензией.",
+  },
+  imageCreditsEmpty: {
+    tr: "Bu menüde künye gerektiren görsel bulunmuyor.",
+    en: "No photos in this menu require credit.",
+    ar: "لا توجد صور في هذه القائمة تتطلب نسب المصدر.",
+    ru: "В этом меню нет изображений, требующих указания авторства.",
+  },
+  photoBy: { tr: "Fotoğraf: {author}", en: "Photo: {author}", ar: "تصوير: {author}", ru: "Фото: {author}" },
   poweredByBuyur: {
     tr: "buyur ile hazırlandı",
     en: "made with buyur",

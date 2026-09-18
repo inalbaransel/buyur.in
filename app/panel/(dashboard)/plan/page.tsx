@@ -1,28 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { pb } from "@/lib/pocketbase";
-import { useAuth } from "@/lib/use-auth";
 import { useBusiness } from "@/components/panel/business-context";
-import { useToast } from "@/components/panel/toast";
-import { Button, PageHeader } from "@/components/panel/ui";
+import { PageHeader } from "@/components/panel/ui";
 import { PlanUsageCard } from "@/components/panel/plan-usage";
 import { CheckCircleIcon, SparkIcon, WhatsappIcon } from "@/components/icons";
-import { menuHost, planWhatsappLink } from "@/lib/site";
+import { planUpgradeWhatsappLink, planWhatsappLink } from "@/lib/site";
 import { FEATURE_MATRIX, PLAN_LABELS, PLAN_ORDER, freemiumUsage, normalizePlan } from "@/lib/entitlements";
 import { MONTHS_IN_YEAR, PLAN_PRICING, formatTL } from "@/lib/pricing";
 import { clearPlanIntent, readPlanIntent, type IntentBilling } from "@/lib/plan-intent";
 import { trackMarketingEvent } from "@/lib/marketing-events";
-import type { Plan, SupportTicket } from "@/lib/types";
+import type { Business, Plan } from "@/lib/types";
 
 // Plan sayfası: mevcut plan, Freemium kullanımı ve planların karşılaştırması.
 // Tablo lib/entitlements.ts'ten geliyor — pazarlama sitesiyle aynı kaynak,
 // dolayısıyla "sitede yazan" ile "panelde uygulanan" ayrışamaz.
 //
-// Yükseltme WhatsApp'a bağlı değil: "Premium'u başlat" panel içinden bir geçiş
-// talebi açar (destek talebi), ödeme ve aktivasyon o talep üzerinden yürür.
-// WhatsApp yalnızca hemen konuşmak isteyenler için ikincil yol.
+// Panel içi destek modülü kaldırıldığı için yükseltme talebi WhatsApp üzerinden
+// yürür: "Premium'u başlat" işletmeyi ve seçilen ödeme dönemini taşıyan hazır
+// bir mesaj açar, ödeme ve aktivasyon o görüşmede tamamlanır.
 
 const PLAN_PITCH: Record<Plan, string> = {
   freemium: "3 ay veya 10.000 menü görüntülenme — hangisi önce dolarsa. Ürün sınırı yok.",
@@ -53,16 +49,14 @@ function Cell({ value }: { value: boolean | string }) {
 
 function UpgradeCard({
   plan,
+  business,
   preferredBilling,
-  requested,
-  requesting,
-  onRequest,
+  onStart,
 }: {
   plan: Plan;
+  business: Business;
   preferredBilling: IntentBilling;
-  requested: string | null;
-  requesting: boolean;
-  onRequest: (plan: Plan, billing: IntentBilling) => void;
+  onStart: (plan: Plan, billing: IntentBilling) => void;
 }) {
   const [billing, setBilling] = useState<IntentBilling>(preferredBilling);
   const pricing = PLAN_PRICING[plan];
@@ -105,40 +99,25 @@ function UpgradeCard({
         })}
       </div>
 
-      {requested ? (
-        <div className="mt-4 rounded-xl bg-herb/10 px-4 py-3 text-sm">
-          <p className="font-semibold text-herb">Talebin alındı.</p>
-          <p className="mt-1 text-ink-soft">
-            Ödeme ve aktivasyon adımlarını destek talebin üzerinden paylaşacağız.{" "}
-            <Link href={`/panel/support/${requested}`} className="font-medium text-paprika hover:underline">
-              Talebi görüntüle
-            </Link>
-          </p>
-        </div>
-      ) : (
-        <Button type="button" className="mt-4" loading={requesting} onClick={() => onRequest(plan, billing)}>
-          {START_LABELS[plan]}
-        </Button>
-      )}
       <a
-        href={planWhatsappLink(PLAN_LABELS[plan])}
+        href={planUpgradeWhatsappLink(PLAN_LABELS[plan], billing, business.name, business.slug)}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-3 inline-flex items-center gap-1.5 self-start font-mono text-[11px] uppercase tracking-wider text-ink-soft transition-colors hover:text-paprika"
+        onClick={() => onStart(plan, billing)}
+        className="mt-4 inline-flex items-center justify-center gap-2 rounded-md bg-ink px-5 py-2.5 font-mono text-[13px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
       >
-        <WhatsappIcon size={13} /> Önce konuşmak istersen WhatsApp
+        <WhatsappIcon size={15} /> {START_LABELS[plan]}
       </a>
+      <p className="mt-2 text-xs text-ink-soft">
+        WhatsApp üzerinden açılır; ödeme ve aktivasyon adımlarını oradan paylaşırız.
+      </p>
     </div>
   );
 }
 
 export default function PlanPage() {
-  const { user } = useAuth();
   const { business } = useBusiness();
-  const { toast } = useToast();
   const [preferredBilling, setPreferredBilling] = useState<IntentBilling>("yearly");
-  const [requesting, setRequesting] = useState<Plan | null>(null);
-  const [requested, setRequested] = useState<Partial<Record<Plan, string>>>({});
 
   useEffect(() => {
     const intent = readPlanIntent();
@@ -153,30 +132,11 @@ export default function PlanPage() {
   // Elite (en üst plan) için bu liste boş kalır — "geç" seçeneği anlamsız olurdu.
   const upgrades = PLAN_ORDER.filter((plan) => PLAN_ORDER.indexOf(plan) > PLAN_ORDER.indexOf(current));
 
-  async function requestUpgrade(plan: Plan, billing: IntentBilling) {
-    if (!user || !business) return;
-    setRequesting(plan);
-    try {
-      const ticket = await pb.collection("buyur_support_tickets").create<SupportTicket>({
-        business: business.id,
-        user: user.id,
-        subject: `${PLAN_LABELS[plan]} planına geçiş talebi`,
-        status: "open",
-      });
-      await pb.collection("buyur_ticket_messages").create({
-        ticket: ticket.id,
-        sender: "user",
-        body: `Merhaba, ${business.name} (${menuHost(business.slug)}) için ${PLAN_LABELS[plan]} planını başlatmak istiyorum. Tercih ettiğim ödeme dönemi: ${billing === "yearly" ? "yıllık" : "aylık"}.`,
-      });
-      clearPlanIntent();
-      trackMarketingEvent("upgrade_requested", { plan, billing });
-      setRequested((prev) => ({ ...prev, [plan]: ticket.id }));
-      toast("Geçiş talebin alındı");
-    } catch {
-      toast("Talep gönderilemedi, tekrar dene.", "error");
-    } finally {
-      setRequesting(null);
-    }
+  // Talep WhatsApp'a taşındığı için burada yalnızca niyet temizlenir ve
+  // pazarlama olayı yazılır; kayıt oluşturulmaz.
+  function startUpgrade(plan: Plan, billing: IntentBilling) {
+    clearPlanIntent();
+    trackMarketingEvent("upgrade_requested", { plan, billing });
   }
 
   return (
@@ -222,10 +182,9 @@ export default function PlanPage() {
             <UpgradeCard
               key={plan}
               plan={plan}
+              business={business}
               preferredBilling={preferredBilling}
-              requested={requested[plan] ?? null}
-              requesting={requesting === plan}
-              onRequest={requestUpgrade}
+              onStart={startUpgrade}
             />
           ))}
         </div>
@@ -246,12 +205,14 @@ export default function PlanPage() {
               buyur&apos;nın tüm özellikleri sizde açık: sınırsız kullanım, gelişmiş analizler, otomatik web
               sitesi, gelişmiş raporlar ve dışa aktarma. Yükseltilecek başka bir plan yok.
             </p>
-            <Link
-              href="/panel/support"
+            <a
+              href={planWhatsappLink(PLAN_LABELS.elite)}
+              target="_blank"
+              rel="noopener noreferrer"
               className="mt-1 inline-flex items-center gap-2 rounded-md border border-paper/25 px-5 py-2.5 font-mono text-[12px] uppercase tracking-wider text-paper transition-colors hover:border-paprika hover:text-paprika"
             >
-              Destek ile iletişime geç
-            </Link>
+              <WhatsappIcon size={14} /> WhatsApp ile iletişime geç
+            </a>
           </div>
         </div>
       )}

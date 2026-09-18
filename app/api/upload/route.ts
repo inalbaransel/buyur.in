@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
   const file = form.get("file");
   const businessId = form.get("businessId");
   const kind = form.get("kind");
+  const name = form.get("name");
 
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Dosya bulunamadı." }, { status: 400 });
@@ -55,7 +56,9 @@ export async function POST(req: NextRequest) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const objectPath = buildObjectPath(businessSlug, kind, file.type);
+  // Ad yalnızca dosya adını okunaklı yapmak için kullanılır; buildObjectPath
+  // içinde slug'lanır, bu yüzden serbest metin gelmesi sakınca yaratmaz.
+  const objectPath = buildObjectPath(businessSlug, kind, file.type, typeof name === "string" ? name : undefined);
   const url = await uploadImage(buffer, file.type, objectPath);
 
   return NextResponse.json({ url });

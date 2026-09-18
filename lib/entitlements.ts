@@ -30,7 +30,9 @@ export type Feature =
   | "advanced_website"
   | "gifted_website"
   | "advanced_reports"
-  | "report_export";
+  | "report_export"
+  | "ai_menu_import"
+  | "ai_translation";
 
 export interface PlanEntitlements {
   features: Record<Feature, boolean>;
@@ -42,6 +44,12 @@ export interface PlanEntitlements {
     menuViews: number | null;
     /** Ham event saklama süresi (gün). */
     retentionDays: number;
+    /** Ay başına AI menü tarama hakkı. null = sınırsız.
+     *  Bir "tarama" = kullanıcının yüklediği sayfa kümesinin tek seferde
+     *  modele gönderilmesi; sayfa sayısı değil istek sayısı sayılır. */
+    aiScansPerMonth: number | null;
+    /** Tek taramada gönderilebilecek en fazla sayfa (fotoğraf/PDF sayfası). */
+    aiPagesPerScan: number;
   };
 }
 
@@ -58,13 +66,15 @@ const NONE: Record<Feature, boolean> = {
   gifted_website: false,
   advanced_reports: false,
   report_export: false,
+  ai_menu_import: false,
+  ai_translation: false,
 };
 
 /** ÖZELLİK MATRİSİ — ürün kararının tek yazılı hâli. */
 export const PLAN_ENTITLEMENTS: Record<Plan, PlanEntitlements> = {
   freemium: {
-    features: { ...NONE, menu: true, basic_analytics: true },
-    limits: { durationMonths: 3, menuViews: 10_000, retentionDays: 90 },
+    features: { ...NONE, menu: true, basic_analytics: true, ai_menu_import: true, ai_translation: true },
+    limits: { durationMonths: 3, menuViews: 10_000, retentionDays: 90, aiScansPerMonth: 3, aiPagesPerScan: 5 },
   },
   premium: {
     features: {
@@ -77,9 +87,11 @@ export const PLAN_ENTITLEMENTS: Record<Plan, PlanEntitlements> = {
       custom_domain: true,
       branding_removal: true,
       custom_website: true,
+      ai_menu_import: true,
+      ai_translation: true,
     },
     // Ücretli planlarda Freemium limitleri UYGULANMAZ.
-    limits: { durationMonths: null, menuViews: null, retentionDays: 365 },
+    limits: { durationMonths: null, menuViews: null, retentionDays: 365, aiScansPerMonth: 30, aiPagesPerScan: 10 },
   },
   elite: {
     features: {
@@ -96,8 +108,10 @@ export const PLAN_ENTITLEMENTS: Record<Plan, PlanEntitlements> = {
       gifted_website: true,
       advanced_reports: true,
       report_export: true,
+      ai_menu_import: true,
+      ai_translation: true,
     },
-    limits: { durationMonths: null, menuViews: null, retentionDays: 1095 },
+    limits: { durationMonths: null, menuViews: null, retentionDays: 1095, aiScansPerMonth: null, aiPagesPerScan: 20 },
   },
 };
 
@@ -203,6 +217,57 @@ export function freemiumUsage(
   };
 }
 
+// ─── AI kullanım kotası ────────────────────────────────────────────────
+
+/** Kotanın sayıldığı dönem anahtarı: işletmenin kaydındaki `ai_scans_period`
+ *  ile karşılaştırılır; ay değişince sayaç sıfırdan başlar. */
+export function aiPeriodKey(now: Date = new Date()): string {
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+export interface AiUsage {
+  /** Bu plan tarama sayısına tabi mi (Elite'te sınırsız). */
+  limited: boolean;
+  /** Bu dönem kullanılan tarama sayısı. */
+  used: number;
+  /** Dönem başına hak; sınırsızsa null. */
+  limit: number | null;
+  /** Kalan hak; sınırsızsa null. */
+  remaining: number | null;
+  /** Hak bitti mi. */
+  exhausted: boolean;
+  /** Tek taramada gönderilebilecek en fazla sayfa. */
+  pagesPerScan: number;
+  /** Sayacın ait olduğu dönem (YYYY-MM). */
+  period: string;
+}
+
+/** İşletmenin bu ayki AI tarama kullanımı. Kayıttaki dönem geçmiş bir aya
+ *  aitse sayaç sıfır kabul edilir — dönem sıfırlaması için ayrı bir cron'a
+ *  gerek kalmasın diye okuma anında hesaplanıyor. */
+export function aiUsage(
+  business: Pick<Business, "plan"> & { ai_scans_used?: number; ai_scans_period?: string },
+  now: Date = new Date()
+): AiUsage {
+  const plan = normalizePlan(business.plan);
+  const { limits } = entitlementsFor(plan);
+  const period = aiPeriodKey(now);
+
+  const samePeriod = business.ai_scans_period === period;
+  const used = samePeriod ? Math.max(0, business.ai_scans_used ?? 0) : 0;
+  const limit = limits.aiScansPerMonth;
+
+  return {
+    limited: limit !== null,
+    used,
+    limit,
+    remaining: limit === null ? null : Math.max(0, limit - used),
+    exhausted: limit !== null && used >= limit,
+    pagesPerScan: limits.aiPagesPerScan,
+    period,
+  };
+}
+
 /** Abonelik hâlâ geçerli mi (Freemium'da limit dolmamış, ücretli planda her zaman). */
 export function isSubscriptionActive(
   business: Pick<Business, "plan" | "plan_expires_at" | "menu_views">,
@@ -269,6 +334,14 @@ export const FEATURE_MATRIX: FeatureMatrixRow[] = [
   {
     label: "Hediye kurumsal web sitesi (bizim kurduğumuz ayrı site)",
     values: { freemium: false, premium: false, elite: "Hediye" },
+  },
+  {
+    label: "Yapay zekâ ile fiziksel menü aktarımı",
+    values: { freemium: "Ayda 3 tarama", premium: "Ayda 30 tarama", elite: "Sınırsız" },
+  },
+  {
+    label: "Yapay zekâ ile çoklu dil tamamlama",
+    values: { freemium: true, premium: true, elite: true },
   },
   { label: "Gelişmiş raporlar", values: { freemium: false, premium: false, elite: true } },
   { label: "PDF ve CSV dışa aktarma", values: { freemium: false, premium: false, elite: true } },

@@ -6,6 +6,7 @@ import { useToast } from "@/components/panel/toast";
 import { Card, ErrorText, FormActions, Label } from "@/components/panel/ui";
 import { ImageUploader } from "@/components/panel/image-uploader";
 import { MultiLangFields } from "@/components/panel/multi-lang-fields";
+import { AiTranslateButton } from "@/components/panel/ai/translate-button";
 import { activeLocales, mainLocale, type TranslatableField, type Translations } from "@/lib/i18n";
 import type { Business, Popup } from "@/lib/types";
 
@@ -67,13 +68,22 @@ export function PopupForm({
           saving={saving}
           onCancel={onCancel}
           toggle={{ checked: isActive, onChange: setIsActive, label: "Aktif" }}
+          extra={
+            <AiTranslateButton
+              business={business}
+              kind="popup"
+              fields={{ title, message }}
+              translations={translations}
+              onTranslationsChange={setTranslations}
+            />
+          }
         />
         <ErrorText>{error}</ErrorText>
 
         {/* Üstte solda kare görsel */}
         <div className="w-32">
           <Label>Görsel (opsiyonel)</Label>
-          <ImageUploader value={imageUrl} onChange={setImageUrl} businessId={business.id} kind="popup" aspect="aspect-square" />
+          <ImageUploader value={imageUrl} onChange={setImageUrl} businessId={business.id} kind="popup" name={title} aspect="aspect-square" />
         </div>
         {/* Başlık ve mesaj dil bazlı — ana dil baz alan, diğerleri çeviri */}
         <MultiLangFields

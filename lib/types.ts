@@ -1,6 +1,11 @@
 import type { Locale, Translations } from "@/lib/i18n";
 import type { AnalyticsEventType } from "@/lib/analytics/events";
 import type { DeviceType, TrafficSource } from "@/lib/analytics/attribution";
+import type { ProductImageSource } from "@/lib/ai/image-source";
+
+// Görsel kaynak künyesi lib/ai/image-source.ts'te tanımlıdır (tek kaynak); veri
+// modelini kullananlar buradan da okuyabilsin diye yeniden dışa verilir.
+export type { ProductImageSource };
 
 export type Plan = "freemium" | "premium" | "elite";
 export type Template = "liste" | "grid";
@@ -92,6 +97,11 @@ export interface Business {
   translations?: Translations;
   /** Aktivasyon adımlarının ilk gerçekleştiği anlar (bkz. lib/activation.ts). */
   activation?: BusinessActivation;
+  /** Bu dönemde harcanan AI menü tarama hakkı. Dönem `ai_scans_period` ile
+   *  birlikte okunur; ay değişince sayaç sıfırdan sayılır (bkz. aiUsage). */
+  ai_scans_used?: number;
+  /** Sayacın ait olduğu dönem (YYYY-MM, UTC). */
+  ai_scans_period?: string;
   created: string;
   updated: string;
 }
@@ -272,6 +282,9 @@ export interface Product {
   description: string;
   price: number;
   images: string[];
+  /** Otomatik bulunan görselin kaynağı ve lisansı. Kullanıcı kendi görselini
+   *  yüklediyse null — künye yalnızca dış kaynaklı görseller için tutulur. */
+  image_source?: ProductImageSource | null;
   prep_time_min: number;
   prep_time_max: number;
   calories: number;
@@ -358,58 +371,6 @@ export interface PlanRecord {
   is_active: boolean;
   is_default: boolean;
   order: number;
-  created: string;
-  updated: string;
-}
-
-export type TicketStatus = "open" | "answered" | "closed";
-
-export interface SupportTicket {
-  id: string;
-  business: string;
-  user: string;
-  subject: string;
-  status: TicketStatus;
-  created: string;
-  updated: string;
-  expand?: {
-    business?: Business;
-    user?: { id: string; name: string; email: string };
-  };
-}
-
-export type TicketSender = "user" | "admin";
-
-export interface TicketMessage {
-  id: string;
-  ticket: string;
-  sender: TicketSender;
-  admin?: string;
-  body: string;
-  created: string;
-  updated: string;
-  expand?: {
-    admin?: { id: string; name: string };
-  };
-}
-
-export type NotificationAudience = "all" | "freemium" | "premium" | "elite" | "user";
-
-export interface Notification {
-  id: string;
-  title: string;
-  body: string;
-  audience: NotificationAudience;
-  user?: string;
-  created_by: string;
-  created: string;
-  updated: string;
-}
-
-export interface NotificationRead {
-  id: string;
-  notification: string;
-  user: string;
   created: string;
   updated: string;
 }

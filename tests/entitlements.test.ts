@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   FEATURE_MATRIX,
   PLAN_ENTITLEMENTS,
+  aiPeriodKey,
+  aiUsage,
   entitlementsFor,
   freemiumUsage,
   isFeatureAvailable,
@@ -55,7 +57,14 @@ describe("plan matrisi", () => {
     expect(limits.menuViews).toBe(10_000);
     // Limit sözlüğünde bir ürün/kategori sınırı KAVRAMI bile yok — ürün limiti
     // ürün kararı olarak kaldırıldı, "sonsuz sayı" yazarak değil.
-    expect(Object.keys(limits).sort()).toEqual(["durationMonths", "menuViews", "retentionDays"]);
+    // (AI kotası ayrı bir eksen: kullanım hakkı, içerik sınırı değil.)
+    expect(Object.keys(limits).sort()).toEqual([
+      "aiPagesPerScan",
+      "aiScansPerMonth",
+      "durationMonths",
+      "menuViews",
+      "retentionDays",
+    ]);
   });
 
   it("bir özelliğin gerektirdiği en düşük planı bilir", () => {
@@ -154,5 +163,73 @@ describe("özellik erişimi", () => {
     expect(isFeatureAvailable(exhausted, "basic_analytics", NOW)).toBe(false);
     // "menu" yeteneği plan seviyesinde açık kalır: veri silinmiyor, erişim kısıtlanıyor.
     expect(entitlementsFor("freemium").features.menu).toBe(true);
+  });
+});
+
+// AI kotası ayrı bir eksen: Freemium'un süre/görüntülenme limitiyle karışmaz.
+// Sayaç ay bazlıdır ve dönem değişince okuma anında sıfırlanır — sıfırlama
+// için ayrı bir cron yok, bu yüzden "geçen ayın sayacı" testi kritik.
+describe("AI kotası", () => {
+  it("her plan AI araçlarına erişir, yalnızca hak sayısı değişir", () => {
+    expect(PLAN_ENTITLEMENTS.freemium.features.ai_menu_import).toBe(true);
+    expect(PLAN_ENTITLEMENTS.premium.features.ai_menu_import).toBe(true);
+    expect(PLAN_ENTITLEMENTS.elite.features.ai_menu_import).toBe(true);
+
+    expect(PLAN_ENTITLEMENTS.freemium.limits.aiScansPerMonth).toBe(3);
+    expect(PLAN_ENTITLEMENTS.premium.limits.aiScansPerMonth).toBe(30);
+    // Elite'te sınır yok — sayı yazmak yerine null.
+    expect(PLAN_ENTITLEMENTS.elite.limits.aiScansPerMonth).toBeNull();
+  });
+
+  it("dönem anahtarı UTC ayına göre üretilir", () => {
+    expect(aiPeriodKey(new Date("2026-08-16T12:00:00Z"))).toBe("2026-08");
+    expect(aiPeriodKey(new Date("2026-01-01T00:00:00Z"))).toBe("2026-01");
+  });
+
+  it("aynı dönemde kullanılan hak sayılır", () => {
+    const usage = aiUsage({ plan: "freemium", ai_scans_used: 2, ai_scans_period: "2026-08" }, NOW);
+    expect(usage.used).toBe(2);
+    expect(usage.remaining).toBe(1);
+    expect(usage.exhausted).toBe(false);
+  });
+
+  it("hak dolduğunda tarama kapanır", () => {
+    const usage = aiUsage({ plan: "freemium", ai_scans_used: 3, ai_scans_period: "2026-08" }, NOW);
+    expect(usage.exhausted).toBe(true);
+    expect(usage.remaining).toBe(0);
+  });
+
+  it("geçen ayın sayacı bu ayı etkilemez", () => {
+    const usage = aiUsage({ plan: "freemium", ai_scans_used: 3, ai_scans_period: "2026-07" }, NOW);
+    expect(usage.used).toBe(0);
+    expect(usage.exhausted).toBe(false);
+    expect(usage.period).toBe("2026-08");
+  });
+
+  it("hiç kullanılmamış işletmede sayaç sıfırdır", () => {
+    const usage = aiUsage({ plan: "premium" }, NOW);
+    expect(usage.used).toBe(0);
+    expect(usage.remaining).toBe(30);
+  });
+
+  it("Elite'te kota uygulanmaz", () => {
+    const usage = aiUsage({ plan: "elite", ai_scans_used: 999, ai_scans_period: "2026-08" }, NOW);
+    expect(usage.limited).toBe(false);
+    expect(usage.limit).toBeNull();
+    expect(usage.remaining).toBeNull();
+    expect(usage.exhausted).toBe(false);
+  });
+
+  it("sayfa sınırı plana göre artar", () => {
+    expect(aiUsage({ plan: "freemium" }, NOW).pagesPerScan).toBe(5);
+    expect(aiUsage({ plan: "premium" }, NOW).pagesPerScan).toBe(10);
+    expect(aiUsage({ plan: "elite" }, NOW).pagesPerScan).toBe(20);
+  });
+
+  it("Freemium süresi dolduysa AI araçları da kapanır", () => {
+    const expired = business({ plan_expires_at: "2026-07-01T00:00:00.000Z" });
+    expect(isFeatureAvailable(expired, "ai_menu_import", NOW)).toBe(false);
+    // Menü erişimi ise kapanmaz — veri silinmiyor, yalnızca yetenek kısıtlanıyor.
+    expect(isFeatureAvailable(expired, "menu", NOW)).toBe(true);
   });
 });

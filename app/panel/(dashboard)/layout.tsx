@@ -7,7 +7,6 @@ import { Logo } from "@/components/chrome";
 import { useAuth } from "@/lib/use-auth";
 import { pb } from "@/lib/pocketbase";
 import { BusinessProvider, useBusiness } from "@/components/panel/business-context";
-import { NotificationBell } from "@/components/panel/notification-bell";
 import { ToastProvider } from "@/components/panel/toast";
 import { TrialBanner } from "@/components/panel/trial-banner";
 import { menuUrl } from "@/lib/site";
@@ -17,13 +16,13 @@ import {
   FolderIcon,
   GlobeIcon,
   LayoutIcon,
-  LifeBuoyIcon,
   LogoutIcon,
   MegaphoneIcon,
   PackageIcon,
   QrCodeIcon,
   SettingsIcon,
   SparkIcon,
+  SparklesIcon,
   StarIcon,
   TrendingUpIcon,
 } from "@/components/icons";
@@ -33,13 +32,13 @@ const navItems = [
   { href: "/panel/analytics", label: "Analiz", Icon: TrendingUpIcon, prefixes: ["/panel/analytics"] },
   { href: "/panel/categories", label: "Kategoriler", Icon: FolderIcon, prefixes: ["/panel/categories", "/panel/category/"] },
   { href: "/panel/products", label: "Ürünler", Icon: PackageIcon, prefixes: ["/panel/products", "/panel/product/"] },
+  { href: "/panel/ai", label: "Yapay Zeka", Icon: SparklesIcon, prefixes: ["/panel/ai"] },
   { href: "/panel/popups", label: "Kampanyalar", Icon: MegaphoneIcon, prefixes: ["/panel/popups", "/panel/popup/"] },
   { href: "/panel/qr", label: "QR kodlar", Icon: QrCodeIcon, prefixes: ["/panel/qr"] },
   { href: "/panel/website", label: "Web sitesi", Icon: GlobeIcon, prefixes: ["/panel/website"] },
   { href: "/panel/reports", label: "Raporlar", Icon: FileTextIcon, prefixes: ["/panel/reports"] },
   { href: "/panel/reviews", label: "Değerlendirmeler", Icon: StarIcon, prefixes: ["/panel/reviews"] },
   { href: "/panel/plan", label: "Plan", Icon: SparkIcon, prefixes: ["/panel/plan"] },
-  { href: "/panel/support", label: "Destek", Icon: LifeBuoyIcon, prefixes: ["/panel/support"] },
   { href: "/panel/settings", label: "Ayarlar", Icon: SettingsIcon, prefixes: ["/panel/settings"] },
 ];
 
@@ -81,7 +80,6 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
                 <span className="hidden sm:inline">Menüyü gör</span>
               </a>
             )}
-            <NotificationBell />
             <button
               onClick={handleLogout}
               className="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 font-mono text-[12px] uppercase tracking-wider text-ink transition-colors hover:border-paprika hover:text-paprika"

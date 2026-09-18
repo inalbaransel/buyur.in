@@ -293,6 +293,11 @@ async function main() {
       // Aktivasyon işaretleri (lib/activation.ts): sektör şablonu, ilk QR
       // indirme, kontrol listesinin tamamlanması. Aktivasyon metriği buradan okunur.
       json("activation"),
+      // AI menü tarama kotası (lib/entitlements.ts → aiUsage). Sayaç dönemle
+      // birlikte okunur; ay değişince okuma anında sıfır kabul edilir, bu
+      // yüzden sıfırlama için ayrı bir cron gerekmez.
+      num("ai_scans_used", { min: 0, onlyInt: true }),
+      text("ai_scans_period", { max: 7 }),
       ...stamps(),
     ],
     indexes: ["CREATE UNIQUE INDEX `idx_businesses_slug` ON `buyur_businesses` (`slug`)"],
@@ -336,6 +341,8 @@ async function main() {
       text("description", { max: 600 }),
       num("price", { required: true, min: 0 }),
       json("images"),
+      // Otomatik bulunan görselin kaynağı/lisansı — telif denetimi için saklanır.
+      json("image_source"),
       num("prep_time_min", { min: 0, onlyInt: true }),
       num("prep_time_max", { min: 0, onlyInt: true }),
       num("calories", { min: 0, onlyInt: true }),
@@ -613,89 +620,7 @@ async function main() {
     indexes: ["CREATE UNIQUE INDEX `idx_plans_key` ON `buyur_plans` (`key`)"],
   });
 
-  // 11) support_tickets — işletme sahibinin admin'e açtığı destek talepleri.
-  const supportTickets = await getOrCreate({
-    name: "buyur_support_tickets",
-    type: "base",
-    listRule: `user = @request.auth.id || ${adminBypass}`,
-    viewRule: `user = @request.auth.id || ${adminBypass}`,
-    createRule: "@request.auth.id != '' && user = @request.auth.id",
-    updateRule: `user = @request.auth.id || ${adminBypass}`,
-    deleteRule: adminBypass,
-    fields: [
-      relation("business", businesses.id, { required: true, cascadeDelete: true, maxSelect: 1 }),
-      relation("user", users.id, { required: true, cascadeDelete: true, maxSelect: 1 }),
-      text("subject", { required: true, max: 150 }),
-      select("status", ["open", "answered", "closed"], { required: true, maxSelect: 1 }),
-      ...stamps(),
-    ],
-    indexes: [
-      "CREATE INDEX `idx_support_tickets_user` ON `buyur_support_tickets` (`user`)",
-      "CREATE INDEX `idx_support_tickets_business` ON `buyur_support_tickets` (`business`)",
-    ],
-  });
-
-  // 12) ticket_messages — destek talebi mesaj akışı (kullanıcı <-> admin).
-  // Gönderilmiş bir mesaj değiştirilemez/silinemez (audit trail).
-  await getOrCreate({
-    name: "buyur_ticket_messages",
-    type: "base",
-    listRule: `ticket.user = @request.auth.id || ${adminBypass}`,
-    viewRule: `ticket.user = @request.auth.id || ${adminBypass}`,
-    createRule: `(ticket.user = @request.auth.id && sender = "user") || (${adminBypass} && sender = "admin")`,
-    updateRule: null,
-    deleteRule: null,
-    fields: [
-      relation("ticket", supportTickets.id, { required: true, cascadeDelete: true, maxSelect: 1 }),
-      select("sender", ["user", "admin"], { required: true, maxSelect: 1 }),
-      relation("admin", admins.id, { maxSelect: 1 }),
-      text("body", { required: true, max: 2000 }),
-      ...stamps(),
-    ],
-    indexes: ["CREATE INDEX `idx_ticket_messages_ticket` ON `buyur_ticket_messages` (`ticket`)"],
-  });
-
-  // 13) notifications — admin'in gönderdiği toplu/tekil duyurular.
-  // audience = "all" | "freemium" | "premium" | "elite" | "user" (bu durumda `user` dolu).
-  const notifications = await getOrCreate({
-    name: "buyur_notifications",
-    type: "base",
-    listRule: `audience = "all" || user = @request.auth.id || audience ?= @request.auth.buyur_businesses_via_owner.plan || ${adminBypass}`,
-    viewRule: `audience = "all" || user = @request.auth.id || audience ?= @request.auth.buyur_businesses_via_owner.plan || ${adminBypass}`,
-    createRule: adminBypass,
-    updateRule: null,
-    deleteRule: null,
-    fields: [
-      text("title", { required: true, max: 150 }),
-      text("body", { required: true, max: 1000 }),
-      select("audience", ["all", "freemium", "premium", "elite", "user"], { required: true, maxSelect: 1 }),
-      relation("user", users.id, { maxSelect: 1 }),
-      relation("created_by", admins.id, { maxSelect: 1 }),
-      ...stamps(),
-    ],
-  });
-
-  // 14) notification_reads — kullanıcı bazında okundu takibi (bildirim zili sayacı).
-  await getOrCreate({
-    name: "buyur_notification_reads",
-    type: "base",
-    listRule: `user = @request.auth.id || ${adminBypass}`,
-    viewRule: `user = @request.auth.id || ${adminBypass}`,
-    createRule: "@request.auth.id != '' && user = @request.auth.id",
-    updateRule: null,
-    deleteRule: null,
-    fields: [
-      relation("notification", notifications.id, { required: true, cascadeDelete: true, maxSelect: 1 }),
-      relation("user", users.id, { required: true, cascadeDelete: true, maxSelect: 1 }),
-      ...stamps(),
-    ],
-    indexes: [
-      "CREATE UNIQUE INDEX `idx_notification_reads_unique` ON `buyur_notification_reads` (`notification`,`user`)",
-      "CREATE INDEX `idx_notification_reads_user` ON `buyur_notification_reads` (`user`)",
-    ],
-  });
-
-  // 15) admin_logs — admin hareketleri + login geçmişi (action ~ "login" ile filtrelenir).
+  // 11) admin_logs — admin hareketleri + login geçmişi (action ~ "login" ile filtrelenir).
   // create herkese açık: login route'u başarısız girişimi (login_failed) admin token'ı
   // olmadan da kaydedebilsin diye. Kabul edilen risk: düşük değerli spam yazımı;
   // list/view sadece super_admin'e açık, satırlar hiçbir zaman API'den değiştirilemez/silinemez.

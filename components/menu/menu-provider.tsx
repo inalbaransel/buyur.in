@@ -43,6 +43,7 @@ import { CartBar } from "@/components/menu/cart";
 import { PopupModal } from "@/components/menu/popup-modal";
 import { LanguageModal } from "@/components/menu/language-modal";
 import { CategoryDrawer } from "@/components/menu/category-drawer";
+import { ImageCreditsLink } from "@/components/menu/image-credit";
 import { UpsellSheet } from "@/components/menu/upsell-sheet";
 import { upsellSuggestions } from "@/lib/upsell";
 import { ArrowLeftIcon, MenuIcon, SearchIcon, ShoppingBagIcon } from "@/components/icons";
@@ -182,6 +183,16 @@ function MenuHeader({
         <LanguageSwitcher />
       </div>
     </header>
+  );
+}
+
+/** Menü altbilgisi. Şimdilik tek işi künye sayfasına bağlanmak; künye
+ *  gerektiren görsel yoksa hiç basılmaz. */
+function MenuFooter({ base, products, locale }: { base: string; products: Product[]; locale: Locale }) {
+  return (
+    <div className="mx-auto flex max-w-3xl justify-center px-5 pb-2 pt-6">
+      <ImageCreditsLink products={products} base={base} locale={locale} />
+    </div>
   );
 }
 
@@ -579,6 +590,7 @@ export function MenuProvider({
         <MenuHeader business={business} base={basePath} onOpenDrawer={() => setDrawerOpen(true)} />
         {drawerOpen && <CategoryDrawer onClose={() => setDrawerOpen(false)} />}
         <main className="mx-auto max-w-3xl">{children}</main>
+        <MenuFooter base={basePath} products={products} locale={locale} />
 
         <CartBar lines={cart} base={basePath} />
         {upsell && (

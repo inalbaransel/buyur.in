@@ -6,6 +6,7 @@ import { highlightLabels, badgeLabels } from "@/lib/labels";
 import type { SiteContent } from "@/lib/site-content";
 import { ClockIcon, MapPinIcon, PhoneIcon, WhatsappIcon } from "@/components/icons";
 import { useSiteLocale } from "@/components/site/site-locale";
+import { ImageCreditList, productsNeedingCredit } from "@/components/menu/image-credit";
 import type { UIKey } from "@/lib/i18n";
 
 // Otomatik web sitesinin bölümleri. Metin, seçili dile göre `useSiteLocale()`
@@ -362,9 +363,22 @@ export function SiteReservationCta({ content }: { content: SiteContent }) {
 }
 
 export function SiteFooter({ content, menuHref }: { content: SiteContent; menuHref: string }) {
-  const { t, tf } = useSiteLocale();
+  const { t, tf, locale } = useSiteLocale();
+  // Sitede gösterilen tüm ürünler — künye gerektiren görselin atfı, eserin
+  // gösterildiği sayfada bulunmak zorunda (CC BY / BY-SA).
+  const shownProducts = [...content.featured, ...content.groups.flatMap((group) => group.products)];
+  const credited = productsNeedingCredit(shownProducts);
+
   return (
     <footer className="border-t border-line bg-paper">
+      {credited.length > 0 && (
+        <div className="mx-auto max-w-5xl border-b border-line px-6 py-8">
+          <p className="mb-3 font-mono text-[11px] uppercase tracking-wider text-ink-soft">
+            {t("imageCreditsTitle")}
+          </p>
+          <ImageCreditList products={credited} locale={locale} />
+        </div>
+      )}
       <div className="mx-auto flex max-w-5xl flex-col items-center gap-3 px-6 py-10 text-center">
         <p className="font-display text-lg font-bold">{tf(content.business, "name")}</p>
         <Link

@@ -1,12 +1,17 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { pb } from "@/lib/pocketbase";
 import { useToast } from "@/components/panel/toast";
 import { allergenLabels, badgeLabels } from "@/lib/labels";
-import { Card, DraftBanner, ErrorText, FormActions, Input, Label, SaveStatus, Select } from "@/components/panel/ui";
+import { Button, Card, DraftBanner, ErrorText, FormActions, Input, Label, SaveStatus, Select, Spinner } from "@/components/panel/ui";
 import { ImageUploader } from "@/components/panel/image-uploader";
+import { ImagePicker, ImageSourceNote } from "@/components/panel/ai/image-picker";
+import { SearchIcon } from "@/components/icons";
+import { autoFindProductImage } from "@/lib/ai/find-image";
+import type { ProductImageSource } from "@/lib/ai/image-source";
 import { MultiLangFields } from "@/components/panel/multi-lang-fields";
+import { AiTranslateButton } from "@/components/panel/ai/translate-button";
 import { useFormDraft } from "@/lib/use-draft";
 import { activeLocales, mainLocale, type TranslatableField, type Translations } from "@/lib/i18n";
 import type { Allergen, Badge, Business, Category, Product } from "@/lib/types";
@@ -29,6 +34,7 @@ interface ProductDraft {
   description: string;
   price: string;
   image: string;
+  imageSource: ProductImageSource | null;
   prepMin: string;
   prepMax: string;
   calories: string;
@@ -47,6 +53,7 @@ function toDraft(initial: Product | undefined, categories: Category[]): ProductD
     description: initial?.description ?? "",
     price: initial?.price?.toString() ?? "",
     image: initial?.images?.[0] ?? "",
+    imageSource: initial?.image_source ?? null,
     prepMin: initial?.prep_time_min ? initial.prep_time_min.toString() : initial ? "0" : "",
     prepMax: initial?.prep_time_max ? initial.prep_time_max.toString() : initial ? "0" : "",
     calories: initial?.calories ? initial.calories.toString() : initial ? "0" : "",
@@ -72,6 +79,9 @@ export function ProductForm({ business, categories, initial, onSaved, onCancel }
   const [description, setDescription] = useState(baseline.description);
   const [price, setPrice] = useState(baseline.price);
   const [image, setImage] = useState<string>(baseline.image);
+  const [imageSource, setImageSource] = useState<ProductImageSource | null>(baseline.imageSource);
+  const [imageStatus, setImageStatus] = useState<"idle" | "searching" | "none">("idle");
+  const [picking, setPicking] = useState(false);
   const [prepMin, setPrepMin] = useState(baseline.prepMin);
   const [prepMax, setPrepMax] = useState(baseline.prepMax);
   const [calories, setCalories] = useState(baseline.calories);
@@ -92,6 +102,7 @@ export function ProductForm({ business, categories, initial, onSaved, onCancel }
     description,
     price,
     image,
+    imageSource,
     prepMin,
     prepMax,
     calories,
@@ -111,6 +122,7 @@ export function ProductForm({ business, categories, initial, onSaved, onCancel }
     setDescription(value.description);
     setPrice(value.price);
     setImage(value.image);
+    setImageSource(value.imageSource);
     setPrepMin(value.prepMin);
     setPrepMax(value.prepMax);
     setCalories(value.calories);
@@ -126,6 +138,51 @@ export function ProductForm({ business, categories, initial, onSaved, onCancel }
     if (field === "name") setName(value);
     else if (field === "campaign_label") setCampaignLabel(value);
     else setDescription(value);
+  }
+
+  const categoryName = categories.find((cat) => cat.id === category)?.name ?? "";
+  // Kullanıcı görseli kendisi belirlediyse (yükledi, seçti ya da kaldırdı)
+  // otomatik arama bir daha devreye girmez — seçimi ezmek en sinir bozucu hata.
+  const manualImage = useRef(false);
+  // Yazmaya devam eden kullanıcıda eski aramanın geç dönen sonucu uygulanmasın.
+  const searchToken = useRef(0);
+
+  async function findImage(term: string) {
+    const token = ++searchToken.current;
+    setImageStatus("searching");
+    const stored = await autoFindProductImage(business.id, term, categoryName);
+    if (token !== searchToken.current) return;
+
+    if (stored) {
+      setImage(stored.url);
+      setImageSource(stored.source);
+      setImageStatus("idle");
+    } else {
+      // Güvenli kaynakta uygun görsel yok: alan boş kalır, elle yükleme açık.
+      setImageStatus("none");
+    }
+  }
+
+  // Ürün adı yazıldıkça görsel otomatik aranır. Yalnızca YENİ üründe ve görsel
+  // alanı boşken çalışır; yazma bitene kadar beklenir ki her harfte istek
+  // atılmasın.
+  useEffect(() => {
+    if (initial || manualImage.current || image !== "") return;
+    const term = name.trim();
+    if (term.length < 3) return;
+
+    const timer = setTimeout(() => findImage(term), 900);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [name, category, image, initial]);
+
+  /** Kullanıcının kendi seçimi — otomatik aramayı kapatır. */
+  function applyManualImage(url: string, source: ProductImageSource | null) {
+    manualImage.current = true;
+    searchToken.current += 1;
+    setImage(url);
+    setImageSource(source);
+    setImageStatus("idle");
   }
 
   function toggle<T>(list: T[], value: T, setList: (v: T[]) => void) {
@@ -148,6 +205,9 @@ export function ProductForm({ business, categories, initial, onSaved, onCancel }
       description,
       price: Number(price) || 0,
       images: image ? [image] : [],
+      // Görselin nereden geldiği ve hangi lisansla kullanıldığı ürünle birlikte
+      // saklanır; kendi yüklediği görselde künye olmaz.
+      image_source: image ? imageSource : null,
       prep_time_min: prepMin ? Number(prepMin) : 0,
       prep_time_max: prepMax ? Number(prepMax) : 0,
       calories: calories ? Number(calories) : 0,
@@ -183,6 +243,15 @@ export function ProductForm({ business, categories, initial, onSaved, onCancel }
         onCancel={onCancel}
         status={<SaveStatus saving={saving} savedAt={lastSavedAt ?? initial?.updated ?? null} draftSavedAt={draft.draftSavedAt} />}
         toggle={{ checked: isAvailable, onChange: setIsAvailable, label: "Satışta" }}
+        extra={
+          <AiTranslateButton
+            business={business}
+            kind="product"
+            fields={{ name, description, campaign_label: campaignLabel }}
+            translations={translations}
+            onTranslationsChange={setTranslations}
+          />
+        }
       />
       {draft.restorable && (
         <DraftBanner
@@ -197,10 +266,64 @@ export function ProductForm({ business, categories, initial, onSaved, onCancel }
       <ErrorText>{error}</ErrorText>
 
       <Card className="space-y-5">
-        {/* Üstte solda kare görsel */}
-        <div className="w-32">
-          <Label>Ürün görseli</Label>
-          <ImageUploader value={image} onChange={setImage} businessId={business.id} kind="product" aspect="aspect-square" />
+        {/* Üstte solda kare görsel — ürün adı yazılınca otomatik doldurulur */}
+        <div>
+          <div className="flex flex-wrap items-start gap-4">
+            <div className="w-32 shrink-0">
+              <Label>Ürün görseli</Label>
+              <ImageUploader
+                value={image}
+                onChange={(url) => applyManualImage(url, null)}
+                businessId={business.id}
+                kind="product"
+                name={name}
+                aspect="aspect-square"
+              />
+            </div>
+
+            <div className="min-w-[13rem] flex-1 space-y-2 pt-6">
+              {imageStatus === "searching" && (
+                <p className="flex items-center gap-2 text-sm text-ink-soft">
+                  <Spinner className="h-4 w-4" /> Ürün adına uygun görsel aranıyor…
+                </p>
+              )}
+              {imageStatus === "none" && !image && (
+                <p className="text-sm text-ink-soft">
+                  Uygun lisanslı görsel bulunamadı. &quot;Görsel bul&quot; ile kendiniz arayabilir veya
+                  kendi görselinizi yükleyebilirsiniz.
+                </p>
+              )}
+              {image && imageSource && <ImageSourceNote source={imageSource} />}
+              {image && !imageSource && (
+                <p className="text-[11px] text-ink-soft">Kendi yüklediğiniz görsel.</p>
+              )}
+
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" onClick={() => setPicking((v) => !v)}>
+                  <SearchIcon size={15} />
+                  {picking ? "Kapat" : image ? "Görseli değiştir" : "Görsel bul"}
+                </Button>
+                {!image && imageStatus === "none" && name.trim().length >= 3 && (
+                  <Button type="button" variant="ghost" onClick={() => findImage(name.trim())}>
+                    Tekrar ara
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {picking && (
+            <div className="mt-3">
+              <ImagePicker
+                businessId={business.id}
+                productName={name}
+                categoryName={categoryName}
+                value={image}
+                onChange={applyManualImage}
+                onClose={() => setPicking(false)}
+              />
+            </div>
+          )}
         </div>
 
         {/* Altında dil sekmeleri — ana dil ilk sırada ve açık */}

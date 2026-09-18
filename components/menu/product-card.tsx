@@ -21,6 +21,7 @@ export function ProductCard({
 }) {
   const { business, locale, t, tf } = useMenu();
   const [added, setAdded] = useState(false);
+  const [imageBroken, setImageBroken] = useState(false);
   const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const hasDiscount = product.discount_percent > 0;
@@ -83,9 +84,17 @@ export function ProductCard({
             : "relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-crema text-ink-soft/30"
         }
       >
-        {image ? (
+        {image && !imageBroken ? (
           <picture>
-            <img src={image} alt={name} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+            <img
+              src={image}
+              alt={name}
+              loading="lazy"
+              // Görsel kaynağından gelir; kaynak ölürse kırık ikon yerine
+              // kartın görselsiz hâline düşülür.
+              onError={() => setImageBroken(true)}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
           </picture>
         ) : (
           <ImageIcon size={isGrid ? 48 : 32} strokeWidth={1.2} />

@@ -72,7 +72,7 @@ export function Button({ variant = "primary", loading, className = "", disabled,
   );
 }
 
-export function AiButton({ className = "", children = "AI İle Tara", ...rest }: ButtonProps) {
+export function AiButton({ className = "", children = "Yapay Zeka ile Tara", ...rest }: ButtonProps) {
   return (
     <div className="relative group/aibtn inline-block">
       <style>{`
@@ -107,13 +107,34 @@ export function AiButton({ className = "", children = "AI İle Tara", ...rest }:
         </p>
         <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-crema border border-line/50">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/ai-scan.jpg" alt="AI Demo" className="absolute inset-0 h-full w-full object-cover" />
+          <img src="/assets/ai-scan.jpg" alt="Yapay zekâ tarama örneği" className="absolute inset-0 h-full w-full object-cover" />
         </div>
         <div className="absolute -top-[8px] left-1/2 h-0 w-0 -translate-x-1/2 border-l-[8px] border-r-[8px] border-b-[8px] border-transparent border-b-line">
           <div className="absolute top-[2px] left-1/2 h-0 w-0 -translate-x-1/2 border-l-[7px] border-r-[7px] border-b-[7px] border-transparent border-b-paper" />
         </div>
       </div>
     </div>
+  );
+}
+
+// Form çubuğuna sığan kompakt yapay zekâ eylem butonu. AiButton ile aynı
+// görsel dili taşır (gradyan + kıvılcım) ama tanıtım balonu yoktur: burada
+// kullanıcı ne olacağını zaten bağlamdan bilir.
+export function AiActionButton({ className = "", loading, disabled, children, ...rest }: ButtonProps) {
+  return (
+    <button
+      {...rest}
+      disabled={disabled || loading}
+      className={`group relative inline-flex shrink-0 items-center justify-center gap-2 overflow-hidden rounded-md bg-gradient-to-br from-paprika to-paprika-deep px-4 py-2 font-mono text-[12px] uppercase tracking-wider text-paper shadow-sm transition-all hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+    >
+      <span className="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />
+      {loading ? (
+        <Spinner className="relative z-10 h-4 w-4" />
+      ) : (
+        <SparklesIcon size={15} className="relative z-10" />
+      )}
+      <span className="relative z-10 font-bold">{children}</span>
+    </button>
   );
 }
 
@@ -199,6 +220,7 @@ export function FormActions({
   saveLabel = "Kaydet",
   cancelLabel = "Vazgeç",
   toggle,
+  extra,
 }: {
   saving?: boolean;
   saved?: boolean;
@@ -208,12 +230,15 @@ export function FormActions({
   saveLabel?: string;
   cancelLabel?: string;
   toggle?: { checked: boolean; onChange: (checked: boolean) => void; label: string };
+  /** Kaydet'in solunda duran ek eylem (ör. yapay zekâ ile dilleri tamamla). */
+  extra?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex items-center gap-3 border-b border-line pb-4">
+    <div className="mb-6 flex flex-wrap items-center gap-3 border-b border-line pb-4">
       <span className="mr-auto font-mono text-[11px] uppercase tracking-wider text-herb">
         {status ?? (saved ? "Kaydedildi ✓" : "")}
       </span>
+      {extra}
       {toggle && <Switch compact checked={toggle.checked} onChange={toggle.onChange} label={toggle.label} />}
       {onCancel && (
         <Button type="button" variant="ghost" onClick={onCancel}>
@@ -335,8 +360,8 @@ export function EmptyState({ title, description, action }: { title: string; desc
 }
 
 // Bir özellik mevcut planda kapalıysa (PlanLimits) gösterilen kilitli-özellik kartı.
-// EmptyState'ten farkı: "boş" değil "erişimin yok" mesajı verir, planını yükseltmesi
-// için destek sayfasına yönlendirir (self-servis faturalandırma henüz yok).
+// EmptyState'ten farkı: "boş" değil "erişimin yok" mesajı verir ve plan sayfasına
+// yönlendirir — yükseltme akışı orada başlar.
 export function UpgradeNotice({ title, description }: { title: string; description: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-paprika/40 bg-paprika/5 py-16 text-center">
@@ -344,7 +369,7 @@ export function UpgradeNotice({ title, description }: { title: string; descripti
       <p className="font-display text-lg font-bold">{title}</p>
       <p className="max-w-sm text-sm text-ink-soft">{description}</p>
       <Link
-        href="/panel/support"
+        href="/panel/plan"
         className="mt-1 inline-flex items-center gap-2 rounded-md bg-ink px-5 py-2.5 font-mono text-[13px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
       >
         Planımı yükselt

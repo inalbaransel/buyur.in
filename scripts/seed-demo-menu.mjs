@@ -16,8 +16,16 @@
 // Kullanım:
 //   POCKETBASE_API_URL=... POCKETBASE_ADMIN_TOKEN=... node scripts/seed-demo-menu.mjs [slug]
 //   ... node scripts/seed-demo-menu.mjs vezirhan --reuse-images
+//   ... bun scripts/seed-demo-menu.mjs vezirhan --find-images
 //
 // Bayraklar:
+//   --find-images   Ürün adına göre ücretsiz sağlayıcılardan (Unsplash/Pexels/
+//                   Pixabay) görsel arar — panelin AI aktarımıyla AYNI kaynağı
+//                   (lib/ai/images.ts) kullanır, mock veri ile gerçek aktarım
+//                   arasında görsel kalitesi ayrışmasın diye.
+//                   `bun` ile çalıştırılmalı (TypeScript modülü içe aktarılır)
+//                   ve en az bir sağlayıcı anahtarı tanımlı olmalı.
+//                   Görsel bulunamazsa ürün görselsiz oluşturulur, akış durmaz.
 //   --reuse-images  Görseli olmayan yeni ürüne, aynı kategorideki mevcut bir
 //                   ürünün görselini kopyalar. YALNIZCA demo için: gerçek bir
 //                   işletmede ürünle görseli eşleşmeyeceği için kullanmayın.
@@ -34,7 +42,20 @@ const PB_TOKEN = process.env.POCKETBASE_ADMIN_TOKEN;
 const args = process.argv.slice(2);
 const SLUG = args.find((arg) => !arg.startsWith("--")) ?? "vezirhan";
 const REUSE_IMAGES = args.includes("--reuse-images");
+const FIND_IMAGES = args.includes("--find-images");
 const DRY = args.includes("--dry");
+
+// Görsel arama yalnızca istendiğinde yüklenir: statik içe aktarma, bayraksız
+// `node` çalıştırmalarını TypeScript modülü yüzünden kırardı.
+let searchProductImages = null;
+if (FIND_IMAGES) {
+  try {
+    ({ searchProductImages } = await import("../lib/ai/images.ts"));
+  } catch {
+    console.error("--find-images için scripti `bun` ile çalıştırın: bun scripts/seed-demo-menu.mjs");
+    process.exit(1);
+  }
+}
 
 if (!PB_URL || !PB_TOKEN) {
   console.error("POCKETBASE_API_URL ve POCKETBASE_ADMIN_TOKEN ortam değişkenleri gerekli.");
@@ -120,7 +141,21 @@ async function seedProduct(business, category, spec, order, pool) {
   }
 
   const [prepMin, prepMax] = spec.prep ?? [0, 0];
-  const images = REUSE_IMAGES && pool.length > 0 ? [pool[order % pool.length]] : [];
+
+  // Görsel kaynağı önceliği: gerçek arama → demo havuzu → görselsiz.
+  // Arama hiçbir koşulda ürün oluşturmayı engellemez.
+  let images = [];
+  if (searchProductImages && !DRY) {
+    try {
+      const found = await searchProductImages(spec.name, category.name, 1);
+      if (found.length > 0) images = [found[0].url];
+    } catch {
+      // Sağlayıcı hatası demo kurulumunu durdurmaz.
+    }
+  }
+  if (images.length === 0 && REUSE_IMAGES && pool.length > 0) {
+    images = [pool[order % pool.length]];
+  }
 
   const payload = {
     business: business.id,
@@ -257,9 +292,10 @@ async function main() {
   const popups = await seedPopups(business);
 
   console.log(`\nTamamlandı. ${addedProducts} ürün, ${popups} pop-up eklendi.`);
-  if (!REUSE_IMAGES) {
+  if (!REUSE_IMAGES && !FIND_IMAGES) {
     console.log(
-      "Not: yeni ürünler görselsiz eklendi. Panelden görsel yükleyin ya da demo için --reuse-images ile çalıştırın."
+      "Not: yeni ürünler görselsiz eklendi. Ürün adına göre gerçek görsel için --find-images (bun ile), " +
+        "hızlı demo için --reuse-images kullanın."
     );
   }
 }

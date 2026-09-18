@@ -1,4 +1,5 @@
 import { Client } from "minio";
+import { slugify } from "@/lib/slug";
 
 // Ürün görselleri, logo ve kapak fotoğrafları burada saklanır.
 // Pocketbase kayıtları sadece dönen public URL'i tutar.
@@ -26,15 +27,33 @@ const EXT_BY_TYPE: Record<string, string> = {
   "image/avif": "avif",
 };
 
+// Dosya adındaki tarih damgası: sıralanabilir ve okunaklı olsun diye
+// "20260918-143052" biçiminde, sunucu saat dilimine bağımlı kalmasın diye UTC.
+function timestamp(now: Date = new Date()): string {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  const date = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}`;
+  const time = `${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}`;
+  return `${date}-${time}`;
+}
+
 // İşletme başına tek olan logo/kapak her zaman aynı isme yazılır (eskisinin
-// üzerine yazar, dosya birikmez). Ürün/pop-up görselleri birden fazla
-// olabildiği için okunaklılığı bozmayacak kısa bir zaman damgasıyla ayrılır.
-export function buildObjectPath(businessSlug: string, kind: UploadKind, mimeType: string): string {
+// üzerine yazar, dosya birikmez). Ürün/pop-up/kategori görselleri birden fazla
+// olabildiği için "urun-adi-20260918-143052.jpg" gibi adlandırılır: MinIO
+// listesinde hangi görselin neye ait olduğu adından okunur. Ad boş ya da
+// tamamen özel karakterse yalnız tarih damgası kalır.
+export function buildObjectPath(
+  businessSlug: string,
+  kind: UploadKind,
+  mimeType: string,
+  label?: string,
+): string {
   const ext = EXT_BY_TYPE[mimeType] ?? "bin";
   if (kind === "logo" || kind === "cover") {
-    return `${businessSlug}/${kind}/${kind}.${ext}`;
+    return `${businessSlug}/${kind}.${ext}`;
   }
-  return `${businessSlug}/${kind}s/${Date.now()}.${ext}`;
+  const name = slugify(label ?? "");
+  const fileName = name ? `${name}-${timestamp()}` : timestamp();
+  return `${businessSlug}/${kind}s/${fileName}.${ext}`;
 }
 
 export async function uploadImage(buffer: Buffer, mimeType: string, objectPath: string): Promise<string> {
