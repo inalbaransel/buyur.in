@@ -24,10 +24,9 @@ import { freemiumLimits } from "@/lib/entitlements";
 import { ensurePlanCatalog } from "@/lib/plan-catalog-loader";
 import { createServerPB } from "@/lib/pocketbase";
 
-// Sosyal kanıt kartları canlı menülerden okunuyor; sayfa statik üretilip
-// 10 dakikada bir tazelenir. (Fiyat kartları artık veritabanına değil koddaki
-// tek kaynağa bakıyor — bkz. components/pricing-plans.tsx.)
-export const revalidate = 600;
+// Sosyal kanıt kartları ve plan/fiyat bilgisi canlı kayıtlardan (menüler,
+// `buyur_plans`) okunuyor; sayfa statik üretilip dakikada bir tazelenir.
+export const revalidate = 60;
 
 // Ürün kartı: Google "yazılım" sonuçlarında fiyat aralığını ve özellikleri
 // buradan okur. Fiyatlar lib/pricing.ts'teki tek kaynaktan gelir.

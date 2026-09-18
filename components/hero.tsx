@@ -208,10 +208,6 @@ export async function Hero({ proof }: { proof: ShowcaseItem | null }) {
 
         <div className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-20 pt-12 md:grid-cols-[1.15fr_0.85fr] md:pt-20">
           <div>
-            <p className="rise rise-1 inline-block rounded-full border border-line bg-paper/70 px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-ink-soft sm:text-[11px]">
-              <span className="mr-1.5 text-paprika">●</span>Restoran · Kafe · Pastane · Otel için QR menü
-            </p>
-
             <h1 className="rise rise-2 mt-6 font-display text-[2.35rem] font-extrabold leading-[1.05] tracking-tight sm:text-5xl md:text-[3.5rem]">
               Menünüzü{" "}
               <span className="relative inline-block text-paprika">

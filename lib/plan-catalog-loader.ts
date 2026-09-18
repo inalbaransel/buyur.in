@@ -18,6 +18,7 @@ export const PLAN_CATALOG_TTL_MS = 60_000;
 
 let loadedAt = Number.NEGATIVE_INFINITY;
 let loadedRecords: PlanRecordLike[] = [];
+let version = 0;
 let inflight: Promise<void> | null = null;
 
 export async function ensurePlanCatalog(client: Pick<PocketBase, "collection">, now: number = Date.now()): Promise<void> {
@@ -32,6 +33,8 @@ export async function ensurePlanCatalog(client: Pick<PocketBase, "collection">, 
       if (records.length > 0) {
         applyPlanRecords(records);
         applyPlanPrices(records);
+        // Yalnızca içerik değiştiyse sürüm artar: gereksiz yeniden çizimi önler.
+        if (JSON.stringify(records) !== JSON.stringify(loadedRecords)) version += 1;
         loadedRecords = records;
       }
       loadedAt = now;
@@ -52,10 +55,16 @@ export function loadedPlanRecords(): PlanRecordLike[] {
   return loadedRecords;
 }
 
+/** Katalog içeriği her değiştiğinde artan sayaç (arayüz yeniden çizimi için). */
+export function catalogVersion(): number {
+  return version;
+}
+
 /** Testler için: önbelleği sıfırlar. */
 export function resetPlanCatalogCache(): void {
   loadedAt = Number.NEGATIVE_INFINITY;
   loadedRecords = [];
+  version = 0;
   inflight = null;
   resetPlanPrices();
 }

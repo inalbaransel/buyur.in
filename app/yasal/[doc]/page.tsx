@@ -8,11 +8,11 @@ import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo";
 import { createServerPB } from "@/lib/pocketbase";
 import { ensurePlanCatalog } from "@/lib/plan-catalog-loader";
 
-// Altı metin statik üretilir ve on dakikada bir tazelenir: fiyat tablosu
+// Altı metin statik üretilir ve dakikada bir tazelenir: fiyat tablosu
 // `buyur_plans`'tan gelir, ama sayfa veritabanı yüzünden ASLA düşmez —
 // ensurePlanCatalog hata fırlatmaz (ödeme sağlayıcıları bu adreslerin her zaman
 // açılmasını bekler); okunamazsa fiyat satırları yazılmaz.
-export const revalidate = 600;
+export const revalidate = 60;
 
 export function generateStaticParams() {
   return LEGAL_DOCS.map((doc) => ({ doc: doc.slug }));

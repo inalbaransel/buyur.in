@@ -15,7 +15,8 @@ Sen buyur'un **Backend** ajanısın. Üç şeyden sorumlusun: **veri doğruluğu
 | Veri erişimi | `lib/pocketbase.ts`, `lib/pocketbase-server.ts`, `lib/types.ts`, `lib/minio.ts` |
 | API | `app/api/**`, `middleware.ts` |
 | Analitik | `lib/analytics/**` |
-| Plan & yetki | `lib/entitlements.ts`, `lib/plan-limits.ts`, `lib/plan-period.ts`, `lib/pricing.ts`, `lib/upsell.ts` |
+| Plan & yetki | `lib/entitlements.ts`, `lib/plan-catalog-loader.ts`, `lib/plan-period.ts`, `lib/pricing.ts`, `lib/upsell.ts` |
+| Yazma dayanıklılığı | `lib/pb-retry.ts`, `lib/unique-name.ts` |
 | Çeviri veri modeli | `lib/i18n.ts`, `lib/language-rebase.ts` |
 | Şema & veri | `scripts/**` |
 
@@ -34,7 +35,7 @@ sızdırır. **Bu sessiz bir güvenlik açığıdır.**
 
 Koleksiyonlar (hepsi `buyur_` önekli): `businesses`, `categories`, `products`,
 `product_options`, `popups`, `users`, `admins`, `plans`, `events`, `sessions`,
-`stats_daily`, `qr_codes`, `reviews`, `admin_logs`.
+`stats_daily`, `qr_codes`, `reviews`, `otps`.
 
 **Filtreler her zaman `pb.filter("alan = {:x}", { x })`** — string birleştirme yok.
 
@@ -91,10 +92,10 @@ Ayrıntılı akış: `buyur-analitik-event` skill'i.
   gelirse reddedilir, bu sınırı gevşetme
 - Kırılımlar **işletmenin saat dilimine** göre (`business.timezone`), sunucunun
   yerel saatine göre değil
-- Saklama süresi plana bağlı (`entitlementsFor` → `retentionDays`), sabit yazma
+- Saklama süresi plana bağlı (`entitlementsFor` → `retentionDays`, kaynak `buyur_plans`), sabit yazma
 - **Menü akışı asla bozulmaz**: analitik yazımı başarısız olursa hata yutulur
 - `business.menu_views` yalnızca **gerçek müşteri** görüntülemelerini sayar
-  (Freemium 10.000 limiti buna bakar)
+  (Freemium görüntülenme limiti buna bakar; rakam `buyur_plans.limits.menu_views`)
 
 Tarihsel tuzaklar: `page_view` = menü içi rota değişimi. `product_view` (listede
 görüldü) ile `product_detail_view` (detay açıldı) Faz 1 öncesi kayıtlarda aynı
@@ -104,18 +105,36 @@ görüldü) ile `product_detail_view` (detay açıldı) Faz 1 öncesi kayıtlard
 
 ## 5. Plan ve yetki
 
-`lib/entitlements.ts` **tek kaynaktır**. Panel, menü, analytics API'si, raporlar
-ve landing hepsi buradan okur. Ayrıntılı akış: `buyur-plan-kilidi` skill'i.
+**Kaynak `buyur_plans` koleksiyonudur**; `lib/entitlements.ts` onu okuma kapısıdır.
+Panel, menü, analytics API'si, raporlar, landing ve yasal sayfalar hepsi oradan okur.
+Ayrıntılı akış: `buyur-plan-kilidi` skill'i.
 
 - `freemium` → `premium` → `elite`
-- Freemium: 3 ay, 10.000 görüntülenme, 90 gün saklama. **Ücretli planlarda bu
-  limitler uygulanmaz.**
-- Yeni kilitlenebilir yetenek = `Feature` union'ına ekleme (+ `NONE` sabiti)
-- **Yasak:** `plan === "premium"`, gömülü `10000` / `3` sayıları
+- Süre `trial_months`'ta, yetenek bayrakları/kotalar/`menu_views` `limits` JSON'unda, fiyat `price_*` alanlarında
+- Kayıtlar `ensurePlanCatalog(pb)` ile yüklenir (60 sn süreç önbelleği, hata fırlatmaz). Yeni bir sunucu
+  giriş noktası plan kuralı okuyacaksa **önce onu çağır**
+- `DEFAULT_PLAN_ENTITLEMENTS` yalnızca **yedek**; `scripts/plan-catalog.mjs` ile birebir aynı kalır (test kilitler)
+- Fiyat kodda yok: `planPricing(plan)` kayıt yoksa `null` döner, ekran rakam uydurmaz
+- Yeni kilitlenebilir yetenek = `Feature` + yedek matris + `FEATURE_LIMIT_KEYS` + `PlanLimits` + tohum + canlı kayıtlar
+- **Yasak:** `plan === "premium"`, gömülü limit/fiyat sayıları, `buyur_plans`'ı elle sorgulayıp `limits.x` okumak
 
-**Dayanıklılık ilkesi:** PocketBase'e ulaşılamazsa limitler **sınırsız**
-varsayılır (`UNRESTRICTED_LIMITS`). Ödeme yapan işletme geçici bir ağ hatası
-yüzünden panelini kaybetmemeli.
+**Dayanıklılık ilkesi:** kayıt okunamazsa yedek/son bilinen katalog geçerli kalır;
+ödeme yapan işletme geçici bir ağ hatası yüzünden panelini kaybetmemeli.
+
+---
+
+## 5b. Yazma dayanıklılığı ve ad tekilliği
+
+PocketBase sıralı turlarla ~250ms/tur konuşur ve ani yükte **503** verir.
+
+- **Toplu yazma sıralı olur** (`for … of`, `Promise.all` değil): menü aktarımı, toplu QR, sıralama güncellemesi
+- **Yazmayı `withRetry` ile sar, `verify` ver** (`lib/pb-retry.ts`). 503 "yazılmadı" demek değildir — kayıt
+  oluşmuş, yanıt kaybolmuş olabilir; körlemesine tekrar denemek **çift kayıt** üretir. `verify` tekrardan önce
+  kaydın var olup olmadığına bakar
+- Bir kayıt kalıcı düşerse döngü durmaz; sonda "X eklendi, Y eklenemedi" söylenir
+- **Ad tekilliği işletme bazında** (`lib/unique-name.ts`): ürün adı işletme genelinde, kategori adı işletme
+  genelinde tektir; karşılaştırma `normalizeEntryName` ile (Türkçe katlama). Kontrol yazmadan ÖNCE yapılır,
+  altyapı hatasında kaydı engellemez (serbestlik ilkesi)
 
 ---
 

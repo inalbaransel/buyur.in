@@ -607,7 +607,7 @@ async function main() {
       text("description", { max: 300 }),
       // Fiyatlandırma aylık kurgulanıyor: aylık ödemede aylık ücret ve yıllık
       // ödemedeki aylık eşdeğer (yıllık toplam = 12 katı). Eski price_6m/price_12m
-      // alanları scripts/migrate-remove-legacy-plan-price.mjs ile kaldırıldı.
+      // alanları kaldırıldı.
       num("price_monthly", { min: 0 }),
       num("price_yearly_monthly", { min: 0 }),
       // Süreli (deneme) planın kaç ay sürdüğü; ücretli planlarda 0.

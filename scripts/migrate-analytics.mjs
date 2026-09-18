@@ -3,7 +3,8 @@
 //   1) buyur_events.type select listesini yeni event sözlüğüne genişletir
 //      (getOrCreate var olan bir alanın değer listesini güncellemez).
 //   2) buyur_events üzerindeki analitik indekslerini ekler.
-//   3) Plan kayıtlarındaki limits'e yeni analitik yetkilerini yazar.
+//   (Plan limitleri artık burada YAZILMAZ: kaynak buyur_plans kaydıdır ve admin
+//   panelinden değişir; bu göç plan kayıtlarını ezmemeli.)
 //   4) Saat dilimi boş olan işletmelere varsayılanı yazar.
 //
 // Kullanım: POCKETBASE_API_URL=... POCKETBASE_ADMIN_TOKEN=... node scripts/migrate-analytics.mjs
@@ -51,35 +52,6 @@ const EVENT_INDEXES = [
 ];
 
 // Plan bazlı analitik yetkileri — docs/analytics-architecture.md §6 ile aynı.
-const PLAN_ANALYTICS = {
-  freemium: {
-    analytics: true,
-    analytics_advanced: false,
-    insights: false,
-    reports: false,
-    reports_export: false,
-    scheduled_reports: false,
-    analytics_retention_days: 90,
-  },
-  premium: {
-    analytics: true,
-    analytics_advanced: true,
-    insights: true,
-    reports: false,
-    reports_export: false,
-    scheduled_reports: false,
-    analytics_retention_days: 365,
-  },
-  elite: {
-    analytics: true,
-    analytics_advanced: true,
-    insights: true,
-    reports: true,
-    reports_export: true,
-    scheduled_reports: false,
-    analytics_retention_days: 1095,
-  },
-};
 
 async function widenEventTypes() {
   const collection = await pb.collections.getOne("buyur_events");
@@ -116,35 +88,6 @@ async function addEventIndexes() {
   console.log(`~ ${missing.length} analitik indeksi eklendi.`);
 }
 
-async function updatePlanLimits() {
-  const plans = await pb.collection("buyur_plans").getFullList();
-
-  for (const plan of plans) {
-    const wanted = PLAN_ANALYTICS[plan.key];
-    if (!wanted) {
-      console.log(`! plans/${plan.key} analitik tablosunda yok, atlanıyor.`);
-      continue;
-    }
-
-    const limits = { ...(plan.limits ?? {}) };
-    const changed = Object.entries(wanted).filter(([field, value]) => limits[field] !== value);
-    if (changed.length === 0) {
-      console.log(`= plans/${plan.key} analitik yetkileri zaten güncel.`);
-      continue;
-    }
-
-    await pb.collection("buyur_plans").update(plan.id, { limits: { ...limits, ...wanted } });
-    console.log(`~ plans/${plan.key}: ${changed.map(([f, v]) => `${f}=${v}`).join(", ")}`);
-  }
-}
-
-/** Göç öncesi yazılmış event'lerde `occurred_at` yok; rollup bu alana göre
- *  sorguladığı için eski veri analitiğe hiç girmez. Kayıt zamanını (created)
- *  occurred_at'e kopyalayarak geçmişi kurtarıyoruz.
- *
- *  Not: eski kayıtlarda oturum/ziyaretçi bilgisi olmadığı için o günlerde
- *  görüntülenme sayıları görünür, oturum bazlı metrikler (tekil ziyaretçi,
- *  süre, bounce, funnel) boş kalır — uydurmak yerine boş bırakıyoruz. */
 async function backfillOccurredAt() {
   let migrated = 0;
 
@@ -238,7 +181,6 @@ async function backfillPlanUsage() {
 async function main() {
   await widenEventTypes();
   await addEventIndexes();
-  await updatePlanLimits();
   await backfillTimezones();
   await backfillOccurredAt();
   await backfillPlanUsage();

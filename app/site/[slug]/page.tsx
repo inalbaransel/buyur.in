@@ -35,7 +35,7 @@ import type { Business, Category, Product } from "@/lib/types";
 // Adres: {slug}.buyur.in/site (middleware /site/{slug}'a yazar).
 // Menü adresi değişmedi: basılı QR kodları etkilenmez.
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 const getBusiness = cache(async (slug: string): Promise<Business | null> => {
   const pb = createServerPB();

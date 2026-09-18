@@ -80,7 +80,7 @@ function Onboarding() {
         defaultPlan = plan.key;
         trialMonths = plan.trial_months ?? 0;
       } catch {
-        // plans koleksiyonu boşsa (ör. migrate-plans.mjs henüz çalıştırılmadıysa) sessizce
+        // plans koleksiyonu boşsa (ör. yeni ortamda migrate-plans.mjs henüz çalıştırılmadıysa) sessizce
         // "freemium"a düşer — kayıt akışını bu yüzden kilitlemiyoruz. Süre de
         // yazılmaz: yanlış bir tarihle işletmeyi "süresi dolmuş" göstermektense
         // süresiz kabul etmek daha az zararlı.

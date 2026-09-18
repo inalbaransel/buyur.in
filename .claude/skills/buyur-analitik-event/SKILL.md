@@ -78,7 +78,7 @@ Zamanı sabitle, sınır durumlarını test et.
 |---|---|
 | `page_view` | Menü içi **rota değişimi** demektir; tarihsel ad, yeniden adlandırılmadı |
 | `product_view` vs `product_detail_view` | Faz 1 öncesi kayıtlarda `product_view` detay açılışıydı. Dönemler arası kıyasta bu kırılmayı kullanıcıya not düş |
-| `business.menu_views` | Yalnızca **gerçek müşteri** sayfa görüntülemeleri. Freemium 10.000 limiti buna bakar; panel önizlemesi artırmamalı |
+| `business.menu_views` | Yalnızca **gerçek müşteri** sayfa görüntülemeleri. Freemium görüntülenme limiti (`buyur_plans.limits.menu_views`) buna bakar; panel önizlemesi artırmamalı |
 
 ## Kontrol listesi
 

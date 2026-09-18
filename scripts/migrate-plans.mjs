@@ -88,7 +88,7 @@ async function seedPlans() {
     }
     if (existing) {
       console.log(
-        `= plans/${spec.key} zaten var, atlanıyor (id: ${existing.id}). Fiyat/özellik değişikliklerini canlıya yazmak için: node scripts/migrate-plan-pricing.mjs`
+        `= plans/${spec.key} zaten var, atlanıyor (id: ${existing.id}). Fiyat/özellik değişiklikleri admin panelinden (buyur_plans) yapılır`
       );
       continue;
     }

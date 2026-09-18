@@ -97,6 +97,8 @@ Kurallar:
 4. Şema değişikliği = `scripts/setup-pocketbase.mjs` güncellemesi + gerekiyorsa **idempotent** bir göç scripti. `getOrCreate` var olan alanın `select` seçeneklerini güncellemez — bunun için ayrı göç adımı gerekir.
 5. Kayıt tarayıcıdan yapılmaz: `buyur_users.createRule` servis hesabına kilitlidir, hesap `/api/auth/register` üzerinden OTP doğrulandıktan sonra açılır (`buyur_otps` yalnızca kodun sha256 özetini tutar).
 6. Altyapı hatasında **kısıtlama değil, serbestlik** varsayılır (`lib/plan-catalog-loader.ts`: plan kaydı okunamazsa son bilinen/yedek katalog geçerli kalır): ödeme yapan işletme geçici bir ağ hatası yüzünden panelini kaybetmemeli.
+7. **Toplu yazma sıralıdır ve çift kayıt üretmez.** PocketBase ani yükte 503 verir ve 503 "yazılmadı" demek değildir. `Promise.all` ile toplu `create` yok; `lib/pb-retry.ts` → `withRetry(..., { verify })` ile sar (tekrardan önce kaydın var olup olmadığına bak), tek kaydın düşmesi döngüyü durdurmaz, sonda "X eklendi, Y eklenemedi" söylenir
+8. **Ürün ve kategori adı işletme bazında tektir** (`lib/unique-name.ts`, karşılaştırma `normalizeEntryName`); menü aktarımı da bunu uygular (`lib/ai/import-plan.ts`)
 
 ---
 

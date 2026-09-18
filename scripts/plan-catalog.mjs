@@ -1,8 +1,9 @@
 // Paket kataloğu: üç planın adı, açıklaması, fiyatı, özellik listesi ve
-// limitleri. İlk seed (scripts/migrate-plans.mjs), canlı kayıtları güncelleyen
-// göç (scripts/migrate-plan-pricing.mjs) VE landing sayfasındaki fiyat kartları
-// (components/pricing-plans.tsx) buradan okur — böylece "sitede yazan",
-// "kodda yazan" ve "veritabanında duran" paket tanımı ayrışamaz.
+// limitleri. YENİ bir ortamın ilk seed'i (scripts/migrate-plans.mjs) ve landing
+// fiyat kartlarının metin yedeği (components/pricing-plans.tsx) buradan okur.
+// Canlı kaynak `buyur_plans` kaydıdır ve admin panelinden değişir; bu dosya
+// canlıyı ezmek için KULLANILMAZ. tests/plan-catalog.test.ts kod yedeğiyle
+// (lib/entitlements.ts) aynı kalmasını kilitler.
 //
 // Uygulama tarafındaki karşılıkları:
 //   · yetki matrisi  → lib/entitlements.ts

@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { ClientResponseError } from "pocketbase";
 import { pb } from "@/lib/pocketbase";
 import { useAuth } from "@/lib/use-auth";
-import { ensurePlanCatalog } from "@/lib/plan-catalog-loader";
+import { catalogVersion, ensurePlanCatalog } from "@/lib/plan-catalog-loader";
 import type { Business } from "@/lib/types";
 
 interface BusinessContextValue {
@@ -56,6 +56,20 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     if (authLoading) return;
     refresh();
   }, [authLoading, refresh]);
+
+  // Plan kuralları admin panelinden değişebilir. Sekmeye dönüldüğünde katalog
+  // (en fazla dakikada bir) tazelenir; değişiklik varsa ekranlar yeniden çizilir.
+  // İşletme kaydı yeniden okunmaz — panel "Yükleniyor"a düşmesin.
+  useEffect(() => {
+    async function onVisible() {
+      if (document.visibilityState !== "visible") return;
+      const before = catalogVersion();
+      await ensurePlanCatalog(pb);
+      if (catalogVersion() !== before) setBusinessState((current) => (current ? { ...current } : current));
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
 
   return (
     <BusinessContext.Provider

@@ -41,7 +41,10 @@ istenmiş olmalı.
 
 **İş kuralı**
 - [ ] Elle plan karşılaştırması (`plan === "premium"`) — `isFeatureAvailable()` olmalı
-- [ ] Bileşene gömülü limit sayısı (`10000`, `3`) — `entitlementsFor()` olmalı
+- [ ] Bileşene/metne gömülü limit veya fiyat sayısı (`5000`, `1 ay`, `249`) — `entitlementsFor()` / `freemiumLimits()` / `planPricing()` olmalı
+- [ ] Yeni sunucu giriş noktası plan kuralı okuyor ama `ensurePlanCatalog` çağırmıyor
+- [ ] Toplu yazmada `Promise.all` (503 → sessiz düşme) ya da `verify`'siz retry (çift kayıt)
+- [ ] Ürün/kategori/QR oluşturan yeni yolda ad tekilliği (`lib/unique-name.ts`) kontrolü yok
 - [ ] Ham `entity.name` yazdırma — `tField` / `tf` olmalı
 - [ ] Yeni çevrilebilir alan `TranslatableField` union'ına eklenmemiş
 - [ ] `language-rebase` yeni alanı taşımıyor
