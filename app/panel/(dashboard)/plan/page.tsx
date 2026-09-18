@@ -6,8 +6,8 @@ import { buttonClass, PageHeader } from "@/components/panel/ui";
 import { PlanUsageCard } from "@/components/panel/plan-usage";
 import { CheckCircleIcon, SparkIcon, WhatsappIcon } from "@/components/icons";
 import { planUpgradeWhatsappLink, planWhatsappLink } from "@/lib/site";
-import { FEATURE_MATRIX, PLAN_LABELS, PLAN_ORDER, freemiumUsage, normalizePlan } from "@/lib/entitlements";
-import { MONTHS_IN_YEAR, PLAN_PRICING, formatTL } from "@/lib/pricing";
+import { PLAN_LABELS, PLAN_ORDER, featureMatrix, freemiumLimits, freemiumUsage, normalizePlan } from "@/lib/entitlements";
+import { MONTHS_IN_YEAR, formatTL, planPricing } from "@/lib/pricing";
 import { clearPlanIntent, readPlanIntent, type IntentBilling } from "@/lib/plan-intent";
 import { trackMarketingEvent } from "@/lib/marketing-events";
 import type { Business, Plan } from "@/lib/types";
@@ -20,11 +20,13 @@ import type { Business, Plan } from "@/lib/types";
 // yürür: "Premium'u başlat" işletmeyi ve seçilen ödeme dönemini taşıyan hazır
 // bir mesaj açar, ödeme ve aktivasyon o görüşmede tamamlanır.
 
-const PLAN_PITCH: Record<Plan, string> = {
-  freemium: "3 ay veya 10.000 menü görüntülenme — hangisi önce dolarsa. Ürün sınırı yok.",
-  premium: "Süre sınırı yok; kampanyalar, gelişmiş analizler, markasız menü ve standart web sitesi.",
-  elite: "Gelişmiş ve hediye kurumsal web sitesi, rapor merkezi, dışa aktarma ve öncelikli destek.",
-};
+/** Plan kısa tanıtımı. Freemium cümlesi canlı limitlerden kurulur. */
+function planPitch(plan: Plan): string {
+  if (plan === "freemium") return `${freemiumLimits().summary} — hangisi önce dolarsa. Ürün sınırı yok.`;
+  return plan === "premium"
+    ? "Süre sınırı yok; kampanyalar, gelişmiş analizler ve markasız menü."
+    : "Web sitesi, rapor merkezi ve dışa aktarma.";
+}
 
 const START_LABELS: Record<Plan, string> = {
   freemium: "Freemium'a geç",
@@ -59,7 +61,8 @@ function UpgradeCard({
   onStart: (plan: Plan, billing: IntentBilling) => void;
 }) {
   const [billing, setBilling] = useState<IntentBilling>(preferredBilling);
-  const pricing = PLAN_PRICING[plan];
+  // Fiyat canlı `buyur_plans` kaydından gelir; okunamadıysa rakam gösterilmez.
+  const pricing = planPricing(plan);
 
   useEffect(() => {
     setBilling(preferredBilling);
@@ -68,8 +71,9 @@ function UpgradeCard({
   return (
     <div className="flex flex-col rounded-2xl border border-line bg-paper p-5">
       <p className="font-display text-lg font-bold">{PLAN_LABELS[plan]}</p>
-      <p className="mt-1 text-sm text-ink-soft">{PLAN_PITCH[plan]}</p>
+      <p className="mt-1 text-sm text-ink-soft">{planPitch(plan)}</p>
 
+      {pricing ? (
       <div className="mt-4 grid grid-cols-2 gap-2" role="radiogroup" aria-label="Ödeme dönemi">
         {(["yearly", "monthly"] as const).map((option) => {
           const active = billing === option;
@@ -80,9 +84,8 @@ function UpgradeCard({
               role="radio"
               aria-checked={active}
               onClick={() => setBilling(option)}
-              className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${
-                active ? "border-paprika bg-paprika/5" : "border-line hover:border-ink/30"
-              }`}
+              className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${active ? "border-paprika bg-paprika/5" : "border-line hover:border-ink/30"
+                }`}
             >
               <span className="block font-mono text-[10px] uppercase tracking-wider text-ink-soft">
                 {option === "yearly" ? "Yıllık" : "Aylık"}
@@ -98,6 +101,11 @@ function UpgradeCard({
           );
         })}
       </div>
+      ) : (
+        <p className="mt-4 rounded-xl border border-line px-3 py-2.5 text-sm text-ink-soft">
+          Güncel fiyat için bize WhatsApp&apos;tan yazın.
+        </p>
+      )}
 
       <a
         href={planUpgradeWhatsappLink(PLAN_LABELS[plan], billing, business.name, business.slug)}
@@ -152,7 +160,7 @@ export default function PlanPage() {
         <div className="rounded-2xl border border-line bg-paper p-5">
           <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">Planınızda neler var</p>
           <ul className="mt-3 space-y-2 text-sm">
-            {FEATURE_MATRIX.filter((row) => row.values[current] !== false).map((row) => (
+            {featureMatrix().filter((row) => row.values[current] !== false).map((row) => (
               <li key={row.label} className="flex items-start gap-2">
                 <span className="mt-0.5 shrink-0 text-herb" aria-hidden>
                   <CheckCircleIcon size={15} />
@@ -237,7 +245,7 @@ export default function PlanPage() {
             </tr>
           </thead>
           <tbody>
-            {FEATURE_MATRIX.map((row) => (
+            {featureMatrix().map((row) => (
               <tr key={row.label} className="border-b border-line/60 last:border-0">
                 <td className="px-2.5 py-3 sm:px-5">{row.label}</td>
                 {PLAN_ORDER.map((plan) => (

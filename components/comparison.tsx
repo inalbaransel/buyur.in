@@ -1,23 +1,27 @@
-import { PLAN_PRICING, formatTL } from "@/lib/pricing";
+import { formatTL, planPricing } from "@/lib/pricing";
 import { CheckCircleIcon } from "@/components/icons";
 
 // Kâğıt menü karşılaştırması + özellik matrisi. Satın alma kararını etkileyen
 // üç sonuç sayfanın üstünde; buradaki detaylar ikna değil, kontrol listesi.
 
-const rows = [
+// Fiyat canlı katalogdan gelir; modül yüklenirken değil render anında okunur.
+function buildRows() {
+  const premiumFrom = planPricing("premium")?.yearlyMonthly ?? null;
+  return [
   { label: "Fiyat değişikliği", paper: "Yeniden baskı, günlerce bekleme", buyur: "Panelden anında, tüm masalarda" },
   { label: "Tükenen ürün", paper: "Garson masada söyler", buyur: "Tek dokunuşla menüden kalkar" },
   {
     label: "Maliyet",
     paper: "Her zamda yeni baskı",
-    buyur: `Ücretsiz başlar · Premium ayda ${formatTL(PLAN_PRICING.premium.yearlyMonthly)}'den`,
+    buyur: premiumFrom ? `Ücretsiz başlar · Premium ayda ${formatTL(premiumFrom)}'den` : "Ücretsiz başlar",
   },
   { label: "Yabancı misafir", paper: "Tek dil", buyur: "TR · EN · AR · RU" },
   { label: "Alerjen ve kalori", paper: "Çoğunlukla yok", buyur: "Her üründe gösterilebilir" },
   { label: "Sipariş", paper: "Garson not alır, karışabilir", buyur: "Müşteri seçimini sepette garsona gösterir" },
   { label: "Hangi ürün ilgi görüyor?", paper: "Bilinmez", buyur: "Panelde ürün ve QR bazında" },
   { label: "Hijyen", paper: "Elden ele dolaşır", buyur: "Müşterinin kendi telefonunda" },
-];
+  ];
+}
 
 const features = [
   "Hazırlanma süresi",
@@ -31,7 +35,7 @@ const features = [
   "Müşteri değerlendirmesi",
   "Wi-Fi, adres, çalışma saatleri",
   "Kampanya ve açılış pop-up'ı (Premium)",
-  "Otomatik web sitesi (Premium)",
+  "Otomatik web sitesi (Elite)",
 ];
 
 export function Comparison() {
@@ -59,7 +63,7 @@ export function Comparison() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {buildRows().map((row) => (
                 <tr key={row.label} className="border-b border-line/60 last:border-0">
                   <th scope="row" className="px-5 py-3 text-left font-medium">
                     {row.label}

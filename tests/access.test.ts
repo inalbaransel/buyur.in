@@ -123,7 +123,7 @@ describe("plan yetkileri", () => {
 describe("Freemium limiti yetkiyi kapatır", () => {
   it("görüntülenme limiti dolan Freemium işletmede temel analiz de kilitlenir", async () => {
     ownedBusinesses = [
-      { id: "biz_a_000000001", name: "Alpha Cafe", plan: "freemium", menu_views: 10_000 },
+      { id: "biz_a_000000001", name: "Alpha Cafe", plan: "freemium", menu_views: 5_000 },
     ];
     const context = await resolveAnalyticsContext(request());
     expect(context.permissions.has("analytics.view")).toBe(false);

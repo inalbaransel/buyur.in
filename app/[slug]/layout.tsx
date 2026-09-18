@@ -6,6 +6,7 @@ import { createServerPB } from "@/lib/pocketbase";
 import { MenuProvider } from "@/components/menu/menu-provider";
 import { MenuUnavailable } from "@/app/[slug]/unavailable";
 import { isSubscriptionActive } from "@/lib/entitlements";
+import { ensurePlanCatalog } from "@/lib/plan-catalog-loader";
 import { menuUrl } from "@/lib/site";
 import { SITE_NAME, shareImages } from "@/lib/seo";
 import type { Business, Category, Popup, Product } from "@/lib/types";
@@ -13,9 +14,15 @@ import type { Business, Category, Popup, Product } from "@/lib/types";
 const getBusiness = cache(async (slug: string): Promise<Business | null> => {
   const pb = createServerPB();
   try {
-    return await pb
-      .collection("buyur_businesses")
-      .getFirstListItem<Business>(pb.filter("slug = {:slug} && is_active = true", { slug }));
+    // Plan kuralları `buyur_plans` kaydından gelir; işletmeyle paralel okunur
+    // (süreç belleğinde önbellekli, çoğu istekte ek tur atılmaz).
+    const [business] = await Promise.all([
+      pb
+        .collection("buyur_businesses")
+        .getFirstListItem<Business>(pb.filter("slug = {:slug} && is_active = true", { slug })),
+      ensurePlanCatalog(pb),
+    ]);
+    return business;
   } catch {
     return null;
   }
@@ -67,7 +74,7 @@ export default async function MenuLayout({
   const business = await getBusiness(slug);
   if (!business) notFound();
 
-  // Freemium limiti (3 ay VEYA 10.000 görüntülenme) dolduysa menü yayından
+  // Freemium limiti (1 ay VEYA 5.000 görüntülenme) dolduysa menü yayından
   // kalkar — veri silinmez, sahibi plana geçtiğinde aynen geri gelir.
   if (!isSubscriptionActive(business)) {
     return <MenuUnavailable business={business} />;

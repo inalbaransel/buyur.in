@@ -6,7 +6,7 @@ import { LiveMenu } from "@/components/live-menu";
 import { PanelShowcase } from "@/components/panel-showcase";
 import { Analytics } from "@/components/analytics";
 import { Showcase } from "@/components/showcase";
-import { Pricing, FAQ, ClosingCTA, faqs } from "@/components/pricing";
+import { Pricing, FAQ, ClosingCTA, getFaqs } from "@/components/pricing";
 import { Comparison } from "@/components/comparison";
 import { LandingTracker } from "@/components/landing-tracker";
 import { DEMO_SLUG, loadShowcase } from "@/lib/showcase";
@@ -19,7 +19,10 @@ import {
   absoluteUrl,
   jsonLdScript,
 } from "@/lib/seo";
-import { PLAN_PRICING } from "@/lib/pricing";
+import { planPricing } from "@/lib/pricing";
+import { freemiumLimits } from "@/lib/entitlements";
+import { ensurePlanCatalog } from "@/lib/plan-catalog-loader";
+import { createServerPB } from "@/lib/pocketbase";
 
 // Sosyal kanıt kartları canlı menülerden okunuyor; sayfa statik üretilip
 // 10 dakikada bir tazelenir. (Fiyat kartları artık veritabanına değil koddaki
@@ -28,7 +31,7 @@ export const revalidate = 600;
 
 // Ürün kartı: Google "yazılım" sonuçlarında fiyat aralığını ve özellikleri
 // buradan okur. Fiyatlar lib/pricing.ts'teki tek kaynaktan gelir.
-const productJsonLd = {
+const buildProductJsonLd = () => ({
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "@id": `${SITE_URL}/#app`,
@@ -57,18 +60,22 @@ const productJsonLd = {
       name: "Freemium",
       price: "0",
       priceCurrency: "TRY",
-      description: "3 ay veya 10.000 menü görüntülenmesine kadar ücretsiz. Kredi kartı istenmez.",
+      description: `${freemiumLimits().summary} kadar ücretsiz. Kredi kartı istenmez.`,
       availability: "https://schema.org/InStock",
     },
-    ...(["premium", "elite"] as const).map((key) => ({
+    // Fiyatı bilinmeyen (kayıt okunamamış) plan için teklif üretilmez: rakam uydurulmaz.
+    ...(["premium", "elite"] as const).flatMap((key) => {
+      const pricing = planPricing(key);
+      if (!pricing) return [];
+      return [{
       "@type": "Offer" as const,
       name: key === "premium" ? "Premium" : "Elite",
-      price: String(PLAN_PRICING[key].monthly),
+      price: String(pricing.monthly),
       priceCurrency: "TRY",
       availability: "https://schema.org/InStock",
       priceSpecification: {
         "@type": "UnitPriceSpecification",
-        price: String(PLAN_PRICING[key].monthly),
+        price: String(pricing.monthly),
         priceCurrency: "TRY",
         referenceQuantity: {
           "@type": "QuantitativeValue",
@@ -76,34 +83,37 @@ const productJsonLd = {
           unitCode: "MON",
         },
       },
-    })),
+    }];
+    }),
   ],
-};
+});
 
 // Sık sorulanlar bölümünün makine okunur karşılığı — arama sonucunda
 // açılır cevap olarak görünebilir.
-const faqJsonLd = {
+// Plan limitleri canlı katalogdan geldiği için sayfa render'ında kurulur.
+const buildFaqJsonLd = () => ({
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "@id": `${SITE_URL}/#faq`,
-  mainEntity: faqs.map((f) => ({
+  mainEntity: getFaqs().map((f) => ({
     "@type": "Question",
     name: f.q,
     acceptedAnswer: { "@type": "Answer", text: f.a },
   })),
-};
+});
 
 // Önerilen huni: sonuç odaklı hero → kanıt → üç sorun/çözüm → canlı menü →
 // gerçek panel ekranları → analitik → nasıl çalışır → sosyal kanıt → paketler →
 // karşılaştırma → SSS → final CTA.
 export default async function Home() {
-  const showcase = await loadShowcase();
+  // Plan limitleri ve paket metinleri canlı `buyur_plans` kaydından gelir.
+  const [showcase] = await Promise.all([loadShowcase(), ensurePlanCatalog(createServerPB())]);
   const proof = showcase[0] ?? null;
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(productJsonLd)} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(faqJsonLd)} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(buildProductJsonLd())} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(buildFaqJsonLd())} />
       <Navbar />
       <main>
         <Hero proof={proof} />

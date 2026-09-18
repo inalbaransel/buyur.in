@@ -5,23 +5,14 @@ import { useRouter } from "next/navigation";
 import { useBusiness } from "@/components/panel/business-context";
 import { PopupForm } from "@/components/panel/popup-form";
 import { PageHeader, UpgradeNotice } from "@/components/panel/ui";
-import { fetchPlanLimits } from "@/lib/plan-limits";
+import { isFeatureAvailable } from "@/lib/entitlements";
 
 export default function NewAnnouncementPage() {
   const { business, isLoading } = useBusiness();
   const router = useRouter();
-  const [campaignsAllowed, setCampaignsAllowed] = useState<boolean | null>(null);
+  // Kampanya kapısı canlı plan kaydından okunur (BusinessProvider katalogu yükler).
+  const campaignsAllowed = business ? isFeatureAvailable(business, "campaigns") : null;
 
-  useEffect(() => {
-    if (!business) return;
-    let cancelled = false;
-    fetchPlanLimits(business.plan).then((limits) => {
-      if (!cancelled) setCampaignsAllowed(limits.campaigns);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [business]);
 
   if (isLoading || !business || campaignsAllowed === null) {
     return <p className="text-ink-soft">Yükleniyor…</p>;

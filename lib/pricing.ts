@@ -1,12 +1,13 @@
 import type { Plan } from "@/lib/types";
 
-// İlan edilen fiyatların TEK KAYNAĞI (₺, KDV hariç/dahil ayrımı için bkz.
-// lib/legal.ts → Ödeme Koşulları).
+// İlan edilen fiyatlar `buyur_plans` koleksiyonundan okunur — kodda rakam YOK.
+// Fiyat değişikliği admin panelinden yapılır; en geç bir dakika içinde landing,
+// panel, yasal sayfalar ve yapılandırılmış veri (JSON-LD) aynı rakamı gösterir
+// (bkz. lib/plan-catalog-loader.ts). Tohum değerler yalnızca yeni bir ortamı
+// kurarken kullanılan scripts/plan-catalog.mjs içinde durur.
 //
-// Canlı fiyat `buyur_plans` koleksiyonundan okunur; burası hem PocketBase'e
-// ulaşılamadığında kullanılan yedek, hem de fiyatın metin içinde geçtiği
-// yerlerin (yasal sayfalar, SSS) beslendiği yer. Rakam değişince önce burası,
-// sonra scripts/migrate-plan-pricing.mjs ile canlı kayıtlar güncellenir.
+// Kayıt okunamamışsa ücretli planların fiyatı BİLİNMEZ (null): ekranlar rakam
+// uydurmak yerine "fiyat için bize yazın" der. Ücretsiz plan tanım gereği 0₺.
 
 export interface PlanPricing {
   /** Aylık ödemede aylık ücret. */
@@ -17,11 +18,39 @@ export interface PlanPricing {
 
 export const MONTHS_IN_YEAR = 12;
 
-export const PLAN_PRICING: Record<Plan, PlanPricing> = {
-  freemium: { monthly: 0, yearlyMonthly: 0 },
-  premium: { monthly: 249, yearlyMonthly: 199.2 },
-  elite: { monthly: 749, yearlyMonthly: 599.2 },
-};
+const FREE: PlanPricing = { monthly: 0, yearlyMonthly: 0 };
+
+let livePricing: Partial<Record<Plan, PlanPricing>> = {};
+
+export interface PlanPriceRecord {
+  key?: string;
+  price_monthly?: unknown;
+  price_yearly_monthly?: unknown;
+}
+
+const isPrice = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value) && value >= 0;
+
+/** `buyur_plans` kayıtlarındaki fiyatları yükler. Geçersiz/eksik alanlı kayıt
+ *  yok sayılır: yarım bir fiyat göstermektense hiç göstermemek daha güvenli. */
+export function applyPlanPrices(records: PlanPriceRecord[]): void {
+  const next: Partial<Record<Plan, PlanPricing>> = {};
+  for (const record of records) {
+    if (record.key !== "premium" && record.key !== "elite") continue;
+    if (!isPrice(record.price_monthly) || !isPrice(record.price_yearly_monthly)) continue;
+    next[record.key] = { monthly: record.price_monthly, yearlyMonthly: record.price_yearly_monthly };
+  }
+  livePricing = next;
+}
+
+export function resetPlanPrices(): void {
+  livePricing = {};
+}
+
+/** Planın ilan fiyatı; ücretli plan için kayıt okunamadıysa null. */
+export function planPricing(plan: Plan): PlanPricing | null {
+  if (plan === "freemium") return FREE;
+  return livePricing[plan] ?? null;
+}
 
 /** Yıllık ödemede tek seferde tahsil edilen tutar. */
 export function yearlyTotal(pricing: PlanPricing): number {

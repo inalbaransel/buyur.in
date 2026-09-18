@@ -12,6 +12,7 @@ import { QrPrintSheet, type PrintableQr } from "@/components/panel/qr-print-shee
 import { markActivation } from "@/lib/activation";
 import { menuUrl } from "@/lib/site";
 import { slugify } from "@/lib/slug";
+import { withRetry } from "@/lib/pb-retry";
 import { FileTextIcon, QrCodeIcon, TrashIcon } from "@/components/icons";
 import type { Business, QrCode, QrPlacement } from "@/lib/types";
 
@@ -36,8 +37,6 @@ const PLACEMENT_LABELS = Object.fromEntries(PLACEMENTS.map((item) => [item.value
 /** Tek seferde oluşturulabilecek en fazla masa QR'ı. */
 const MAX_BULK = 100;
 /** PocketBase'i boğmadan toplu oluşturma. */
-const BULK_CONCURRENCY = 5;
-
 function qrUrlFor(slug: string, code: string): string {
   return `${menuUrl(slug)}?qr=${encodeURIComponent(code)}`;
 }
@@ -274,21 +273,35 @@ export default function QrCodesPage() {
       return;
     }
 
+    // Tek tek ve sırayla: 5'erli paralel gönderim sunucudan 503 aldırıp
+    // sessizce düşüyordu ("10 iste, 2 gelsin"). Kod bir kez üretilir; tekrar
+    // denemeden önce kaydın oluşup oluşmadığına bakılır, böylece 503 sonrası
+    // yazılmış bir QR ikinci kez açılmaz.
     let created = 0;
-    for (let index = 0; index < names.length; index += BULK_CONCURRENCY) {
-      const chunk = names.slice(index, index + BULK_CONCURRENCY);
-      const results = await Promise.allSettled(
-        chunk.map((qrName) =>
-          pb.collection("buyur_qr_codes").create({
-            business: business.id,
-            name: qrName,
-            code: makeCode(qrName, "table"),
-            placement: "table",
-            is_active: true,
-          })
-        )
-      );
-      created += results.filter((result) => result.status === "fulfilled").length;
+    for (const qrName of names) {
+      const code = makeCode(qrName, "table");
+      try {
+        await withRetry(
+          () =>
+            pb.collection("buyur_qr_codes").create({
+              business: business.id,
+              name: qrName,
+              code,
+              placement: "table",
+              is_active: true,
+            }),
+          {
+            verify: () =>
+              pb.collection("buyur_qr_codes").getFirstListItem(
+                pb.filter("business = {:id} && code = {:code}", { id: business.id, code }),
+                { requestKey: null }
+              ),
+          }
+        );
+        created += 1;
+      } catch {
+        /* sayılır, aşağıda kullanıcıya bildirilir; kalanlar denenmeye devam eder */
+      }
     }
 
     await load();

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
 import { createServerPB } from "@/lib/pocketbase";
 import { isFeatureAvailable, isSubscriptionActive } from "@/lib/entitlements";
+import { ensurePlanCatalog } from "@/lib/plan-catalog-loader";
 import { buildSiteContent } from "@/lib/site-content";
 import { isValidHex, pickReadableOn, visibleFill } from "@/lib/color";
 import { getThemeColor } from "@/lib/themes";
@@ -39,9 +40,13 @@ export const revalidate = 300;
 const getBusiness = cache(async (slug: string): Promise<Business | null> => {
   const pb = createServerPB();
   try {
-    return await pb
-      .collection("buyur_businesses")
-      .getFirstListItem<Business>(pb.filter("slug = {:slug} && is_active = true", { slug }), { requestKey: null });
+    const [business] = await Promise.all([
+      pb
+        .collection("buyur_businesses")
+        .getFirstListItem<Business>(pb.filter("slug = {:slug} && is_active = true", { slug }), { requestKey: null }),
+      ensurePlanCatalog(pb),
+    ]);
+    return business;
   } catch {
     return null;
   }
@@ -67,7 +72,7 @@ const getMenu = cache(async (businessId: string) => {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const business = await getBusiness(slug);
-  if (!business || !isFeatureAvailable(business, "custom_website")) return {};
+  if (!business || !isFeatureAvailable(business, "website")) return {};
 
   const description =
     business.description ||
@@ -96,13 +101,14 @@ export default async function RestaurantSitePage({ params }: { params: Promise<{
   const { slug } = await params;
   const business = await getBusiness(slug);
 
-  // Plan kapısı: web sitesi Premium ve Elite'e ait. Freemium'da (ya da limiti
+  // Plan kapısı: web sitesi yalnızca Elite'e ait. Freemium'da (ya da limiti
   // dolmuş bir işletmede) böyle bir adres yok — kilit ekranı değil 404.
-  if (!business || !isFeatureAvailable(business, "custom_website") || !isSubscriptionActive(business)) {
+  if (!business || !isFeatureAvailable(business, "website") || !isSubscriptionActive(business)) {
     notFound();
   }
 
-  const rich = isFeatureAvailable(business, "advanced_website");
+  // Web sitesi yalnızca Elite'te var ve tek bir deneyim sunuyor (animasyon, slider, galeri).
+  const rich = true;
   const { categories, products } = await getMenu(business.id);
   const content = buildSiteContent({ business, categories, products, rich });
   const { sections } = content;

@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { ClockIcon, EyeIcon, LockIcon } from "@/components/icons";
 import { STATUS } from "@/components/panel/charts/palette";
 import { formatNumber } from "@/components/panel/charts/chart-utils";
-import { PLAN_LABELS, entitlementsFor, freemiumUsage, type FreemiumUsage } from "@/lib/entitlements";
+import { PLAN_LABELS, entitlementsFor, freemiumLimits, freemiumUsage, type FreemiumUsage } from "@/lib/entitlements";
 import type { Business } from "@/lib/types";
 import { buttonClass } from "@/components/panel/ui";
 
@@ -101,11 +101,7 @@ export function PlanUsageCard({ business, compact = false }: { business: Busines
         <p className="mt-2 font-display text-3xl font-extrabold">{PLAN_LABELS[plan]}</p>
         <p className="mt-1 text-sm text-ink-soft">
           Sınırsız menü görüntülenme · süre sınırı yok
-          {entitlements.features.gifted_website
-            ? " · gelişmiş web sitesi + hediye kurumsal site"
-            : entitlements.features.custom_website
-              ? " · standart web sitesi"
-              : ""}
+          {entitlements.features.website ? " · web sitesi" : ""}
         </p>
       </div>
     );
@@ -127,7 +123,7 @@ export function PlanUsageCard({ business, compact = false }: { business: Busines
         </Link>
       </div>
       <p className="mt-2 font-display text-3xl font-extrabold">{PLAN_LABELS[plan]}</p>
-      <p className="mt-1 text-sm text-ink-soft">3 ay veya 10.000 menü görüntülenme — hangisi önce dolarsa</p>
+      <p className="mt-1 text-sm text-ink-soft">{freemiumLimits().summary} — hangisi önce dolarsa</p>
 
       <div className="mt-4 space-y-3.5">
         <Meter

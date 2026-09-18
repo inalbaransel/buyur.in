@@ -96,23 +96,25 @@ Kurallar:
 3. Menü ziyaretçisi PocketBase'e **doğrudan yazmaz**; `buyur_events` yazımı `/api/track` üzerinden servis hesabıyla yapılır.
 4. Şema değişikliği = `scripts/setup-pocketbase.mjs` güncellemesi + gerekiyorsa **idempotent** bir göç scripti. `getOrCreate` var olan alanın `select` seçeneklerini güncellemez — bunun için ayrı göç adımı gerekir.
 5. Kayıt tarayıcıdan yapılmaz: `buyur_users.createRule` servis hesabına kilitlidir, hesap `/api/auth/register` üzerinden OTP doğrulandıktan sonra açılır (`buyur_otps` yalnızca kodun sha256 özetini tutar).
-6. Altyapı hatasında **kısıtlama değil, serbestlik** varsayılır (`lib/plan-limits.ts`): ödeme yapan işletme geçici bir ağ hatası yüzünden panelini kaybetmemeli.
+6. Altyapı hatasında **kısıtlama değil, serbestlik** varsayılır (`lib/plan-catalog-loader.ts`: plan kaydı okunamazsa son bilinen/yedek katalog geçerli kalır): ödeme yapan işletme geçici bir ağ hatası yüzünden panelini kaybetmemeli.
 
 ---
 
 ## 4. Plan ve Yetki Sistemi
 
-`lib/entitlements.ts` tek kaynaktır. Panel, menü, analytics API'si, raporlar ve
-landing sayfası hepsi buradan okur.
+**Kaynak `buyur_plans` koleksiyonudur** (admin panelinden değişir); `lib/entitlements.ts`
+onu okuma kapısıdır. Panel, menü, analytics API'si, raporlar ve landing sayfası hepsi
+buradan okur.
 
 - Planlar: `freemium` → `premium` → `elite`
-- Freemium sınırları: **3 ay**, **10.000 menü görüntülenmesi**, 90 gün ham veri saklama
-- Ücretli planlarda süre/görüntülenme limiti **yoktur**
-- Yetenekler `Feature` union'ında tanımlı; yeni kilitlenebilir özellik eklenince **tek yer burasıdır**
+- Süre `trial_months` alanında (0 = süresiz); yetenek bayrakları, `menu_views`, saklama süresi ve AI kotası `limits` JSON'unda
+- Kayıtlar `lib/plan-catalog-loader.ts` ile yüklenir (`ensurePlanCatalog`, 60 sn süreç önbelleği). Yeni bir sunucu/istemci giriş noktası plan kuralı okuyacaksa önce onu çağırın
+- `entitlements.ts` içindeki `DEFAULT_PLAN_ENTITLEMENTS` yalnızca **yedek**tir (kayıt okunamazsa / alan eksikse). `scripts/plan-catalog.mjs` tohum kataloğu ile birebir aynı kalmalı — `tests/plan-catalog.test.ts` kilitler
+- Yetenekler `Feature` union'ında tanımlı; yeni kilitlenebilir özellik = `Feature` + yedek matris + `FEATURE_LIMIT_KEYS` eşlemesi + tohum katalog + canlı kayıtlar
+- Fiyatlar da `buyur_plans`'tan gelir (`price_monthly`, `price_yearly_monthly`); kodda rakam yok. `planPricing(plan)` ücretli planda kayıt okunamadıysa `null` döner — ekranlar rakam uydurmaz, "bize yazın" der. Yasal fiyat tablosu (`lib/legal.ts`) render anında aynı kayıttan kurulur
 
 > Hiçbir yerde `if (plan === "premium")` yazmayın. `isFeatureAvailable()` /
-> `entitlementsFor()` kullanın. `tests/entitlements.test.ts` bu sözleşmenin
-> yazılı hâlidir; kural değişiyorsa önce test değişir.
+> `entitlementsFor()` kullanın. Kural değişiyorsa önce ilgili sözleşme testi değişir.
 
 ---
 

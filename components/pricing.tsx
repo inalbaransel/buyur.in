@@ -2,10 +2,24 @@ import Link from "next/link";
 import { whatsappLink } from "@/lib/site";
 import { CheckCircleIcon, WhatsappIcon } from "@/components/icons";
 import { PlanGrid } from "@/components/pricing-plans";
-import { FEATURE_MATRIX, PLAN_LABELS, PLAN_ORDER } from "@/lib/entitlements";
-import { MONTHS_IN_YEAR, PLAN_PRICING, formatTL, yearlyDiscountPercent } from "@/lib/pricing";
+import { PLAN_LABELS, PLAN_ORDER, featureMatrix, freemiumLimits } from "@/lib/entitlements";
+import { loadedPlanRecords } from "@/lib/plan-catalog-loader";
+import type { Plan } from "@/lib/types";
+import type { PlanText } from "@/components/pricing-plans";
+import { MONTHS_IN_YEAR, formatTL, planPricing, yearlyDiscountPercent } from "@/lib/pricing";
 
 export function Pricing() {
+  const freemium = freemiumLimits();
+  const texts = loadedPlanRecords().map((record) => ({
+    key: record.key,
+    name: record.name,
+    description: record.description,
+    features: Array.isArray(record.features) ? (record.features as string[]) : undefined,
+    trial_months: record.trial_months,
+    monthly: planPricing(record.key as Plan)?.monthly ?? null,
+    yearlyMonthly: planPricing(record.key as Plan)?.yearlyMonthly ?? null,
+  })) as PlanText[];
+
   return (
     <section id="fiyat" data-track-view="pricing_viewed" className="mx-auto max-w-6xl px-5 py-24">
       <p className="text-center font-mono text-[13px] uppercase tracking-[0.2em] text-paprika">Hesap lütfen</p>
@@ -16,10 +30,12 @@ export function Pricing() {
         Bir kez menü bastırmanın parasıyla aylarca dijital kalın. Ücretsiz başlayın, işinize yaradığında devam edin.
       </p>
 
-      <PlanGrid />
+      <PlanGrid texts={texts} freemiumViews={freemium.viewsLabel} />
 
       <p className="mx-auto mt-10 max-w-2xl rounded-2xl border border-line bg-crema/40 px-5 py-4 text-center text-sm text-ink-soft">
-        <span className="font-semibold text-ink">Freemium: 3 ay veya 10.000 menü görüntülenmesine kadar ücretsiz.</span>{" "}
+        <span className="font-semibold text-ink">Freemium: {freemium.summary}
+          {" "}
+          kadar ücretsiz.</span>{" "}
         İki limitten hangisi önce dolarsa Freemium sona erer. Ürün ve kategori sayısı hiçbir planda sınırlı değildir —
         menünüzün tamamını girebilirsiniz. Premium ve Elite&apos;te süre ya da görüntülenme sınırı yoktur.
       </p>
@@ -49,7 +65,7 @@ function PlanComparison() {
           </tr>
         </thead>
         <tbody>
-          {FEATURE_MATRIX.map((row) => (
+          {featureMatrix().map((row) => (
             <tr key={row.label} className="border-b border-line/60 last:border-0">
               <td className="px-5 py-3">{row.label}</td>
               {PLAN_ORDER.map((plan) => {
@@ -78,31 +94,28 @@ function PlanComparison() {
   );
 }
 
-const premium = PLAN_PRICING.premium;
-const elite = PLAN_PRICING.elite;
-
 // Landing sayfası bu listeden FAQPage yapılandırılmış verisi de üretiyor
 // (app/page.tsx) — soru/cevap metinleri tek yerde dursun.
-export const faqs = [
+export function getFaqs() {
+  const freemium = freemiumLimits();
+  const premium = planPricing("premium");
+  const elite = planPricing("elite");
+  return [
   {
     q: "buyur sipariş alıyor mu?",
     a: "Bugün sipariş ya da ödeme almıyor. Müşteri beğendiklerini sepette toplar, toplamı görür ve ekranı garsona gösterir; siparişi garsonunuz alır. Yanlış ya da eksik sipariş azalır, mevcut düzeniniz değişmez.",
   },
   {
     q: "Freemium ne kadar süre ücretsiz?",
-    a: "Freemium plan 3 ay veya 10.000 menü görüntülenmesine kadar ücretsizdir. Bu iki limitten hangisi önce dolarsa Freemium sona erer. Kredi kartı istemiyoruz.",
+    a: `Freemium plan ${freemium.summary} kadar ücretsizdir. Bu iki limitten hangisi önce dolarsa Freemium sona erer. Kredi kartı istemiyoruz.`,
   },
   {
     q: "Freemium'da kaç ürün girebilirim?",
-    a: "Sınırsız. Hiçbir planda ürün ya da kategori limiti yoktur; menünüzün tamamını eksiksiz girebilirsiniz. Freemium'ın tek sınırı süre ve görüntülenmedir: 3 ay veya 10.000 menü görüntülenmesi.",
+    a: `Sınırsız. Hiçbir planda ürün ya da kategori limiti yoktur; menünüzün tamamını eksiksiz girebilirsiniz. Freemium'ın tek sınırı süre ve görüntülenmedir: ${freemium.summary}.`,
   },
   {
     q: "Premium ve Elite arasındaki fark nedir?",
-    a: "Premium; kampanyalar, gelişmiş analizler, buyur markası olmadan profesyonel menü, özel alan adı ve menünüzden otomatik oluşan standart web sitesi içerir. Elite bunlara gelişmiş web sitesi deneyimini (animasyonlu tanıtım, menü slider'ı, galeri), kurulumunu bizim yaptığımız hediye kurumsal web sitesini, rapor merkezini (PDF ve CSV dışa aktarma) ve öncelikli teknik desteği ekler.",
-  },
-  {
-    q: "Elite'teki hediye web sitesi neyi kapsıyor?",
-    a: "Elite aboneliğiyle birlikte, otomatik menü sitesinden ayrı olarak standart bir kurumsal web sitesi kurulumu hediye edilir: tanıtım sayfaları, görsel düzen, alan adı bağlantısı ve yayına alma bizde. Alan adı ve varsa üçüncü taraf servis ücretleri kapsam dışıdır.",
+    a: "Premium; kampanyalar, gelişmiş analizler, buyur markası olmadan profesyonel menü içerir. Elite bunlara menünüzden otomatik oluşan web sitesini (animasyonlu tanıtım, menü slider'ı, galeri), rapor merkezini (PDF ve CSV dışa aktarma) ve öncelikli teknik desteği ekler.",
   },
   {
     q: "Premium'a nasıl geçerim?",
@@ -110,7 +123,10 @@ export const faqs = [
   },
   {
     q: "Aylık mı yıllık mı ödemeliyim?",
-    a: `İkisi de mümkün. Yıllık ödemede aylık maliyet %${yearlyDiscountPercent(premium)} düşer: Premium ayda ${formatTL(premium.monthly)} yerine ${formatTL(premium.yearlyMonthly)} (yıllık ${formatTL(premium.yearlyMonthly * MONTHS_IN_YEAR)} peşin), Elite ayda ${formatTL(elite.monthly)} yerine ${formatTL(elite.yearlyMonthly)} (yıllık ${formatTL(elite.yearlyMonthly * MONTHS_IN_YEAR)} peşin). Aylık ödemede taahhüt yok, istediğiniz dönem sonunda bırakabilirsiniz.`,
+    a:
+      premium && elite
+        ? `İkisi de mümkün. Yıllık ödemede aylık maliyet %${yearlyDiscountPercent(premium)} düşer: Premium ayda ${formatTL(premium.monthly)} yerine ${formatTL(premium.yearlyMonthly)} (yıllık ${formatTL(premium.yearlyMonthly * MONTHS_IN_YEAR)} peşin), Elite ayda ${formatTL(elite.monthly)} yerine ${formatTL(elite.yearlyMonthly)} (yıllık ${formatTL(elite.yearlyMonthly * MONTHS_IN_YEAR)} peşin). Aylık ödemede taahhüt yok, istediğiniz dönem sonunda bırakabilirsiniz.`
+        : "İkisi de mümkün. Yıllık ödemede aylık maliyet düşer; güncel fiyatlar için bize yazın. Aylık ödemede taahhüt yok, istediğiniz dönem sonunda bırakabilirsiniz.",
   },
   {
     q: "Freemium süresi dolunca verilerim silinir mi?",
@@ -132,7 +148,8 @@ export const faqs = [
     q: "Teknik bilgim yok, kullanabilir miyim?",
     a: "Kesinlikle. Ürün eklemek fotoğraf paylaşmak kadar kolay. İsterseniz menünüzü gönderin, demo menünüzü biz hazırlayalım.",
   },
-];
+  ];
+}
 
 export function FAQ() {
   return (
@@ -140,7 +157,7 @@ export function FAQ() {
       <div className="mx-auto max-w-3xl px-5 py-24">
         <h2 className="text-center font-display text-4xl font-extrabold tracking-tight">Sık sorulanlar</h2>
         <div className="mt-10 divide-y divide-line">
-          {faqs.map((f) => (
+          {getFaqs().map((f) => (
             <details key={f.q} data-reveal className="group py-5">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-display text-lg font-bold transition-colors hover:text-paprika">
                 {f.q}

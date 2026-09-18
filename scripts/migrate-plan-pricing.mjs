@@ -2,7 +2,7 @@
 // `buyur_plans` kayıtlarına yazar. Tek doğruluk kaynağı
 // scripts/plan-catalog.mjs — burada rakam/metin elle yazılmaz.
 //
-//   Freemium  0₺        · 3 ay veya 10.000 görüntülenme · ÜRÜN LİMİTİ YOK
+//   Freemium  0₺        · 1 ay veya 5.000 görüntülenme · ÜRÜN LİMİTİ YOK
 //   Premium   ayda 249₺ · yıllık ödemede ayda 199,20₺ (2.390,40₺/yıl)
 //   Elite     ayda 749₺ · yıllık ödemede ayda 599,20₺ (7.190,40₺/yıl)
 //

@@ -79,9 +79,9 @@ export interface Business {
   plan: Plan;
   /** Freemium'un başladığı an (plan değişince yeniden yazılır). */
   freemium_started_at?: string;
-  /** Freemium süresinin bitiş anı (başlangıç + 3 ay). Ücretli planlarda boş. */
+  /** Freemium süresinin bitiş anı (başlangıç + 1 ay). Ücretli planlarda boş. */
   plan_expires_at?: string;
-  /** Genel menü görüntülenme sayacı — Freemium 10.000 limiti buna bakar.
+  /** Genel menü görüntülenme sayacı — Freemium 5.000 limiti buna bakar.
    *  Yalnızca gerçek müşteri sayfa görüntülemeleri sayılır (bkz. /api/track). */
   menu_views?: number;
   /** IANA saat dilimi (ör. "Europe/Istanbul"). Günlük/saatlik analitik
@@ -311,29 +311,38 @@ export interface Popup {
 
 // ─── Admin paneli ──────────────────────────────────────────────────
 
+/** `buyur_plans.limits` şeması: yetenek bayrakları ve kotalar. Uygulama bu
+ *  alanları canlı OKUR (bkz. lib/entitlements.ts → applyPlanRecords); anahtar
+ *  adları o eşlemeyle birebir aynıdır. null = sınırsız. */
 export interface PlanLimits {
-  max_businesses: number | null;
-  max_menus: number | null;
-  max_products: number | null;
+  /** Fiziksel menüden AI ile ürün aktarımı. */
+  ai_menu_import: boolean;
+  /** Tek taramada gönderilebilecek en fazla sayfa. */
+  ai_pages_per_scan: number;
+  /** Ay başına AI tarama hakkı. */
+  ai_scans_per_month: number | null;
+  ai_translation: boolean;
   /** Temel analitik: özet metrikler + son 7 gün grafiği (Freemium dahil). */
   analytics: boolean;
   /** Gelişmiş analitik: karşılaştırma, funnel, kaynak/cihaz/saat kırılımı, drill-down. */
-  analytics_advanced?: boolean;
-  /** Otomatik içgörüler + menü performans skoru. */
-  insights?: boolean;
-  /** Rapor Merkezi (Elite). */
-  reports?: boolean;
-  /** Rapor dışa aktarma — PDF/Excel/CSV (Elite). */
-  reports_export?: boolean;
-  /** Zamanlanmış rapor gönderimi (şimdilik hiçbir planda açık değil: e-posta altyapısı yok). */
-  scheduled_reports?: boolean;
+  analytics_advanced: boolean;
   /** Ham event saklama süresi (gün). Plan düşse de geçmiş silinmez, erişim kapanır. */
-  analytics_retention_days?: number;
-  custom_domain: boolean;
+  analytics_retention_days: number;
+  api_access: boolean;
   branding_removal: boolean;
   campaigns: boolean;
-  white_label: boolean;
-  api_access: boolean;
+  /** Menüden otomatik üretilen web sitesi. */
+  website: boolean;
+  /** Otomatik içgörüler + menü performans skoru. */
+  insights: boolean;
+  /** Menü görüntülenme limiti (null = sınırsız). */
+  menu_views: number | null;
+  /** Rapor Merkezi. */
+  reports: boolean;
+  /** Rapor dışa aktarma — PDF/Excel/CSV. */
+  reports_export: boolean;
+  /** Zamanlanmış rapor gönderimi (şimdilik hiçbir planda açık değil: e-posta altyapısı yok). */
+  scheduled_reports: boolean;
 }
 
 export interface PlanRecord {

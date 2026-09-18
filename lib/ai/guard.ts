@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createServerPB } from "@/lib/pocketbase";
 import { isFeatureAvailable, type Feature } from "@/lib/entitlements";
+import { ensurePlanCatalog } from "@/lib/plan-catalog-loader";
 import type { Business } from "@/lib/types";
 
 /** Menü görseli/PDF'i okuyabilen model. Ortamdan değiştirilebilir. */
@@ -56,7 +57,12 @@ export async function guardAiRequest(
 
   let business: Business;
   try {
-    business = await pb.collection("buyur_businesses").getOne<Business>(businessId);
+    // Kota ve özellik kapısı canlı plan kaydından okunur.
+    const [record] = await Promise.all([
+      pb.collection("buyur_businesses").getOne<Business>(businessId),
+      ensurePlanCatalog(pb),
+    ]);
+    business = record;
   } catch {
     return fail("İşletme bulunamadı.", 404);
   }

@@ -59,7 +59,7 @@ const PLAN_ANALYTICS = {
     reports: false,
     reports_export: false,
     scheduled_reports: false,
-    analytics_retention_days: 30,
+    analytics_retention_days: 90,
   },
   premium: {
     analytics: true,

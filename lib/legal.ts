@@ -1,5 +1,6 @@
 import { ROOT_DOMAIN } from "@/lib/site";
-import { PLAN_PRICING, formatTL, yearlyTotal } from "@/lib/pricing";
+import { formatTL, planPricing, yearlyDiscountPercent, yearlyTotal } from "@/lib/pricing";
+import { freemiumLimits } from "@/lib/entitlements";
 
 // Yasal metinlerin tek kaynağı: Gizlilik, KVKK, Kullanım, Abonelik/İptal,
 // Ödeme ve Faturalandırma. Altı sayfa da app/yasal/[doc] altında aynı
@@ -60,28 +61,38 @@ export interface LegalDoc {
 const WRITTEN_ON = "2026-09-05";
 
 const C = LEGAL_COMPANY;
-const premium = PLAN_PRICING.premium;
-const elite = PLAN_PRICING.elite;
+/** Fiyat tablosu `buyur_plans` kaydından, İSTENDİĞİ ANDA kurulur (modül
+ *  yüklenirken değil): fiyat değişince yasal sayfa da aynı rakamı gösterir.
+ *  Kayıt okunamamışsa ücretli plan satırları yazılmaz — rakam uydurulmaz. */
+function priceTable(): { label: string; value: string }[] {
+  const premium = planPricing("premium");
+  const elite = planPricing("elite");
+  const rows = [{ label: "Freemium", value: `0₺ — ${freemiumLimits().summary} (hangisi önce dolarsa)` }];
 
-const PRICE_TABLE: { label: string; value: string }[] = [
-  { label: "Freemium", value: "0₺ — 3 ay veya 10.000 menü görüntülenme (hangisi önce dolarsa)" },
-  {
-    label: "Premium — aylık ödeme",
-    value: `${formatTL(premium.monthly)} / ay (yıllık toplam ${formatTL(premium.monthly * 12)})`,
-  },
-  {
-    label: "Premium — yıllık ödeme",
-    value: `${formatTL(premium.yearlyMonthly)} / ay · yılda tek çekim ${formatTL(yearlyTotal(premium))}`,
-  },
-  {
-    label: "Elite — aylık ödeme",
-    value: `${formatTL(elite.monthly)} / ay (yıllık toplam ${formatTL(elite.monthly * 12)})`,
-  },
-  {
-    label: "Elite — yıllık ödeme",
-    value: `${formatTL(elite.yearlyMonthly)} / ay · yılda tek çekim ${formatTL(yearlyTotal(elite))}`,
-  },
-];
+  for (const [name, pricing] of [
+    ["Premium", premium],
+    ["Elite", elite],
+  ] as const) {
+    if (!pricing) continue;
+    rows.push(
+      {
+        label: `${name} — aylık ödeme`,
+        value: `${formatTL(pricing.monthly)} / ay (yıllık toplam ${formatTL(pricing.monthly * 12)})`,
+      },
+      {
+        label: `${name} — yıllık ödeme`,
+        value: `${formatTL(pricing.yearlyMonthly)} / ay · yılda tek çekim ${formatTL(yearlyTotal(pricing))}`,
+      }
+    );
+  }
+  return rows;
+}
+
+/** Yıllık indirim oranı da kayıttan hesaplanır; bilinmiyorsa cümle rakamsız kurulur. */
+function yearlyDiscountText(): string {
+  const premium = planPricing("premium");
+  return premium ? `Yıllık ödemede aylık maliyet %${yearlyDiscountPercent(premium)} düşer` : "Yıllık ödemede aylık maliyet düşer";
+}
 
 // ─── 1. Gizlilik Politikası ────────────────────────────────────────────
 
@@ -389,7 +400,7 @@ const SUBSCRIPTION: LegalDoc = {
       heading: "1. Freemium",
       paragraphs: [
         "Freemium ücretsizdir ve kredi kartı istemez. Freemium'da ürün ya da kategori sayısı sınırlı değildir; menünüzün tamamını girebilirsiniz.",
-        "Freemium'ın tek sınırı süre ve görüntülenmedir: 3 ay veya 10.000 menü görüntülenmesi. Bu iki limitten hangisi önce dolarsa Freemium sona erer.",
+        "Freemium'ın tek sınırı süre ve görüntülenmedir: 1 ay veya 5.000 menü görüntülenmesi. Bu iki limitten hangisi önce dolarsa Freemium sona erer.",
         "Freemium sona erdiğinde verileriniz silinmez. Menünün yayını ve ücretli özellikler durur; ücretli bir pakete geçtiğinizde her şey kaldığı yerden devam eder.",
       ],
     },
@@ -422,7 +433,6 @@ const SUBSCRIPTION: LegalDoc = {
       list: [
         "14 günlük süre geçtikten sonra, kullanılmakta olan dönemin kalanı için iade yapılmaz.",
         "Kullanım koşullarına ağır aykırılık nedeniyle hesabın kapatıldığı hâller (bu durumda kullanılmamış dönem bedeli iade edilir).",
-        "Elite paketi kapsamında kurulumu tamamlanmış hediye kurumsal web sitesi gibi, iadesi mümkün olmayan tamamlanmış hizmetler.",
       ],
     },
     {
@@ -461,11 +471,16 @@ const PAYMENT: LegalDoc = {
   sections: [
     {
       heading: "1. Güncel fiyatlar",
-      rows: PRICE_TABLE,
-      footnotes: [
-        "Yıllık ödemede aylık maliyet %20 düşer ve bedel dönem başında tek seferde tahsil edilir. Tüm tutarlar Türk Lirası (₺) cinsindendir.",
-        "Fiyatlara KDV dâhil/hariç durumu: [KDV DURUMU — ör. \"Fiyatlara %20 KDV dâhildir\"].",
-      ],
+      // Getter: render anında canlı fiyatla kurulur (bkz. priceTable).
+      get rows() {
+        return priceTable();
+      },
+      get footnotes() {
+        return [
+          `${yearlyDiscountText()} ve bedel dönem başında tek seferde tahsil edilir. Tüm tutarlar Türk Lirası (₺) cinsindendir.`,
+          "Fiyatlara KDV dâhil/hariç durumu: [KDV DURUMU — ör. \"Fiyatlara %20 KDV dâhildir\"].",
+        ];
+      },
     },
     {
       heading: "2. Ödeme yöntemleri",

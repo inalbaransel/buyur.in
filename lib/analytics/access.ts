@@ -2,6 +2,7 @@ import PocketBase from "pocketbase";
 import { PB_URL } from "@/lib/pocketbase";
 import { getServicePB } from "@/lib/pocketbase-server";
 import { isFeatureAvailable, type Feature } from "@/lib/entitlements";
+import { ensurePlanCatalog } from "@/lib/plan-catalog-loader";
 import type { Business, PlanLimits, PlanRecord } from "@/lib/types";
 
 // Analytics API'nin yetki katmanı. İki kural pazarlıksız:
@@ -36,24 +37,24 @@ const PERMISSION_FEATURES: Record<Permission, Feature> = {
   "reports.export": "report_export",
 };
 
+/** Plan kaydı okunamazsa geçerli en kısıtlı (Freemium) limitler. */
 export const DEFAULT_LIMITS: PlanLimits = {
-  max_businesses: 1,
-  max_menus: 1,
-  // Freemium'da ürün limiti yok — sınır yalnızca süre ve görüntülenme
-  // (bkz. lib/entitlements.ts).
-  max_products: null,
+  ai_menu_import: true,
+  ai_pages_per_scan: 5,
+  ai_scans_per_month: 2,
+  ai_translation: true,
   analytics: true,
   analytics_advanced: false,
+  analytics_retention_days: 90,
+  api_access: false,
+  branding_removal: false,
+  campaigns: false,
+  website: false,
   insights: false,
+  menu_views: 5000,
   reports: false,
   reports_export: false,
   scheduled_reports: false,
-  analytics_retention_days: 30,
-  custom_domain: false,
-  branding_removal: false,
-  campaigns: false,
-  white_label: false,
-  api_access: false,
 };
 
 export interface AnalyticsContext {
@@ -156,6 +157,9 @@ export async function resolveAnalyticsContext(request: Request, requestedBusines
   const service = await getServicePB();
 
   const { business } = await resolveBusiness(service, userId, requestedBusinessId ?? null);
+
+  // Özellik kapıları (insights, raporlar…) canlı plan kaydından okunur.
+  await ensurePlanCatalog(service);
 
   let plan: PlanRecord | null = null;
   try {

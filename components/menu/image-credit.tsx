@@ -65,7 +65,7 @@ export function ImageCreditsLink({
 
   return (
     <Link
-      href={`${base}/gorsel-kaynaklari`}
+      href={`${base}/sources`}
       className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/60 underline-offset-2 transition-colors hover:text-ink-soft hover:underline"
     >
       {translate(locale, "imageCreditsTitle")}

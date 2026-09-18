@@ -1,10 +1,16 @@
 import type { Business, Plan } from "@/lib/types";
 
-// Abonelik kurallarının TEK KAYNAĞI.
+// Abonelik kurallarının OKUMA KAPISI.
 //
 // Panel, genel menü, analytics API'si, rapor üretimi ve pazarlama sitesi —
 // hepsi buradan okur. Plan kontrolü hiçbir yerde elle yazılmaz; böylece
 // "landing'de yazan ile panelde uygulanan" ayrışamaz.
+//
+// KAYNAK `buyur_plans` koleksiyonudur: özellikler, süre, görüntülenme ve AI
+// kotası orada tutulur ve admin panelinden değişir (bkz. applyPlanRecords,
+// lib/plan-catalog-loader.ts). Aşağıdaki DEFAULT_PLAN_ENTITLEMENTS yalnızca
+// YEDEKTİR: kayıt okunamadığında ya da bir alan eksik olduğunda devreye girer,
+// böylece geçici bir ağ hatası ödeme yapan işletmeyi kilitlemez.
 //
 // Buyur'da tek ilişki geçerlidir: bir kullanıcı → bir işletme. Ekip/rol yok,
 // dolayısıyla yetki yalnızca plana bağlıdır.
@@ -24,11 +30,8 @@ export type Feature =
   | "advanced_analytics"
   | "insights"
   | "campaigns"
-  | "custom_domain"
   | "branding_removal"
-  | "custom_website"
-  | "advanced_website"
-  | "gifted_website"
+  | "website"
   | "advanced_reports"
   | "report_export"
   | "ai_menu_import"
@@ -59,22 +62,20 @@ const NONE: Record<Feature, boolean> = {
   advanced_analytics: false,
   insights: false,
   campaigns: false,
-  custom_domain: false,
   branding_removal: false,
-  custom_website: false,
-  advanced_website: false,
-  gifted_website: false,
+  website: false,
   advanced_reports: false,
   report_export: false,
   ai_menu_import: false,
   ai_translation: false,
 };
 
-/** ÖZELLİK MATRİSİ — ürün kararının tek yazılı hâli. */
-export const PLAN_ENTITLEMENTS: Record<Plan, PlanEntitlements> = {
+/** YEDEK ÖZELLİK MATRİSİ — canlı kayıt okunamazsa geçerli olan değerler.
+ *  Alan alan `buyur_plans` ile örtüşmelidir (tests/plan-catalog.test.ts kilitler). */
+export const DEFAULT_PLAN_ENTITLEMENTS: Record<Plan, PlanEntitlements> = {
   freemium: {
     features: { ...NONE, menu: true, basic_analytics: true, ai_menu_import: true, ai_translation: true },
-    limits: { durationMonths: 3, menuViews: 10_000, retentionDays: 90, aiScansPerMonth: 3, aiPagesPerScan: 5 },
+    limits: { durationMonths: 1, menuViews: 5_000, retentionDays: 90, aiScansPerMonth: 2, aiPagesPerScan: 5 },
   },
   premium: {
     features: {
@@ -84,14 +85,12 @@ export const PLAN_ENTITLEMENTS: Record<Plan, PlanEntitlements> = {
       advanced_analytics: true,
       insights: true,
       campaigns: true,
-      custom_domain: true,
       branding_removal: true,
-      custom_website: true,
       ai_menu_import: true,
       ai_translation: true,
     },
     // Ücretli planlarda Freemium limitleri UYGULANMAZ.
-    limits: { durationMonths: null, menuViews: null, retentionDays: 365, aiScansPerMonth: 30, aiPagesPerScan: 10 },
+    limits: { durationMonths: null, menuViews: null, retentionDays: 365, aiScansPerMonth: 5, aiPagesPerScan: 5 },
   },
   elite: {
     features: {
@@ -101,17 +100,14 @@ export const PLAN_ENTITLEMENTS: Record<Plan, PlanEntitlements> = {
       advanced_analytics: true,
       insights: true,
       campaigns: true,
-      custom_domain: true,
       branding_removal: true,
-      custom_website: true,
-      advanced_website: true,
-      gifted_website: true,
+      website: true,
       advanced_reports: true,
       report_export: true,
       ai_menu_import: true,
       ai_translation: true,
     },
-    limits: { durationMonths: null, menuViews: null, retentionDays: 1095, aiScansPerMonth: null, aiPagesPerScan: 20 },
+    limits: { durationMonths: null, menuViews: null, retentionDays: 1095, aiScansPerMonth: 10, aiPagesPerScan: 5 },
   },
 };
 
@@ -119,8 +115,96 @@ export function normalizePlan(value: unknown): Plan {
   return PLAN_ORDER.includes(value as Plan) ? (value as Plan) : "freemium";
 }
 
+// ─── Canlı katalog (buyur_plans) ───────────────────────────────────────
+
+/** Canlı kayıtlardan türetilmiş yetkiler. Boşsa her okuma yedeğe düşer. */
+let liveCatalog: Partial<Record<Plan, PlanEntitlements>> = {};
+
+/** Feature → plan kaydındaki `limits` anahtarı. Var olan alanlar yeniden
+ *  kullanıldı (analytics, reports…) ki aynı bilgi iki yerde durmasın. */
+const FEATURE_LIMIT_KEYS: Record<Exclude<Feature, "menu">, string> = {
+  basic_analytics: "analytics",
+  advanced_analytics: "analytics_advanced",
+  insights: "insights",
+  campaigns: "campaigns",
+  branding_removal: "branding_removal",
+  website: "website",
+  advanced_reports: "reports",
+  report_export: "reports_export",
+  ai_menu_import: "ai_menu_import",
+  ai_translation: "ai_translation",
+};
+
+/** applyPlanRecords'un ihtiyaç duyduğu en küçük kayıt şekli. */
+export interface PlanRecordLike {
+  key?: string;
+  name?: string;
+  description?: string;
+  features?: unknown;
+  price_monthly?: unknown;
+  price_yearly_monthly?: unknown;
+  trial_months?: number;
+  limits?: unknown;
+}
+
+const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
+
+/** Tek bir plan kaydını yetkilere çevirir. Eksik ya da bozuk her alan o
+ *  planın YEDEK değerine düşer; kayıt kısmen dolu olsa da plan kilitlenmez. */
+export function entitlementsFromRecord(record: PlanRecordLike, fallback: PlanEntitlements): PlanEntitlements {
+  const raw = (record.limits && typeof record.limits === "object" ? record.limits : {}) as Record<string, unknown>;
+
+  const features = { ...fallback.features };
+  for (const [feature, key] of Object.entries(FEATURE_LIMIT_KEYS) as [Exclude<Feature, "menu">, string][]) {
+    if (typeof raw[key] === "boolean") features[feature] = raw[key] as boolean;
+  }
+
+  // Süre üst düzey `trial_months` alanından okunur: 0 = süresiz.
+  const durationMonths = isNumber(record.trial_months)
+    ? record.trial_months > 0
+      ? record.trial_months
+      : null
+    : fallback.limits.durationMonths;
+
+  // null "sınırsız" demektir ve geçerli bir değerdir; yalnızca anahtar HİÇ
+  // yoksa ya da tipi bozuksa yedeğe düşülür.
+  const nullableNumber = (key: string, fallbackValue: number | null) =>
+    key in raw && (raw[key] === null || isNumber(raw[key])) ? (raw[key] as number | null) : fallbackValue;
+
+  return {
+    features,
+    limits: {
+      durationMonths,
+      menuViews: nullableNumber("menu_views", fallback.limits.menuViews),
+      retentionDays: isNumber(raw.analytics_retention_days)
+        ? raw.analytics_retention_days
+        : fallback.limits.retentionDays,
+      aiScansPerMonth: nullableNumber("ai_scans_per_month", fallback.limits.aiScansPerMonth),
+      aiPagesPerScan: isNumber(raw.ai_pages_per_scan) ? raw.ai_pages_per_scan : fallback.limits.aiPagesPerScan,
+    },
+  };
+}
+
+/** `buyur_plans` kayıtlarını canlı katalog olarak yükler. Tanınmayan anahtarlar
+ *  yok sayılır; listede olmayan planlar yedekte kalır. */
+export function applyPlanRecords(records: PlanRecordLike[]): void {
+  const next: Partial<Record<Plan, PlanEntitlements>> = {};
+  for (const record of records) {
+    if (!PLAN_ORDER.includes(record.key as Plan)) continue;
+    const plan = record.key as Plan;
+    next[plan] = entitlementsFromRecord(record, DEFAULT_PLAN_ENTITLEMENTS[plan]);
+  }
+  liveCatalog = next;
+}
+
+/** Canlı kataloğu boşaltır: her okuma yedek değerlere döner (testler için). */
+export function resetPlanCatalog(): void {
+  liveCatalog = {};
+}
+
 export function entitlementsFor(plan: Plan): PlanEntitlements {
-  return PLAN_ENTITLEMENTS[normalizePlan(plan)];
+  const key = normalizePlan(plan);
+  return liveCatalog[key] ?? DEFAULT_PLAN_ENTITLEMENTS[key];
 }
 
 // ─── Freemium kullanımı ────────────────────────────────────────────────
@@ -295,7 +379,21 @@ export function isFeatureAvailable(
 
 /** Bir özelliğin açık olduğu en düşük plan — "hangi plana geçmeliyim" mesajı için. */
 export function requiredPlanFor(feature: Feature): Plan | null {
-  return PLAN_ORDER.find((plan) => PLAN_ENTITLEMENTS[plan].features[feature]) ?? null;
+  return PLAN_ORDER.find((plan) => entitlementsFor(plan).features[feature]) ?? null;
+}
+
+const formatCount = (value: number) => value.toLocaleString("tr-TR");
+
+/** Freemium limitlerinin metin hâli — landing, SSS ve panel aynı cümleyi kursun.
+ *  Canlı katalogdan okunur; rakam değişince metinler kendiliğinden değişir. */
+export function freemiumLimits(): { months: number | null; views: number | null; viewsLabel: string; summary: string } {
+  const { durationMonths: months, menuViews: views } = entitlementsFor("freemium").limits;
+  const viewsLabel = views === null ? "sınırsız" : formatCount(views);
+  const parts = [
+    months === null ? null : `${months} ay`,
+    views === null ? null : `${viewsLabel} menü görüntülenmesi`,
+  ].filter(Boolean);
+  return { months, views, viewsLabel, summary: parts.length > 0 ? parts.join(" veya ") : "süre ve görüntülenme sınırı yok" };
 }
 
 // ─── Pazarlama ve panel için ortak karşılaştırma tablosu ───────────────
@@ -306,43 +404,50 @@ export interface FeatureMatrixRow {
   values: Record<Plan, boolean | string>;
 }
 
-/** Landing sayfası ve panelin plan sayfası aynı tablodan beslenir. */
-export const FEATURE_MATRIX: FeatureMatrixRow[] = [
-  { label: "Dijital QR menü", values: { freemium: true, premium: true, elite: true } },
+const feat = (feature: Feature) => (plan: Plan): boolean | string => entitlementsFor(plan).features[feature];
+
+/** Satır tanımları: etiket sabit, DEĞERLER canlı katalogdan hesaplanır. */
+const MATRIX_ROWS: { label: string; value: (plan: Plan) => boolean | string }[] = [
+  { label: "Dijital QR menü", value: feat("menu") },
   {
     label: "Menü görüntülenme",
-    values: { freemium: "10.000", premium: "Sınırsız", elite: "Sınırsız" },
+    value: (plan) => {
+      const limit = entitlementsFor(plan).limits.menuViews;
+      return limit === null ? "Sınırsız" : formatCount(limit);
+    },
   },
   {
     label: "Kullanım süresi",
-    values: { freemium: "3 ay", premium: "Sınırsız", elite: "Sınırsız" },
+    value: (plan) => {
+      const months = entitlementsFor(plan).limits.durationMonths;
+      return months === null ? "Sınırsız" : `${months} ay`;
+    },
   },
-  { label: "Temel analizler", values: { freemium: true, premium: true, elite: true } },
-  { label: "Gelişmiş analizler", values: { freemium: false, premium: true, elite: true } },
-  { label: "Otomatik içgörüler & performans skoru", values: { freemium: false, premium: true, elite: true } },
-  { label: "Kampanyalar", values: { freemium: false, premium: true, elite: true } },
-  { label: "buyur markasını kaldırma", values: { freemium: false, premium: true, elite: true } },
-  { label: "Özel alan adı", values: { freemium: false, premium: true, elite: true } },
-  {
-    label: "Standart web sitesi (menü verisinden otomatik)",
-    values: { freemium: false, premium: true, elite: true },
-  },
-  {
-    label: "Gelişmiş web sitesi deneyimi (animasyon · slider · galeri)",
-    values: { freemium: false, premium: false, elite: true },
-  },
-  {
-    label: "Hediye kurumsal web sitesi (bizim kurduğumuz ayrı site)",
-    values: { freemium: false, premium: false, elite: "Hediye" },
-  },
+  { label: "Temel analizler", value: feat("basic_analytics") },
+  { label: "Gelişmiş analizler", value: feat("advanced_analytics") },
+  { label: "Otomatik içgörüler & performans skoru", value: feat("insights") },
+  { label: "Kampanyalar", value: feat("campaigns") },
+  { label: "buyur markasını kaldırma", value: feat("branding_removal") },
+  { label: "Otomatik web sitesi (menü verisinden · animasyon · slider · galeri)", value: feat("website") },
   {
     label: "Yapay zekâ ile fiziksel menü aktarımı",
-    values: { freemium: "Ayda 3 tarama", premium: "Ayda 30 tarama", elite: "Sınırsız" },
+    value: (plan) => {
+      const { features, limits } = entitlementsFor(plan);
+      if (!features.ai_menu_import) return false;
+      return limits.aiScansPerMonth === null ? "Sınırsız" : `Ayda ${limits.aiScansPerMonth} tarama`;
+    },
   },
-  {
-    label: "Yapay zekâ ile çoklu dil tamamlama",
-    values: { freemium: true, premium: true, elite: true },
-  },
-  { label: "Gelişmiş raporlar", values: { freemium: false, premium: false, elite: true } },
-  { label: "PDF ve CSV dışa aktarma", values: { freemium: false, premium: false, elite: true } },
+  { label: "Yapay zekâ ile çoklu dil tamamlama", value: feat("ai_translation") },
+  { label: "Gelişmiş raporlar", value: feat("advanced_reports") },
+  { label: "PDF ve CSV dışa aktarma", value: feat("report_export") },
 ];
+
+/** Landing sayfası ve panelin plan sayfası aynı tablodan beslenir. Değerler
+ *  her çağrıda canlı katalogdan okunur — panelde admin'in değiştirdiği rakam
+ *  ile fiyat sayfasında görünen rakam ayrışamaz. */
+export function featureMatrix(): FeatureMatrixRow[] {
+  return MATRIX_ROWS.map((row) => ({
+    label: row.label,
+    values: Object.fromEntries(PLAN_ORDER.map((plan) => [plan, row.value(plan)])) as Record<Plan, boolean | string>,
+  }));
+}

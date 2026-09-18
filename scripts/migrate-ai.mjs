@@ -26,9 +26,9 @@ pb.authStore.save(PB_TOKEN, null);
 
 // lib/entitlements.ts ile aynı değerler — tek kaynak orası, burası yansıma.
 const AI_LIMITS = {
-  freemium: { ai_scans_per_month: 3, ai_pages_per_scan: 5 },
-  premium: { ai_scans_per_month: 30, ai_pages_per_scan: 10 },
-  elite: { ai_scans_per_month: null, ai_pages_per_scan: 20 },
+  freemium: { ai_scans_per_month: 2, ai_pages_per_scan: 5 },
+  premium: { ai_scans_per_month: 5, ai_pages_per_scan: 5 },
+  elite: { ai_scans_per_month: 10, ai_pages_per_scan: 5 },
 };
 
 async function addFields() {

@@ -13,6 +13,30 @@
 // Özellik metinleri kural: yalnızca ürünün BUGÜN yaptığı iş yazılır. Sipariş
 // yönetimi, API erişimi, ürün limiti gibi olmayan şeyler burada yer almaz.
 
+/** `buyur_plans.limits` şeması: yetenek bayrakları + kotalar. Uygulama bunları
+ *  canlı OKUR (lib/entitlements.ts → applyPlanRecords); anahtar adları o eşlemeyle
+ *  ve lib/types.ts → PlanLimits ile birebir aynı olmalı. Süre ayrıca üst düzey
+ *  `trial_months` alanında tutulur (0 = süresiz). null = sınırsız. */
+const planLimits = (overrides) => ({
+  ai_menu_import: true,
+  ai_pages_per_scan: 5,
+  ai_scans_per_month: 5,
+  ai_translation: true,
+  analytics: true,
+  analytics_advanced: false,
+  analytics_retention_days: 365,
+  api_access: false,
+  branding_removal: false,
+  campaigns: false,
+  website: false,
+  insights: false,
+  menu_views: null,
+  reports: false,
+  reports_export: false,
+  scheduled_reports: false,
+  ...overrides,
+});
+
 export const PLAN_SEEDS = [
   {
     key: "freemium",
@@ -20,33 +44,23 @@ export const PLAN_SEEDS = [
     description: "Ürünü deneyen küçük işletmeler için: menünü kur, QR'ını yayına al.",
     price_monthly: 0,
     price_yearly_monthly: 0,
-    trial_months: 3,
+    trial_months: 1,
     is_active: true,
     is_default: true,
     order: 0,
     features: [
-      "3 ay veya 10.000 menü görüntülenme",
+      "1 ay veya 5.000 menü görüntülenme",
       "Sınırsız ürün ve kategori",
       "QR menü ve size özel menü adresi",
       "Anlık fiyat ve ürün güncelleme",
       "Sepet: müşteri seçimini garsona gösterir",
       "Temel analizler",
     ],
-    limits: {
-      max_businesses: 1,
-      max_menus: 1,
-      // Freemium'da ürün limiti YOK: sınır yalnızca süre (3 ay) ve görüntülenme
-      // (10.000). İşletme menüsünün tamamını girebilsin ki ürünü kesilen bir
-      // menüyle değil, gerçek menüsüyle karar versin.
-      max_products: null,
-      // Temel analizler Freemium'a dahil (lib/entitlements.ts → basic_analytics).
-      analytics: true,
-      custom_domain: false,
-      branding_removal: false,
-      campaigns: false,
-      white_label: false,
-      api_access: false,
-    },
+    limits: planLimits({
+      menu_views: 5000,
+      analytics_retention_days: 90,
+      ai_scans_per_month: 2,
+    }),
   },
   {
     key: "premium",
@@ -63,27 +77,22 @@ export const PLAN_SEEDS = [
       "Kampanyalar ve açılış pop-up'ı",
       "Gelişmiş analizler ve otomatik içgörüler",
       "buyur markasını kaldırma",
-      "Özel alan adı",
-      "Standart web sitesi (menüden otomatik)",
     ],
-    limits: {
-      max_businesses: null,
-      max_menus: null,
-      max_products: null,
-      analytics: true,
-      custom_domain: true,
+    limits: planLimits({
+      analytics_advanced: true,
+      insights: true,
       branding_removal: true,
       campaigns: true,
-      white_label: false,
-      api_access: false,
-    },
+      analytics_retention_days: 365,
+      ai_scans_per_month: 5,
+    }),
   },
   {
     key: "elite",
     name: "Elite",
-    // Elite'in ana değeri: gelişmiş web sitesi + raporlama + öncelikli hizmet.
+    // Elite'in ana değeri: web sitesi + raporlama + öncelikli hizmet.
     // API/güvenlik araçları ürünün bugün sunduğu şeyler değil; vaat edilmez.
-    description: "Premium ve kurumsal işletmeler için: gelişmiş web sitesi, raporlama ve öncelikli hizmet.",
+    description: "Büyüyen işletmeler için: web sitesi, raporlama ve öncelikli hizmet.",
     price_monthly: 749,
     price_yearly_monthly: 599.2,
     trial_months: 0,
@@ -92,22 +101,21 @@ export const PLAN_SEEDS = [
     order: 2,
     features: [
       "Premium'daki her şey",
-      "Gelişmiş web sitesi (animasyon · slider · galeri)",
-      "Hediye kurumsal web sitesi — kurulumu bizden",
+      "Web sitesi (menüden otomatik · animasyon · slider · galeri)",
       "Rapor merkezi · PDF ve CSV dışa aktarma",
       "3 yıl analiz geçmişi",
       "Öncelikli teknik destek",
     ],
-    limits: {
-      max_businesses: null,
-      max_menus: null,
-      max_products: null,
-      analytics: true,
-      custom_domain: true,
+    limits: planLimits({
+      analytics_advanced: true,
+      insights: true,
       branding_removal: true,
       campaigns: true,
-      white_label: false,
-      api_access: false,
-    },
+      website: true,
+      reports: true,
+      reports_export: true,
+      analytics_retention_days: 1095,
+      ai_scans_per_month: 10,
+    }),
   },
 ];

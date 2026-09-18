@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { ClientResponseError } from "pocketbase";
 import { pb } from "@/lib/pocketbase";
 import { useAuth } from "@/lib/use-auth";
+import { ensurePlanCatalog } from "@/lib/plan-catalog-loader";
 import type { Business } from "@/lib/types";
 
 interface BusinessContextValue {
@@ -30,9 +31,14 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
     try {
       // Tek ilişki: bir kullanıcı → bir işletme. Ekip/üyelik kavramı yok.
-      const record = await pb
-        .collection("buyur_businesses")
-        .getFirstListItem<Business>(pb.filter("owner = {:id}", { id: user.id }), { requestKey: null });
+      // Plan kuralları canlı `buyur_plans` kaydından gelir; işletmeyle paralel
+      // okunur ki panelin açılışına ek tur binmesin.
+      const [record] = await Promise.all([
+        pb
+          .collection("buyur_businesses")
+          .getFirstListItem<Business>(pb.filter("owner = {:id}", { id: user.id }), { requestKey: null }),
+        ensurePlanCatalog(pb),
+      ]);
       setBusinessState(record);
     } catch (err) {
       // StrictMode'un dev'de effect'i iki kez çalıştırması SDK'nın bu isteği

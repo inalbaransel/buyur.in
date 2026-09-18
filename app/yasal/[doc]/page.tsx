@@ -5,10 +5,15 @@ import { Footer } from "@/components/chrome";
 import { LegalDocView } from "@/components/legal-doc";
 import { LEGAL_DOCS, legalDoc, legalPath } from "@/lib/legal";
 import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo";
+import { createServerPB } from "@/lib/pocketbase";
+import { ensurePlanCatalog } from "@/lib/plan-catalog-loader";
 
-// Altı metnin tamamı build sırasında statik üretilir; yasal sayfa hiçbir koşulda
-// veritabanına ya da ağa bağlı olmasın (ödeme sağlayıcıları bu adreslerin her
-// zaman açılmasını bekler).
+// Altı metin statik üretilir ve on dakikada bir tazelenir: fiyat tablosu
+// `buyur_plans`'tan gelir, ama sayfa veritabanı yüzünden ASLA düşmez —
+// ensurePlanCatalog hata fırlatmaz (ödeme sağlayıcıları bu adreslerin her zaman
+// açılmasını bekler); okunamazsa fiyat satırları yazılmaz.
+export const revalidate = 600;
+
 export function generateStaticParams() {
   return LEGAL_DOCS.map((doc) => ({ doc: doc.slug }));
 }
@@ -35,6 +40,8 @@ export default async function LegalPage({ params }: { params: Promise<{ doc: str
   const { doc: slug } = await params;
   const doc = legalDoc(slug);
   if (!doc) notFound();
+
+  await ensurePlanCatalog(createServerPB());
 
   const breadcrumbs = breadcrumbJsonLd([
     { name: "Yasal metinler", path: "/yasal" },

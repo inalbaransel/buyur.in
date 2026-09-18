@@ -6,7 +6,7 @@ import { pb } from "@/lib/pocketbase";
 import { useBusiness } from "@/components/panel/business-context";
 import { useToast } from "@/components/panel/toast";
 import { Button, Card, EmptyState, FooterNote, PageHeader, UpdatedAt, UpgradeNotice } from "@/components/panel/ui";
-import { fetchPlanLimits } from "@/lib/plan-limits";
+import { isFeatureAvailable } from "@/lib/entitlements";
 import type { Popup } from "@/lib/types";
 
 export default function AnnouncementsPage() {
@@ -14,23 +14,14 @@ export default function AnnouncementsPage() {
   const { toast } = useToast();
   const [popups, setPopups] = useState<Popup[]>([]);
   const [loading, setLoading] = useState(true);
-  const [campaignsAllowed, setCampaignsAllowed] = useState<boolean | null>(null);
+  // Kampanya kapısı canlı plan kaydından okunur (BusinessProvider katalogu yükler).
+  const campaignsAllowed = business ? isFeatureAvailable(business, "campaigns") : null;
 
   useEffect(() => {
     if (!business) return;
     load();
   }, [business]);
 
-  useEffect(() => {
-    if (!business) return;
-    let cancelled = false;
-    fetchPlanLimits(business.plan).then((limits) => {
-      if (!cancelled) setCampaignsAllowed(limits.campaigns);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [business]);
 
   async function load() {
     if (!business) return;
