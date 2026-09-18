@@ -8,6 +8,7 @@ import { useToast } from "@/components/panel/toast";
 import { useConfirm } from "@/components/panel/confirm-dialog";
 import { AiButton, Button, Card, EmptyState, FooterNote, PageHeader, UpdatedAt } from "@/components/panel/ui";
 import { GripIcon } from "@/components/icons";
+import { runPooled } from "@/lib/pb-retry";
 import type { Category } from "@/lib/types";
 
 export default function CategoriesPage() {
@@ -103,7 +104,15 @@ export default function CategoriesPage() {
     next.splice(index, 0, moved);
     setCategories(next);
     handleDragEnd();
-    await Promise.all(next.map((c, i) => pb.collection("buyur_categories").update(c.id, { order: i })));
+    // Sıralama tek seferde onlarca güncelleme demek; hepsini aynı anda göndermek
+    // sunucudan 503 döndürüyordu. Kuyruğa alınır, geçici hatalar yeniden denenir.
+    const results = await runPooled(next, (c, i) =>
+      pb.collection("buyur_categories").update(c.id, { order: i })
+    );
+    if (results.some((result) => result.error)) {
+      toast("Sıralama kaydedilemedi, tekrar deneyin.", "error");
+      load();
+    }
   }
 
   if (businessLoading || loading) {

@@ -10,6 +10,8 @@ import { autoFindProductImage } from "@/lib/ai/find-image";
 import { fingerprintPages } from "@/lib/ai/fingerprint";
 import { buildImportPlan, isPlanEmpty, type ImportPlan } from "@/lib/ai/import-plan";
 import type { ProductImageSource } from "@/lib/ai/image-source";
+import { isRetryableError, withRetry } from "@/lib/pb-retry";
+import { findCategoryByName, findProductByName } from "@/lib/unique-name";
 import { CheckCircleIcon, ImageIcon, TrashIcon } from "@/components/icons";
 import { aiUsage } from "@/lib/entitlements";
 import type { ScannedCategory, ScannedProduct } from "@/lib/ai/menu-scan";
@@ -461,44 +463,72 @@ export function MenuImport({ business }: { business: Business }) {
 
     const total = plan.newProductCount;
     setImportProgress({ done: 0, total });
-    let written = 0;
+    let done = 0;
+    let failed = 0;
+    let firstError: unknown;
 
     try {
       for (const planned of plan.categories) {
         let categoryId = planned.existingId;
         if (!categoryId) {
-          const created = await pb.collection("buyur_categories").create({
-            business: business.id,
-            name: planned.draft.name,
-            description: "",
-            order: planned.order,
-            // Taslak: kullanıcı ayrıca "yayınla" demedikçe menüde görünmez.
-            is_active: publishNow,
-          });
+          const created = await withRetry(
+            () =>
+              pb.collection("buyur_categories").create<{ id: string }>({
+                business: business.id,
+                name: planned.draft.name,
+                description: "",
+                order: planned.order,
+                // Taslak: kullanıcı ayrıca "yayınla" demedikçe menüde görünmez.
+                is_active: publishNow,
+              }),
+            { verify: () => findCategoryByName(business.id, planned.draft.name) }
+          );
           categoryId = created.id;
         }
 
-        if (planned.newProducts.length === 0) continue;
+        // Ürünler TEK TEK ve SIRAYLA yazılır. Aynı anda 25 istek göndermek
+        // sunucudan 503 döndürüyordu; sıralı akış hem yükü yayar hem de bir
+        // ürünün sonucu bilinmeden diğerine geçilmemesini sağlar.
+        for (const [index, product] of planned.newProducts.entries()) {
+          try {
+            await withRetry(
+              () =>
+                pb.collection("buyur_products").create<{ id: string }>({
+                  business: business.id,
+                  category: categoryId,
+                  name: product.name,
+                  description: product.description,
+                  price: product.price ?? 0,
+                  images: product.image_url ? [product.image_url] : [],
+                  image_source: product.image_url ? product.image_source : null,
+                  is_available: publishNow,
+                  order: planned.productOrderStart + index,
+                }),
+              // ÇİFT KAYIT KORUMASI: 503 "yazılmadı" demek değil. Tekrar denemeden
+              // önce ürünün menüde belirip belirmediğine bakılır.
+              { verify: () => findProductByName(business.id, product.name) }
+            );
+            done += 1;
+          } catch (error) {
+            failed += 1;
+            firstError ??= error;
+          }
+          setImportProgress({ done, total });
+        }
+      }
 
-        // Ürünler paralel oluşturulur; kategori başına tur sayısı düşsün.
-        await Promise.all(
-          planned.newProducts.map((product, index) =>
-            pb.collection("buyur_products").create({
-              business: business.id,
-              category: categoryId,
-              name: product.name,
-              description: product.description,
-              price: product.price ?? 0,
-              images: product.image_url ? [product.image_url] : [],
-              image_source: product.image_url ? product.image_source : null,
-              is_available: publishNow,
-              order: planned.productOrderStart + index,
-            })
-          )
+      // Kısmi başarı artık sessiz kalmıyor: kaçının yazılamadığı açıkça söylenir
+      // ve kullanıcı aynı ekranda tekrar deneyebilir (plan yeniden hesaplandığı
+      // için yalnızca eksikler yazılır, kayıtlar ikiye katlanmaz).
+      if (failed > 0) {
+        setPlan(null);
+        setImportError(
+          `${done} ürün eklendi, ${failed} ürün eklenemedi${
+            isRetryableError(firstError) ? " (sunucu yanıt vermedi)" : ""
+          }. Tekrar denediğinizde eklenenler tekrarlanmaz, yalnızca eksikler yazılır.`
         );
-
-        written += planned.newProducts.length;
-        setImportProgress({ done: written, total });
+        toast(`${failed} ürün eklenemedi.`, "error");
+        return;
       }
 
       if (fingerprint) setImportedPrints((current) => [...new Set([...current, fingerprint])]);
@@ -506,18 +536,18 @@ export function MenuImport({ business }: { business: Business }) {
       setReviewOpen(false);
       toast(
         publishNow
-          ? `${written} ürün menünüze eklendi ve yayınlandı.`
-          : `${written} ürün taslak olarak eklendi. Ürünler sayfasından yayınlayabilirsiniz.`
+          ? `${done} ürün menünüze eklendi ve yayınlandı.`
+          : `${done} ürün taslak olarak eklendi. Ürünler sayfasından yayınlayabilirsiniz.`
       );
       router.push("/panel/products");
     } catch {
-      // Yarım kalan aktarım: yazılanlar menüde kaldı, kalanı yazılamadı.
+      // Kategori yazılamadı: yazılanlar menüde kaldı, kalanı yazılamadı.
       // Plan sıfırlanır ki "tekrar dene" menüyü baştan okuyup yalnızca
       // eksikleri yazsın — kayıtlar ikiye katlanmaz.
       setPlan(null);
       setImportError(
-        written > 0
-          ? `${written} ürün eklendikten sonra bağlantı koptu. Tekrar denediğinizde eklenenler tekrarlanmaz, yalnızca eksikler yazılır.`
+        done > 0
+          ? `${done} ürün eklendikten sonra bağlantı koptu. Tekrar denediğinizde eklenenler tekrarlanmaz, yalnızca eksikler yazılır.`
           : "Kaydedilirken bir hata oluştu. Hiçbir ürün eklenmedi, tekrar deneyebilirsiniz."
       );
     } finally {

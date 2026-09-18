@@ -160,7 +160,8 @@ describe("buildImportPlan", () => {
     expect(plan.categories[0].productOrderStart).toBe(4);
   });
 
-  it("başka kategorideki aynı adlı ürün engel olmaz", () => {
+  // Ad tekilliği işletme genelinde: aynı ürün iki kategoride ayrı ayrı durmasın.
+  it("başka kategoride aynı adlı ürün varsa ikinci kez yazmaz", () => {
     const plan = buildImportPlan(
       [cat("Kahvaltı", "Çay")],
       [
@@ -170,8 +171,8 @@ describe("buildImportPlan", () => {
       [{ category: "cat1", name: "Çay", order: 0 }]
     );
 
-    expect(plan.newProductCount).toBe(1);
-    expect(plan.duplicateProductCount).toBe(0);
+    expect(plan.newProductCount).toBe(0);
+    expect(plan.duplicateProductCount).toBe(1);
   });
 
   it("taramanın kendi tekrarını da eler", () => {

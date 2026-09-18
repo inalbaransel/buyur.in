@@ -8,6 +8,7 @@ import { ImageUploader } from "@/components/panel/image-uploader";
 import { MultiLangFields } from "@/components/panel/multi-lang-fields";
 import { AiTranslateButton } from "@/components/panel/ai/translate-button";
 import { useFormDraft } from "@/lib/use-draft";
+import { categoryNameTaken } from "@/lib/unique-name";
 import { activeLocales, mainLocale, type TranslatableField, type Translations } from "@/lib/i18n";
 import type { Business, Category } from "@/lib/types";
 
@@ -83,6 +84,14 @@ export function CategoryForm({
     setError("");
     setSaving(true);
     try {
+      // Aynı adda ikinci bir kategori menüde ayırt edilemez — yazmadan önce sorulur.
+      const taken = await categoryNameTaken(business.id, name, initial?.id);
+      if (taken) {
+        setError(taken);
+        toast(taken, "error");
+        return;
+      }
+
       const payload = { name, description, image_url: imageUrl, is_active: isActive, translations };
       const record = initial
         ? await pb.collection("buyur_categories").update<Category>(initial.id, payload)

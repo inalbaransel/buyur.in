@@ -13,6 +13,7 @@ import type { ProductImageSource } from "@/lib/ai/image-source";
 import { MultiLangFields } from "@/components/panel/multi-lang-fields";
 import { AiTranslateButton } from "@/components/panel/ai/translate-button";
 import { useFormDraft } from "@/lib/use-draft";
+import { productNameTaken } from "@/lib/unique-name";
 import { activeLocales, mainLocale, type TranslatableField, type Translations } from "@/lib/i18n";
 import type { Allergen, Badge, Business, Category, Product } from "@/lib/types";
 
@@ -221,6 +222,14 @@ export function ProductForm({ business, categories, initial, onSaved, onCancel }
 
     setSaving(true);
     try {
+      // Ad tekilliği işletme genelindedir: aynı ürün iki kategoride durmasın.
+      const taken = await productNameTaken(business.id, name, initial?.id);
+      if (taken) {
+        setError(taken);
+        toast(taken, "error");
+        return;
+      }
+
       const record = initial
         ? await pb.collection("buyur_products").update<Product>(initial.id, payload)
         : await pb.collection("buyur_products").create<Product>({ ...payload, order: 999 });

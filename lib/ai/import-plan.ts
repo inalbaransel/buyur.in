@@ -86,8 +86,9 @@ export interface ImportPlan<C, P> {
 }
 
 /** Taramanın kendi içindeki tekrarları temizler: aynı adlı kategoriler tek
- *  kategoride birleşir, aynı adlı ürün kategoride bir kez kalır.
- *  (Çok sayfalı menülerde aynı kategori başlığı her sayfada tekrar okunur.) */
+ *  kategoride birleşir, aynı adlı ürün TÜM menüde bir kez kalır.
+ *  (Çok sayfalı menülerde aynı kategori başlığı her sayfada tekrar okunur;
+ *  aynı ürün de iki farklı başlığın altında listelenmiş olabilir.) */
 export function dedupeScanned<P extends NamedProduct, C extends NamedCategory<P>>(
   categories: C[]
 ): { categories: C[]; mergedCategoryCount: number; mergedProductCount: number } {
@@ -110,8 +111,9 @@ export function dedupeScanned<P extends NamedProduct, C extends NamedCategory<P>
     }
   }
 
+  // Ürün tekilliği işletme genelindedir; sayaç kategoriler arasında paylaşılır.
+  const seen = new Set<string>();
   const cleaned = order.map((category) => {
-    const seen = new Set<string>();
     const products: P[] = [];
     for (const product of category.products) {
       const key = normalizeEntryName(product.name);
@@ -131,7 +133,8 @@ export function dedupeScanned<P extends NamedProduct, C extends NamedCategory<P>
 /** Aktarım planı: neyin yazılacağı, neyin atlanacağı.
  *
  *  Kategori adı menüde zaten varsa yeniden açılmaz, ürünler mevcut kategoriye
- *  eklenir. Aynı kategoride aynı adlı ürün zaten varsa yazılmaz. */
+ *  eklenir. Ad tekilliği işletme genelindedir: menüde aynı adlı bir ürün
+ *  varsa, başka bir kategorinin altında bile olsa ikincisi yazılmaz. */
 export function buildImportPlan<P extends NamedProduct, C extends NamedCategory<P>>(
   drafts: C[],
   existingCategories: ExistingCategory[],
@@ -145,14 +148,13 @@ export function buildImportPlan<P extends NamedProduct, C extends NamedCategory<
     if (key !== "" && !categoryByKey.has(key)) categoryByKey.set(key, category);
   }
 
-  // Kategori kimliği → o kategorideki ürün adları ve en yüksek sıra numarası.
-  const productKeysByCategory = new Map<string, Set<string>>();
+  // Menüde ZATEN bulunan ürün adları — kategori farkı gözetilmez, ad işletme
+  // genelinde tekildir. Sıra numarası ise kategori bazında sürer.
+  const takenKeys = new Set<string>();
   const maxProductOrder = new Map<string, number>();
   for (const product of existingProducts) {
-    const set = productKeysByCategory.get(product.category) ?? new Set<string>();
     const key = normalizeEntryName(product.name);
-    if (key !== "") set.add(key);
-    productKeysByCategory.set(product.category, set);
+    if (key !== "") takenKeys.add(key);
     maxProductOrder.set(
       product.category,
       Math.max(maxProductOrder.get(product.category) ?? -1, product.order ?? 0)
@@ -172,10 +174,6 @@ export function buildImportPlan<P extends NamedProduct, C extends NamedCategory<
     const key = normalizeEntryName(draft.name);
     const match = key === "" ? undefined : categoryByKey.get(key);
     const existingId = match?.id ?? null;
-
-    const takenKeys = existingId
-      ? new Set(productKeysByCategory.get(existingId) ?? [])
-      : new Set<string>();
 
     const newProducts: P[] = [];
     const skippedNames: string[] = [];
