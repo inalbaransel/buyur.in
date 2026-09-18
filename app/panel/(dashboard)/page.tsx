@@ -7,7 +7,7 @@ import { pb } from "@/lib/pocketbase";
 import { useAuth } from "@/lib/use-auth";
 import { useBusiness } from "@/components/panel/business-context";
 import { isReservedSlug, slugify } from "@/lib/slug";
-import { Button, Card, ErrorText, Input, Label, PageHeader, UpgradeNotice } from "@/components/panel/ui";
+import { Button, buttonClass, Card, ErrorText, FooterNote, Input, Label, PageHeader, UpdatedAt, UpgradeNotice } from "@/components/panel/ui";
 import { QrShare } from "@/components/panel/qr-share";
 import { PlanUsageCard } from "@/components/panel/plan-usage";
 import { LaunchChecklist } from "@/components/panel/launch-checklist";
@@ -339,7 +339,7 @@ function PlanIntentNotice({ business }: { business: Business }) {
       </p>
       <Link
         href="/panel/plan"
-        className="rounded-md bg-ink px-4 py-2 font-mono text-[12px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
+        className={buttonClass("primary")}
       >
         Planı başlat
       </Link>
@@ -405,6 +405,10 @@ function Overview({ business }: { business: Business }) {
           />
         </div>
       )}
+
+      <FooterNote>
+        <UpdatedAt at={business.updated} label="İşletme bilgileri güncellendi" />
+      </FooterNote>
     </div>
   );
 }

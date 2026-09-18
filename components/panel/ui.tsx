@@ -56,17 +56,26 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
 }
 
+const BUTTON_BASE =
+  "inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 font-mono text-[13px] uppercase tracking-wider transition-colors disabled:cursor-not-allowed disabled:opacity-50";
+
+const BUTTON_VARIANTS: Record<string, string> = {
+  primary: "bg-ink text-paper hover:bg-paprika",
+  outline: "border border-line text-ink hover:border-paprika hover:text-paprika",
+  ghost: "text-ink-soft hover:text-paprika",
+  danger: "border border-paprika/40 text-paprika hover:bg-paprika hover:text-paper",
+};
+
+// Bağlantıya (a / next Link) buton görünümü verir. Panelde el yazımı buton
+// sınıfı kullanılmaz; tıklanabilir her şey aynı dili konuşsun diye stil
+// tek yerden, buradan alınır.
+export function buttonClass(variant: "primary" | "outline" | "ghost" | "danger" = "primary", className = "") {
+  return `${BUTTON_BASE} ${BUTTON_VARIANTS[variant]} ${className}`;
+}
+
 export function Button({ variant = "primary", loading, className = "", disabled, children, ...rest }: ButtonProps) {
-  const base =
-    "inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 font-mono text-[13px] uppercase tracking-wider transition-colors disabled:cursor-not-allowed disabled:opacity-50";
-  const variants: Record<string, string> = {
-    primary: "bg-ink text-paper hover:bg-paprika",
-    outline: "border border-line text-ink hover:border-paprika hover:text-paprika",
-    ghost: "text-ink-soft hover:text-paprika",
-    danger: "border border-paprika/40 text-paprika hover:bg-paprika hover:text-paper",
-  };
   return (
-    <button className={`${base} ${variants[variant]} ${className}`} disabled={disabled || loading} {...rest}>
+    <button className={buttonClass(variant, className)} disabled={disabled || loading} {...rest}>
       {loading ? "..." : children}
     </button>
   );
@@ -157,13 +166,61 @@ export function Card({ children, className = "", ...rest }: HTMLAttributes<HTMLD
 
 export function PageHeader({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
   return (
-    <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-      <div>
+    <div className="mb-8 flex flex-wrap items-start justify-between gap-4 border-b border-line pb-5">
+      <div className="min-w-0 max-w-2xl">
         <h1 className="font-display text-2xl font-extrabold tracking-tight md:text-3xl">{title}</h1>
         {description && <p className="mt-1.5 text-sm text-ink-soft">{description}</p>}
       </div>
-      {action}
+      {/* Eylemler her ekranda aynı yerde: sağ üst. */}
+      {action && <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{action}</div>}
     </div>
+  );
+}
+
+// Kart ya da bölüm başlığı: başlık solda, eylem sağ üstte. Panelin her
+// ekranında aynı hizayı korumak için elle başlık yazmak yerine bu kullanılır.
+export function SectionHeader({
+  title,
+  description,
+  action,
+  className = "",
+}: {
+  title: string;
+  description?: string;
+  action?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`flex flex-wrap items-start justify-between gap-3 ${className}`}>
+      <div className="min-w-0">
+        <p className="font-display text-lg font-bold">{title}</p>
+        {description && <p className="mt-1 text-sm text-ink-soft">{description}</p>}
+      </div>
+      {action && <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{action}</div>}
+    </div>
+  );
+}
+
+// Bir bölümün sağ alt köşesine yerleşen bilgi satırı: kaydetme durumu, son
+// güncelleme tarihi, küçük uyarılar. Panelde bu tür bildirimler her zaman
+// sağ altta durur; kullanıcı nereye bakacağını bir kez öğrenir.
+export function FooterNote({ children, className = "" }: { children?: ReactNode; className?: string }) {
+  if (!children) return null;
+  return (
+    <div className={`mt-4 flex flex-wrap items-center justify-end gap-2 text-right text-xs text-ink-soft ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+// Kaydın son güncellenme zamanı — sağ alt bilgi satırında kullanılır.
+export function UpdatedAt({ at, label = "Son güncelleme" }: { at?: number | string | null; label?: string }) {
+  const ms = typeof at === "string" ? Date.parse(at.replace(" ", "T")) : (at ?? null);
+  if (ms === null || !Number.isFinite(ms)) return null;
+  return (
+    <span className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">
+      {label} · {formatSavedTime(ms as number)}
+    </span>
   );
 }
 
@@ -234,10 +291,7 @@ export function FormActions({
   extra?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-center gap-3 border-b border-line pb-4">
-      <span className="mr-auto font-mono text-[11px] uppercase tracking-wider text-herb">
-        {status ?? (saved ? "Kaydedildi ✓" : "")}
-      </span>
+    <div className="mb-6 flex flex-wrap items-center justify-end gap-3 border-b border-line pb-4">
       {extra}
       {toggle && <Switch compact checked={toggle.checked} onChange={toggle.onChange} label={toggle.label} />}
       {onCancel && (
@@ -250,6 +304,13 @@ export function FormActions({
       </Button>
     </div>
   );
+}
+
+// Formun sağ alt köşesindeki kayıt durumu satırı — FormActions ile eşleşir.
+// Butonlar sağ üstte, bildirim sağ altta: her panel formunda aynı düzen.
+export function FormStatusFooter({ status, saved }: { status?: ReactNode; saved?: boolean }) {
+  const content = status ?? (saved ? <span className="text-herb">Kaydedildi ✓</span> : null);
+  return <FooterNote>{content}</FooterNote>;
 }
 
 // Yatay sekme çubuğu — aktif sekmenin altında vurgu çizgisi (referans görsel gibi).

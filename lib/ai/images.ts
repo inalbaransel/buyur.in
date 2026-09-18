@@ -478,7 +478,7 @@ function licenseBonus(license: ImageLicense): number {
 
 /** Künyesi eksiksiz basılabilen aday mı.
  *
- *  Atıf gerektiren bir lisansta fotoğrafçı adı ya da kaynak sayfası yoksa
+ *  Lisans şartı gerektiren bir durumda fotoğrafçı adı ya da kaynak sayfası yoksa
  *  geçerli bir künye üretemeyiz — böyle bir görseli otomatik kullanmak,
  *  yerine getiremeyeceğimiz bir yükümlülüğü sessizce kabul etmek olur. */
 export function canAttributeProperly(candidate: ImageCandidate): boolean {

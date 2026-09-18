@@ -7,6 +7,7 @@ import { STATUS } from "@/components/panel/charts/palette";
 import { formatNumber } from "@/components/panel/charts/chart-utils";
 import { PLAN_LABELS, entitlementsFor, freemiumUsage, type FreemiumUsage } from "@/lib/entitlements";
 import type { Business } from "@/lib/types";
+import { buttonClass } from "@/components/panel/ui";
 
 // Freemium kullanımının tek görsel kaynağı: süre ve menü görüntülenme, yan yana.
 // Kural (lib/entitlements.ts): iki limitten hangisi önce dolarsa Freemium biter.
@@ -158,7 +159,7 @@ export function PlanUsageCard({ business, compact = false }: { business: Busines
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href="/panel/plan"
-              className="rounded-md bg-ink px-4 py-2 font-mono text-[12px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
+              className={buttonClass("primary")}
             >
               Premium&apos;a geç
             </Link>

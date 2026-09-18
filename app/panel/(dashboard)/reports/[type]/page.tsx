@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { PageHeader } from "@/components/panel/ui";
+import { buttonClass, PageHeader } from "@/components/panel/ui";
 import { AnalyticsFilterBar } from "@/components/panel/analytics/filters";
 import { useAnalyticsQuery } from "@/components/panel/analytics/use-analytics";
 import { AnalyticsErrorState, AnalyticsSkeleton, NoDataYet, PlanLocked } from "@/components/panel/analytics/states";
@@ -72,14 +72,14 @@ export default function ReportDetailPage() {
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="rounded-md bg-ink px-4 py-2.5 font-mono text-[12px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
+                  className={buttonClass("primary")}
                 >
                   PDF olarak yazdır
                 </button>
                 <button
                   type="button"
                   onClick={handleCsv}
-                  className="rounded-md border border-line px-4 py-2.5 font-mono text-[12px] uppercase tracking-wider transition-colors hover:border-paprika hover:text-paprika"
+                  className={buttonClass("outline")}
                 >
                   CSV indir
                 </button>

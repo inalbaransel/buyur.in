@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { pb } from "@/lib/pocketbase";
 import { useToast } from "@/components/panel/toast";
 import { allergenLabels, badgeLabels } from "@/lib/labels";
-import { Button, Card, DraftBanner, ErrorText, FormActions, Input, Label, SaveStatus, Select, Spinner } from "@/components/panel/ui";
+import { Button, Card, DraftBanner, ErrorText, FormActions, FormStatusFooter, Input, Label, SaveStatus, Select, Spinner } from "@/components/panel/ui";
 import { ImageUploader } from "@/components/panel/image-uploader";
 import { ImagePicker, ImageSourceNote } from "@/components/panel/ai/image-picker";
 import { SearchIcon } from "@/components/icons";
@@ -241,7 +241,6 @@ export function ProductForm({ business, categories, initial, onSaved, onCancel }
       <FormActions
         saving={saving}
         onCancel={onCancel}
-        status={<SaveStatus saving={saving} savedAt={lastSavedAt ?? initial?.updated ?? null} draftSavedAt={draft.draftSavedAt} />}
         toggle={{ checked: isAvailable, onChange: setIsAvailable, label: "Satışta" }}
         extra={
           <AiTranslateButton
@@ -442,6 +441,9 @@ export function ProductForm({ business, categories, initial, onSaved, onCancel }
       </Card>
 
       <ErrorText>{error}</ErrorText>
+      <FormStatusFooter
+        status={<SaveStatus saving={saving} savedAt={lastSavedAt ?? initial?.updated ?? null} draftSavedAt={draft.draftSavedAt} />}
+      />
     </form>
   );
 }

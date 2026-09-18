@@ -13,7 +13,7 @@ import { fonts, DEFAULT_FONT, getFontStack } from "@/lib/fonts";
 import { ROOT_DOMAIN } from "@/lib/site";
 import { highlightLabels } from "@/lib/labels";
 import { HighlightIcon } from "@/components/icons";
-import { Card, ErrorText, FormActions, Input, Label, PageHeader, Select, Spinner, Tabs, Textarea } from "@/components/panel/ui";
+import { Card, ErrorText, FormActions, FormStatusFooter, Input, Label, PageHeader, SaveStatus, Select, Spinner, Tabs, Textarea } from "@/components/panel/ui";
 import { MultiLangFields } from "@/components/panel/multi-lang-fields";
 import { useToast } from "@/components/panel/toast";
 import { StarIcon } from "@/components/icons";
@@ -312,7 +312,7 @@ function SettingsForm({ business, onSaved }: { business: Business; onSaved: (b: 
 
   return (
     <div>
-      <PageHeader title="İşletme ayarları" description={savedAt ? "Kaydedildi ✓" : "Menünün görünümünü ve bilgilerini düzenle."} />
+      <PageHeader title="İşletme ayarları" description="Menünün görünümünü ve bilgilerini düzenle." />
       <form onSubmit={handleSubmit} className="space-y-8">
         <FormActions saving={saving} saved={!!savedAt} />
         <ErrorText>{error}</ErrorText>
@@ -717,6 +717,7 @@ function SettingsForm({ business, onSaved }: { business: Business; onSaved: (b: 
         )}
 
         <ErrorText>{error}</ErrorText>
+        <FormStatusFooter status={<SaveStatus saving={saving} savedAt={savedAt ?? business.updated ?? null} />} />
       </form>
     </div>
   );

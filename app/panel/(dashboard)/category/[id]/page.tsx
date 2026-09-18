@@ -15,7 +15,6 @@ export default function EditCategoryPage() {
   const { business, isLoading: businessLoading } = useBusiness();
   const [category, setCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
-  const [savedAt, setSavedAt] = useState<number | null>(null);
 
   useEffect(() => {
     if (!business) return;
@@ -38,13 +37,12 @@ export default function EditCategoryPage() {
 
   return (
     <div>
-      <PageHeader title={category.name} description={savedAt ? "Kaydedildi ✓" : undefined} />
+      <PageHeader title={category.name} />
       <CategoryForm
         business={business}
         initial={category}
         onSaved={(updated) => {
           setCategory(updated);
-          setSavedAt(Date.now());
         }}
       />
     </div>

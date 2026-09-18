@@ -7,6 +7,7 @@ import { markActivation, readActivation } from "@/lib/activation";
 import { menuUrl } from "@/lib/site";
 import { CheckCircleIcon } from "@/components/icons";
 import type { Business, BusinessActivation } from "@/lib/types";
+import { buttonClass } from "@/components/panel/ui";
 
 // "Menünü yayına hazırla" kontrol listesi. Aktivasyon hunisi:
 // kayıt → ilk ürün → QR indirme → ilk gerçek görüntülenme. Tamamlanma yüzdesi
@@ -192,14 +193,14 @@ export function LaunchChecklist({
                 href={next.href}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex w-fit items-center rounded-md bg-ink px-5 py-2.5 font-mono text-[13px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
+                className={buttonClass("primary", "w-fit")}
               >
                 {next.cta}
               </a>
             ) : (
               <Link
                 href={next.href}
-                className="inline-flex w-fit items-center rounded-md bg-ink px-5 py-2.5 font-mono text-[13px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
+                className={buttonClass("primary", "w-fit")}
               >
                 {next.cta}
               </Link>

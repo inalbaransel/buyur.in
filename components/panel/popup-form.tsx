@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { pb } from "@/lib/pocketbase";
 import { useToast } from "@/components/panel/toast";
-import { Card, ErrorText, FormActions, Label } from "@/components/panel/ui";
+import { Card, ErrorText, FormActions, FormStatusFooter, Label, SaveStatus } from "@/components/panel/ui";
 import { ImageUploader } from "@/components/panel/image-uploader";
 import { MultiLangFields } from "@/components/panel/multi-lang-fields";
 import { AiTranslateButton } from "@/components/panel/ai/translate-button";
@@ -98,6 +98,7 @@ export function PopupForm({
             { key: "message", label: "Mesaj", multiline: true, rows: 3 },
           ]}
         />
+        <FormStatusFooter status={<SaveStatus saving={saving} savedAt={initial?.updated ?? null} />} />
       </form>
     </Card>
   );

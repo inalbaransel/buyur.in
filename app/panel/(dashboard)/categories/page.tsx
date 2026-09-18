@@ -6,7 +6,7 @@ import { pb } from "@/lib/pocketbase";
 import { useBusiness } from "@/components/panel/business-context";
 import { useToast } from "@/components/panel/toast";
 import { useConfirm } from "@/components/panel/confirm-dialog";
-import { Button, Card, EmptyState, PageHeader, AiButton } from "@/components/panel/ui";
+import { AiButton, Button, Card, EmptyState, FooterNote, PageHeader, UpdatedAt } from "@/components/panel/ui";
 import { GripIcon } from "@/components/icons";
 import type { Category } from "@/lib/types";
 
@@ -110,6 +110,9 @@ export default function CategoriesPage() {
     return <p className="text-ink-soft">Yükleniyor…</p>;
   }
 
+  // Listedeki en yeni kayıt zamanı — sağ alttaki bilgi satırında gösterilir.
+  const latestUpdate = categories.reduce<string | null>((max, item) => (!max || item.updated > max ? item.updated : max), null);
+
   return (
     <div>
       <PageHeader
@@ -192,6 +195,10 @@ export default function CategoriesPage() {
           );
         })}
       </div>
+
+      <FooterNote>
+        <UpdatedAt at={latestUpdate} />
+      </FooterNote>
 
       {confirmDialog}
     </div>

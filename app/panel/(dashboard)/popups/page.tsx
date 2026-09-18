@@ -5,7 +5,7 @@ import Link from "next/link";
 import { pb } from "@/lib/pocketbase";
 import { useBusiness } from "@/components/panel/business-context";
 import { useToast } from "@/components/panel/toast";
-import { Button, Card, EmptyState, PageHeader, UpgradeNotice } from "@/components/panel/ui";
+import { Button, Card, EmptyState, FooterNote, PageHeader, UpdatedAt, UpgradeNotice } from "@/components/panel/ui";
 import { fetchPlanLimits } from "@/lib/plan-limits";
 import type { Popup } from "@/lib/types";
 
@@ -53,6 +53,9 @@ export default function AnnouncementsPage() {
   if (businessLoading || loading) {
     return <p className="text-ink-soft">Yükleniyor…</p>;
   }
+
+  // Listedeki en yeni kayıt zamanı — sağ alttaki bilgi satırında gösterilir.
+  const latestUpdate = popups.reduce<string | null>((max, item) => (!max || item.updated > max ? item.updated : max), null);
 
   return (
     <div>
@@ -116,6 +119,10 @@ export default function AnnouncementsPage() {
           </Card>
         ))}
       </div>
+
+      <FooterNote>
+        <UpdatedAt at={latestUpdate} />
+      </FooterNote>
     </div>
   );
 }

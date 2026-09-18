@@ -3,7 +3,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { pb } from "@/lib/pocketbase";
 import { useToast } from "@/components/panel/toast";
-import { Card, DraftBanner, ErrorText, FormActions, Label, SaveStatus } from "@/components/panel/ui";
+import { Card, DraftBanner, ErrorText, FormActions, FormStatusFooter, Label, SaveStatus } from "@/components/panel/ui";
 import { ImageUploader } from "@/components/panel/image-uploader";
 import { MultiLangFields } from "@/components/panel/multi-lang-fields";
 import { AiTranslateButton } from "@/components/panel/ai/translate-button";
@@ -105,7 +105,6 @@ export function CategoryForm({
         <FormActions
           saving={saving}
           onCancel={onCancel}
-          status={<SaveStatus saving={saving} savedAt={lastSavedAt ?? initial?.updated ?? null} draftSavedAt={draft.draftSavedAt} />}
           toggle={{ checked: isActive, onChange: setIsActive, label: "Menüde Göster" }}
           extra={
             <AiTranslateButton
@@ -147,6 +146,9 @@ export function CategoryForm({
             { key: "name", label: "Kategori adı", required: true, placeholder: "Ana Yemekler" },
             { key: "description", label: "Açıklama", multiline: true },
           ]}
+        />
+        <FormStatusFooter
+          status={<SaveStatus saving={saving} savedAt={lastSavedAt ?? initial?.updated ?? null} draftSavedAt={draft.draftSavedAt} />}
         />
       </form>
     </Card>

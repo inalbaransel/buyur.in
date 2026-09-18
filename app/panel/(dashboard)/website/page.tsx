@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useBusiness } from "@/components/panel/business-context";
 import { useToast } from "@/components/panel/toast";
-import { Card, PageHeader } from "@/components/panel/ui";
+import { buttonClass, Card, PageHeader } from "@/components/panel/ui";
 import { PlanLocked } from "@/components/panel/analytics/states";
 import { CheckCircleIcon, ExternalLinkIcon, GlobeIcon } from "@/components/icons";
 import { menuUrl, whatsappLink } from "@/lib/site";
@@ -65,7 +65,7 @@ export default function WebsitePage() {
             href={siteUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-md bg-ink px-5 py-2.5 font-mono text-[12px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
+            className={buttonClass("primary")}
           >
             <ExternalLinkIcon size={15} /> Siteyi aç
           </a>
@@ -90,7 +90,7 @@ export default function WebsitePage() {
             await navigator.clipboard.writeText(siteUrl);
             toast("Site adresi kopyalandı");
           }}
-          className="shrink-0 rounded-md border border-line px-5 py-2.5 font-mono text-[12px] uppercase tracking-wider transition-colors hover:border-paprika hover:text-paprika"
+          className={buttonClass("outline", "shrink-0")}
         >
           Adresi kopyala
         </button>
@@ -165,7 +165,7 @@ export default function WebsitePage() {
             href={whatsappLink("Merhaba, Elite planındaki hediye kurumsal web sitesi kurulumunu başlatmak istiyorum.")}
             target="_blank"
             rel="noreferrer"
-            className="mt-4 inline-flex items-center gap-2 rounded-md bg-ink px-5 py-2.5 font-mono text-[12px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
+            className={buttonClass("primary", "mt-4")}
           >
             Kurulumu başlat
           </a>

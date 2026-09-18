@@ -6,7 +6,7 @@ import { pb } from "@/lib/pocketbase";
 import { useBusiness } from "@/components/panel/business-context";
 import { useToast } from "@/components/panel/toast";
 import { useConfirm } from "@/components/panel/confirm-dialog";
-import { Button, Card, EmptyState, PageHeader, AiButton } from "@/components/panel/ui";
+import { AiButton, Button, Card, EmptyState, FooterNote, PageHeader, UpdatedAt } from "@/components/panel/ui";
 import type { Category, Product } from "@/lib/types";
 
 export default function ProductsPage() {
@@ -113,6 +113,9 @@ export default function ProductsPage() {
     );
   }
 
+  // Listedeki en yeni kayıt zamanı — sağ alttaki bilgi satırında gösterilir.
+  const latestUpdate = products.reduce<string | null>((max, item) => (!max || item.updated > max ? item.updated : max), null);
+
   return (
     <div>
       <PageHeader
@@ -191,6 +194,10 @@ export default function ProductsPage() {
           );
         })}
       </div>
+
+      <FooterNote>
+        <UpdatedAt at={latestUpdate} />
+      </FooterNote>
 
       {confirmDialog}
     </div>

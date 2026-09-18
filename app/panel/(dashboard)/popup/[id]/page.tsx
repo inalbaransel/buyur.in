@@ -15,7 +15,6 @@ export default function EditAnnouncementPage() {
   const { business, isLoading: businessLoading } = useBusiness();
   const [popup, setPopup] = useState<Popup | null>(null);
   const [loading, setLoading] = useState(true);
-  const [savedAt, setSavedAt] = useState<number | null>(null);
 
   useEffect(() => {
     if (!business) return;
@@ -38,13 +37,12 @@ export default function EditAnnouncementPage() {
 
   return (
     <div>
-      <PageHeader title={popup.title} description={savedAt ? "Kaydedildi ✓" : undefined} />
+      <PageHeader title={popup.title} />
       <PopupForm
         business={business}
         initial={popup}
         onSaved={(updated) => {
           setPopup(updated);
-          setSavedAt(Date.now());
         }}
       />
     </div>

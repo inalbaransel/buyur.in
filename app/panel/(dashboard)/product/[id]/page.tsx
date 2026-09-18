@@ -17,7 +17,6 @@ export default function EditProductPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [savedAt, setSavedAt] = useState<number | null>(null);
 
   useEffect(() => {
     if (!business) return;
@@ -55,7 +54,7 @@ export default function EditProductPage() {
 
   return (
     <div>
-      <PageHeader title={product.name} description={savedAt ? "Kaydedildi ✓" : undefined} />
+      <PageHeader title={product.name} />
       <div className="space-y-8">
         <ProductForm
           business={business}
@@ -63,7 +62,6 @@ export default function EditProductPage() {
           initial={product}
           onSaved={(updated) => {
             setProduct(updated);
-            setSavedAt(Date.now());
           }}
         />
         <ProductOptionsEditor business={business} productId={product.id} />

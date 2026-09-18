@@ -144,7 +144,7 @@ export function ImagePicker({
               <img src={image.thumbUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
               {image.license.attributionRequired && (
                 <span className="absolute left-1 top-1 rounded bg-ink/75 px-1.5 py-0.5 text-[9px] font-semibold text-paper">
-                  Atıf gerekli
+                  Lisans gerekli
                 </span>
               )}
               <span className="absolute inset-x-0 bottom-0 truncate bg-ink/60 px-1 py-0.5 text-[9px] text-paper">
@@ -164,7 +164,7 @@ export function ImagePicker({
 
       <p className="mt-3 text-[11px] leading-relaxed text-ink-soft">
         Yalnızca ticari kullanıma açık, lisansı belirtilmiş görseller listelenir.{" "}
-        <strong className="font-semibold">Atıf gerekli</strong> işaretli görsellerde fotoğrafçı ve lisans
+        <strong className="font-semibold">Lisans gerekli</strong> işaretli görsellerde fotoğrafçı ve lisans
         bilgisi menünüzde otomatik gösterilir; sizin yapmanız gereken bir şey yok.
       </p>
 
@@ -200,7 +200,7 @@ export function ImagePicker({
   );
 }
 
-/** Otomatik bulunan görselin kaynak/lisans künyesi. Atıf zorunlu lisanslarda
+/** Otomatik bulunan görselin kaynak/lisans künyesi. Lisans zorunlu tuttuğunda
  *  (CC BY ailesi) fotoğrafçı adı ve kaynak bağlantısı gösterilir. */
 export function ImageSourceNote({ source }: { source: ProductImageSource }) {
   return (

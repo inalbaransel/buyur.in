@@ -6,7 +6,7 @@ import { pb } from "@/lib/pocketbase";
 import { useBusiness } from "@/components/panel/business-context";
 import { useToast } from "@/components/panel/toast";
 import { useConfirm } from "@/components/panel/confirm-dialog";
-import { Button, Card, ErrorText, Input, Label, PageHeader, Select } from "@/components/panel/ui";
+import { Button, Card, ErrorText, FooterNote, Input, Label, PageHeader, SectionHeader, Select } from "@/components/panel/ui";
 import { QrShare } from "@/components/panel/qr-share";
 import { QrPrintSheet, type PrintableQr } from "@/components/panel/qr-print-sheet";
 import { markActivation } from "@/lib/activation";
@@ -157,32 +157,36 @@ function BulkTableForm({ onCreate }: { onCreate: (prefix: string, from: number, 
 
   return (
     <Card className="mt-6">
-      <p className="font-display text-lg font-bold">Masa QR&apos;larını toplu oluştur</p>
-      <p className="mt-1 text-sm text-ink-soft">
-        Her masaya ayrı QR: hangi masanın menüyü açıp sepete dönüştürdüğünü Trafik sayfasında ayrı ayrı görürsün.
-      </p>
-      <form onSubmit={handleSubmit} className="mt-4 grid gap-3 sm:grid-cols-[1.4fr_1fr_1fr_auto] sm:items-end">
-        <div>
-          <Label htmlFor="bulk-prefix">Ön ek</Label>
-          <Input id="bulk-prefix" value={prefix} maxLength={40} onChange={(e) => setPrefix(e.target.value)} />
+      <form onSubmit={handleSubmit}>
+        <SectionHeader
+          title="Masa QR'larını toplu oluştur"
+          description="Her masaya ayrı QR: hangi masanın menüyü açıp sepete dönüştürdüğünü Trafik sayfasında ayrı ayrı görürsün."
+          action={
+            <Button type="submit" loading={saving}>
+              Oluştur
+            </Button>
+          }
+        />
+        <div className="mt-5 grid gap-3 sm:grid-cols-3 sm:items-end">
+          <div>
+            <Label htmlFor="bulk-prefix">Ön ek</Label>
+            <Input id="bulk-prefix" value={prefix} maxLength={40} onChange={(e) => setPrefix(e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="bulk-from">Başlangıç no</Label>
+            <Input id="bulk-from" type="number" min={0} value={from} onChange={(e) => setFrom(e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="bulk-count">Adet</Label>
+            <Input id="bulk-count" type="number" min={1} max={MAX_BULK} value={count} onChange={(e) => setCount(e.target.value)} />
+          </div>
         </div>
-        <div>
-          <Label htmlFor="bulk-from">Başlangıç no</Label>
-          <Input id="bulk-from" type="number" min={0} value={from} onChange={(e) => setFrom(e.target.value)} />
-        </div>
-        <div>
-          <Label htmlFor="bulk-count">Adet</Label>
-          <Input id="bulk-count" type="number" min={1} max={MAX_BULK} value={count} onChange={(e) => setCount(e.target.value)} />
-        </div>
-        <Button type="submit" loading={saving}>
-          Oluştur
-        </Button>
       </form>
-      <p className="mt-2 font-mono text-[11px] text-ink-soft">
+      <ErrorText>{error}</ErrorText>
+      <FooterNote className="font-mono text-[11px]">
         Örnek: {prefix || "Masa"} {from || 1} … {prefix || "Masa"} {(Number.parseInt(from, 10) || 0) + (Number.parseInt(count, 10) || 1) - 1} ·
         aynı adla var olan QR&apos;lar atlanır
-      </p>
-      <ErrorText>{error}</ErrorText>
+      </FooterNote>
     </Card>
   );
 }
@@ -333,35 +337,42 @@ export default function QrCodesPage() {
       <BulkTableForm onCreate={handleBulkCreate} />
 
       <Card className="mt-6">
-        <p className="font-display text-lg font-bold">Tek QR oluştur</p>
-        <form onSubmit={handleCreate} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
-          <div className="flex-1">
-            <Label htmlFor="qr-name">QR adı</Label>
-            <Input
-              id="qr-name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="Vitrin, Instagram bio, Paket poşeti…"
-              maxLength={60}
-            />
+        <form onSubmit={handleCreate}>
+          <SectionHeader
+            title="Tek QR oluştur"
+            description="Vitrin, sosyal medya ya da paket servis için tek tek QR ekleyin."
+            action={
+              <Button type="submit" loading={saving}>
+                <QrCodeIcon size={15} /> QR oluştur
+              </Button>
+            }
+          />
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex-1">
+              <Label htmlFor="qr-name">QR adı</Label>
+              <Input
+                id="qr-name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Vitrin, Instagram bio, Paket poşeti…"
+                maxLength={60}
+              />
+            </div>
+            <div className="sm:w-48">
+              <Label htmlFor="qr-placement">Nerede kullanılacak</Label>
+              <Select
+                id="qr-placement"
+                value={placement}
+                onChange={(event) => setPlacement(event.target.value as QrPlacement)}
+              >
+                {PLACEMENTS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
-          <div className="sm:w-48">
-            <Label htmlFor="qr-placement">Nerede kullanılacak</Label>
-            <Select
-              id="qr-placement"
-              value={placement}
-              onChange={(event) => setPlacement(event.target.value as QrPlacement)}
-            >
-              {PLACEMENTS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <Button type="submit" loading={saving}>
-            <QrCodeIcon size={15} /> QR oluştur
-          </Button>
         </form>
         <ErrorText>{error}</ErrorText>
       </Card>
@@ -375,9 +386,11 @@ export default function QrCodesPage() {
         </p>
       ) : (
         <>
-          <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
-            <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft">{codes.length} QR kodu</p>
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
+            <p className="font-display text-lg font-bold">
+              QR kodları <span className="font-mono text-xs font-normal text-ink-soft">({codes.length})</span>
+            </p>
+            <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
               {tableCodes.length > 0 && tableCodes.length < codes.length && (
                 <Select
                   aria-label="Yazdırılacak QR'lar"
@@ -394,15 +407,14 @@ export default function QrCodesPage() {
               </Button>
             </div>
           </div>
-          <p className="mt-1 text-xs text-ink-soft">
-            Yazdırma penceresinde hedef olarak “PDF olarak kaydet”i seçin. A4 sayfaya 6 kart düşer, kesim çizgileri kesiklidir.
-          </p>
-
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
             {codes.map((code) => (
               <QrCard key={code.id} code={code} business={business} onDelete={handleDelete} onDownloaded={markDownloaded} />
             ))}
           </div>
+          <FooterNote>
+            Yazdırma penceresinde hedef olarak “PDF olarak kaydet”i seçin · A4 sayfaya 6 kart düşer, kesim çizgileri kesiklidir
+          </FooterNote>
         </>
       )}
 

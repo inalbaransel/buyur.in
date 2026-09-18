@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useBusiness } from "@/components/panel/business-context";
-import { PageHeader } from "@/components/panel/ui";
+import { buttonClass, PageHeader } from "@/components/panel/ui";
 import { PlanUsageCard } from "@/components/panel/plan-usage";
 import { CheckCircleIcon, SparkIcon, WhatsappIcon } from "@/components/icons";
 import { planUpgradeWhatsappLink, planWhatsappLink } from "@/lib/site";
@@ -104,7 +104,7 @@ function UpgradeCard({
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => onStart(plan, billing)}
-        className="mt-4 inline-flex items-center justify-center gap-2 rounded-md bg-ink px-5 py-2.5 font-mono text-[13px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
+        className={buttonClass("primary", "mt-4 w-full")}
       >
         <WhatsappIcon size={15} /> {START_LABELS[plan]}
       </a>
@@ -209,7 +209,7 @@ export default function PlanPage() {
               href={planWhatsappLink(PLAN_LABELS.elite)}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-1 inline-flex items-center gap-2 rounded-md border border-paper/25 px-5 py-2.5 font-mono text-[12px] uppercase tracking-wider text-paper transition-colors hover:border-paprika hover:text-paprika"
+              className={buttonClass("outline", "mt-1 border-paper/25 text-paper")}
             >
               <WhatsappIcon size={14} /> WhatsApp ile iletişime geç
             </a>
