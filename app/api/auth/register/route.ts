@@ -75,9 +75,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Kod hatalı, tekrar dene." }, { status: 400 });
     }
 
-    let userId: string;
     try {
-      const created = await pb.collection("buyur_users").create<{ id: string }>(
+      await pb.collection("buyur_users").create(
         {
           name,
           email,
@@ -87,7 +86,6 @@ export async function POST(req: NextRequest) {
         },
         { requestKey: null }
       );
-      userId = created.id;
     } catch (err) {
       const data = (err as { response?: { data?: Record<string, unknown> } })?.response?.data;
       if (data?.email) {
@@ -97,14 +95,9 @@ export async function POST(req: NextRequest) {
       throw err;
     }
 
-    // Adres zaten OTP ile kanıtlandı; ikinci bir doğrulama maili gereksiz.
-    // Ayrı adımda çünkü `verified` korumalı bir alan: yazılamazsa kayıt yine
-    // geçerlidir, bayrağın düşmesi kimseyi panelin dışında bırakmaz.
-    await pb
-      .collection("buyur_users")
-      .update(userId, { verified: true }, { requestKey: null })
-      .catch((err) => console.error("[register] verified işaretlenemedi", userId, err));
-
+    // Not: PocketBase'in `verified` bayrağı bilerek işaretlenmiyor. Alan yalnızca
+    // superuser'a açık, servis hesabı 400 alıyor; üstelik uygulamada hiçbir yer
+    // okumuyor — adresin kanıtı zaten OTP'nin kendisi.
     await clearOtpRecords(pb, email);
     return NextResponse.json({ ok: true });
   } catch (err) {
