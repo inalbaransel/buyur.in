@@ -119,36 +119,6 @@ export const SECTOR_TEMPLATES: SectorTemplate[] = [
     ],
   },
   {
-    key: "bar",
-    label: "Bar",
-    description: "Kokteyl, içki ve atıştırmalık",
-    template: "liste",
-    categories: [
-      {
-        name: "Kokteyller",
-        products: [
-          { name: "Mojito", description: "Beyaz rom, taze nane ve misket limonu", price: 280 },
-          { name: "Margarita", description: "Tekila, portakal likörü ve limon suyu", price: 300 },
-        ],
-      },
-      {
-        name: "Biralar",
-        products: [
-          { name: "Fıçı Bira 50cl", description: "Soğuk servis fıçı bira", price: 150 },
-          { name: "Şişe Bira 33cl", description: "Yerli şişe bira", price: 140 },
-        ],
-      },
-      {
-        name: "Atıştırmalıklar",
-        products: [
-          { name: "Bira Tabağı", description: "Soğan halkası, sosis, patates kızartması", price: 220 },
-          { name: "Çerez Tabağı", description: "Karışık lüks çerez", price: 120 },
-        ],
-      },
-      { name: "Şaraplar", products: [] },
-    ],
-  },
-  {
     key: "bos",
     label: "Boş başla",
     description: "Kategorileri kendim oluşturacağım",
