@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMenu } from "@/components/menu/menu-provider";
+import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 import { ArrowLeftIcon } from "@/components/icons";
 
 export function CategoryDrawer({ onClose }: { onClose: () => void }) {
   const { business, base, categories, imageByCategory, productCountByCategory, t, tf } = useMenu();
+  // Açıkken arkadaki menü kaymasın.
+  useBodyScrollLock(true);
   const pathname = usePathname();
 
   return (

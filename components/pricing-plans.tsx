@@ -95,8 +95,8 @@ function PlanPrice({ card, billing }: { card: PlanCard; billing: Billing }) {
     return (
       <>
         <p className={eyebrow}>{card.trialMonths > 0 ? `${card.trialMonths} ay ücretsiz` : "Ücretsiz"}</p>
-        <div className="mt-1 flex items-baseline gap-2">
-          <span className="font-display text-5xl font-extrabold">0₺</span>
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
+          <span className="font-display text-4xl font-extrabold lg:text-5xl">0₺</span>
         </div>
         <p className="mt-2 text-sm font-semibold">
           {card.trialMonths > 0 ? `${card.trialMonths} ay veya 10.000 görüntülenme` : "Süre sınırı yok"}
@@ -112,8 +112,8 @@ function PlanPrice({ card, billing }: { card: PlanCard; billing: Billing }) {
     return (
       <>
         <p className={eyebrow}>Aylık karşılığı</p>
-        <div className="mt-1 flex items-baseline gap-2">
-          <span className="font-display text-5xl font-extrabold">{formatTL(card.yearlyMonthly)}</span>
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
+          <span className="font-display text-4xl font-extrabold lg:text-5xl">{formatTL(card.yearlyMonthly)}</span>
           <span className={`font-mono text-xs uppercase tracking-wider ${soft}`}>/ ay</span>
         </div>
         <p className="mt-2 text-sm font-semibold">Yıllık {formatTL(card.yearlyMonthly * MONTHS_IN_YEAR)} peşin</p>
@@ -125,8 +125,8 @@ function PlanPrice({ card, billing }: { card: PlanCard; billing: Billing }) {
   return (
     <>
       <p className={eyebrow}>Aylık ödeme</p>
-      <div className="mt-1 flex items-baseline gap-2">
-        <span className="font-display text-5xl font-extrabold">{formatTL(card.monthly)}</span>
+      <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
+        <span className="font-display text-4xl font-extrabold lg:text-5xl">{formatTL(card.monthly)}</span>
         <span className={`font-mono text-xs uppercase tracking-wider ${soft}`}>/ ay</span>
       </div>
       <p className="mt-2 text-sm font-semibold">Her ay faturalanır · taahhüt yok</p>

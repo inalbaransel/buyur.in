@@ -2,9 +2,12 @@
 
 import type { Popup } from "@/lib/types";
 import { useMenu } from "@/components/menu/menu-provider";
+import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 
 export function PopupModal({ popup, onClose }: { popup: Popup; onClose: () => void }) {
   const { t, tf } = useMenu();
+  // Açıkken arkadaki menü kaymasın.
+  useBodyScrollLock(true);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-5" onClick={onClose}>
       <div

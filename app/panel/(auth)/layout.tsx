@@ -24,7 +24,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const isLogin = pathname?.startsWith("/panel/login");
 
   return (
-    <div className="flex min-h-screen flex-col bg-paper px-5 py-5 sm:px-8 sm:py-6">
+    <div className="flex min-h-dvh flex-col bg-paper px-5 py-5 sm:px-8 sm:py-6">
       <div className="flex items-center justify-between">
         <Link href="/">
           <Logo />

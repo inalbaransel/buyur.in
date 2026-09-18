@@ -136,7 +136,7 @@ export default async function RestaurantSitePage({ params }: { params: Promise<{
 
   return (
     <SiteLocaleProvider business={business}>
-      <div style={style} className="min-h-screen bg-paper text-ink">
+      <div style={style} className="min-h-dvh bg-paper text-ink">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
         <div className="relative">

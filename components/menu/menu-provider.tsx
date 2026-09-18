@@ -568,7 +568,7 @@ export function MenuProvider({
         // global (açık tema) mürekkepten hesaplanıp miras kalıyordu — koyu
         // yüzeylerde renk sınıfı olmayan her metin (kategori başlıkları, dil
         // listesi…) zemine gömülüyordu.
-        className="min-h-screen bg-paper pb-24 text-ink"
+        className="min-h-dvh bg-paper pb-24 text-ink"
       >
         <TrackPageViews business={business} base={basePath} locale={locale} />
         {/* İlk açılışta önce dil seçimi; dil modalı kapanınca kampanya popup'ı gösterilir. */}

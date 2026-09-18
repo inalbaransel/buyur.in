@@ -22,7 +22,7 @@ export function SiteHero({ content, rich, menuHref }: { content: SiteContent; ri
   const tagline = tf(business, "description").trim();
 
   return (
-    <header className="relative isolate h-[100vh] overflow-hidden">
+    <header className="relative isolate h-svh overflow-hidden">
       {hero.image && (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}

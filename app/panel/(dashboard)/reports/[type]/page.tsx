@@ -68,7 +68,7 @@ export default function ReportDetailPage() {
           description={data?.description}
           action={
             data && meta?.plan.export ? (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => window.print()}

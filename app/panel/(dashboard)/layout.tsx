@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/chrome";
@@ -52,19 +52,28 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { business, isLoading } = useBusiness();
 
+  const mobileNavRef = useRef<HTMLElement>(null);
+
+  // Mobil menü yatay kaydığı için aktif sekme ekran dışında kalabiliyor
+  // (ör. "Ayarlar"); sayfa değişince görünür alana getirilir.
+  useEffect(() => {
+    const active = mobileNavRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
+    active?.scrollIntoView({ inline: "center", block: "nearest" });
+  }, [pathname, business]);
+
   function handleLogout() {
     pb.authStore.clear();
     router.replace("/panel/login");
   }
 
   if (isLoading) {
-    return <div className="flex min-h-screen items-center justify-center text-ink-soft">Yükleniyor…</div>;
+    return <div className="flex min-h-dvh items-center justify-center text-ink-soft">Yükleniyor…</div>;
   }
 
   return (
-    <div className="min-h-screen bg-crema/30">
+    <div className="min-h-dvh overflow-x-clip bg-crema/30 [--panel-header-h:69px]">
       <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
+        <div className="mx-auto flex h-[calc(var(--panel-header-h)-1px)] max-w-6xl items-center justify-between px-5">
           <Link href="/panel">
             <Logo />
           </Link>
@@ -89,15 +98,20 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </div>
-        {/* Mobil: yatay kaydırılabilir kompakt menü (sidebar masaüstünde) */}
+        {/* Mobil/tablet: yatay kaydırılabilir kompakt menü. Sidebar 1024px ve üstünde;
+            768px'te yan menü içeriği ~490px'e sıkıştırıp kartları bozuyordu. */}
         {business && (
-          <div className="border-t border-line/60 md:hidden">
-            <nav className="mx-auto flex max-w-6xl gap-4 overflow-x-auto px-5 py-2.5 font-mono text-[11px] uppercase tracking-wider text-ink-soft">
+          <div className="border-t border-line/60 lg:hidden">
+            <nav
+              ref={mobileNavRef}
+              className="mx-auto flex max-w-6xl gap-5 overflow-x-auto px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-ink-soft [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
               {navItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`whitespace-nowrap transition-colors hover:text-paprika ${isNavItemActive(pathname, item) ? "text-paprika" : ""
+                  aria-current={isNavItemActive(pathname, item) ? "page" : undefined}
+                  className={`shrink-0 whitespace-nowrap transition-colors hover:text-paprika ${isNavItemActive(pathname, item) ? "text-paprika" : ""
                     }`}
                 >
                   {item.label}
@@ -108,9 +122,9 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         )}
       </header>
       <div className="mx-auto flex max-w-6xl gap-8 px-5">
-        {/* Masaüstü: sol sidebar */}
+        {/* Masaüstü (lg+): sol sidebar */}
         {business && (
-          <aside className="sticky top-[65px] hidden h-[calc(100vh-65px)] w-52 shrink-0 overflow-y-auto py-8 md:block">
+          <aside className="sticky top-[var(--panel-header-h)] hidden h-[calc(100dvh-var(--panel-header-h))] w-52 shrink-0 overflow-y-auto py-8 lg:block">
             <nav className="space-y-1">
               {navItems.map((item) => {
                 const active = isNavItemActive(pathname, item);
@@ -151,7 +165,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [isLoading, user, router]);
 
   if (isLoading || !user) {
-    return <div className="flex min-h-screen items-center justify-center text-ink-soft">Yükleniyor…</div>;
+    return <div className="flex min-h-dvh items-center justify-center text-ink-soft">Yükleniyor…</div>;
   }
 
   return (

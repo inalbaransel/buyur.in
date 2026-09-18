@@ -6,7 +6,7 @@ import type { Business } from "@/lib/types";
 // geçtiği anda menü yeniden yayına girer. Müşteriye teknik detay verilmez.
 export function MenuUnavailable({ business }: { business: Business }) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-5 bg-paper px-6 text-center">
+    <main className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-paper px-6 text-center">
       {business.logo_url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={business.logo_url} alt={business.name} className="h-16 w-16 rounded-2xl object-cover" />

@@ -218,13 +218,13 @@ export default function PlanPage() {
       )}
 
       <div className="mt-8 overflow-x-auto rounded-2xl border border-line bg-paper">
-        <table className="w-full min-w-[640px] text-sm">
+        <table className="w-full text-[13px] sm:min-w-[640px] sm:text-sm">
           <thead>
             <tr className="border-b border-line bg-crema/50 text-left">
-              <th className="px-5 py-3 font-mono text-[10px] uppercase tracking-wider text-ink-soft">Özellik</th>
+              <th className="px-2.5 py-3 font-mono text-[10px] uppercase tracking-wider text-ink-soft sm:px-5">Özellik</th>
               {PLAN_ORDER.map((plan) => (
-                <th key={plan} className="px-5 py-3 text-center">
-                  <span className={`font-display text-base font-bold ${plan === current ? "text-paprika" : ""}`}>
+                <th key={plan} className="px-1.5 py-3 text-center sm:px-5">
+                  <span className={`font-display text-[13px] font-bold sm:text-base ${plan === current ? "text-paprika" : ""}`}>
                     {PLAN_LABELS[plan]}
                   </span>
                   {plan === current && (
@@ -239,9 +239,9 @@ export default function PlanPage() {
           <tbody>
             {FEATURE_MATRIX.map((row) => (
               <tr key={row.label} className="border-b border-line/60 last:border-0">
-                <td className="px-5 py-3">{row.label}</td>
+                <td className="px-2.5 py-3 sm:px-5">{row.label}</td>
                 {PLAN_ORDER.map((plan) => (
-                  <td key={plan} className={`px-5 py-3 text-center ${plan === current ? "bg-paprika/5" : ""}`}>
+                  <td key={plan} className={`px-1.5 py-3 text-center sm:px-5 ${plan === current ? "bg-paprika/5" : ""}`}>
                     <Cell value={row.values[plan]} />
                   </td>
                 ))}

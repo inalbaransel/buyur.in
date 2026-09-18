@@ -13,6 +13,7 @@ import type {
 import Link from "next/link";
 import { LockIcon, SparklesIcon } from "@/components/icons";
 import { formatSavedTime } from "@/lib/format";
+import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 
 export function Label(props: LabelHTMLAttributes<HTMLLabelElement>) {
   const { className = "", ...rest } = props;
@@ -113,7 +114,7 @@ export function AiButton({ className = "", children = "Yapay Zeka ile Tara", ...
         <span className="relative z-10 font-bold drop-shadow-sm">{children}</span>
       </button>
 
-      <div className="pointer-events-none absolute top-full left-1/2 z-50 mt-3 w-64 -translate-x-1/2 -translate-y-2 rounded-2xl border border-line bg-paper p-3 opacity-0 shadow-xl transition-all duration-300 group-hover/aibtn:translate-y-0 group-hover/aibtn:opacity-100">
+      <div className="pointer-events-none absolute top-full left-1/2 z-50 mt-3 hidden w-64 md:block -translate-x-1/2 -translate-y-2 rounded-2xl border border-line bg-paper p-3 opacity-0 shadow-xl transition-all duration-300 group-hover/aibtn:translate-y-0 group-hover/aibtn:opacity-100">
         <p className="mb-2 text-center text-xs font-medium leading-relaxed text-ink">
           Fiziksel menünüzün fotoğrafını çekin, yapay zeka ürünleri otomatik okuyup listeye eklesin.
         </p>
@@ -175,7 +176,7 @@ export function PageHeader({ title, description, action }: { title: string; desc
         {description && <p className="mt-1.5 text-sm text-ink-soft">{description}</p>}
       </div>
       {/* Eylemler her ekranda aynı yerde: sağ üst. */}
-      {action && <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{action}</div>}
+      {action && <div className="ml-auto flex max-w-full shrink-0 flex-wrap items-center justify-end gap-2">{action}</div>}
     </div>
   );
 }
@@ -199,7 +200,7 @@ export function SectionHeader({
         <p className="font-display text-lg font-bold">{title}</p>
         {description && <p className="mt-1 text-sm text-ink-soft">{description}</p>}
       </div>
-      {action && <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{action}</div>}
+      {action && <div className="ml-auto flex max-w-full shrink-0 flex-wrap items-center justify-end gap-2">{action}</div>}
     </div>
   );
 }
@@ -327,7 +328,7 @@ export function Tabs<T extends string>({
   onChange: (key: T) => void;
 }) {
   return (
-    <div className="mb-6 flex gap-6 overflow-x-auto border-b border-line">
+    <div className="mb-6 flex gap-6 overflow-x-auto overflow-y-hidden border-b border-line [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {tabs.map((t) => {
         const isActive = t.key === active;
         return (
@@ -472,19 +473,16 @@ export function Modal({
   children: ReactNode;
   dismissable?: boolean;
 }) {
+  // Arkadaki sayfa kaymasın — mobilde modal içi kaydırma karışıyor.
+  useBodyScrollLock(open);
+
   useEffect(() => {
     if (!open) return;
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape" && dismissable) onClose();
     }
-    // Arkadaki sayfa kaymasın — mobilde modal içi kaydırma karışıyor.
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = previous;
-      window.removeEventListener("keydown", onKey);
-    };
+    return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose, dismissable]);
 
   if (!open) return null;
@@ -498,7 +496,7 @@ export function Modal({
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className={`flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl border border-line bg-paper shadow-[0_30px_70px_-25px_rgba(35,24,18,0.55)] sm:rounded-2xl ${MODAL_WIDTHS[size]}`}
+        className={`flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl border border-line bg-paper shadow-[0_30px_70px_-25px_rgba(35,24,18,0.55)] sm:rounded-2xl ${MODAL_WIDTHS[size]}`}
       >
         <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4 sm:px-6">
           <div className="min-w-0">

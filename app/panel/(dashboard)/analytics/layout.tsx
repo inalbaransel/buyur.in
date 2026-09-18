@@ -21,7 +21,7 @@ export default function AnalyticsLayout({ children }: { children: React.ReactNod
   return (
     <AnalyticsFilterProvider>
       <div>
-        <nav className="mb-6 flex gap-5 overflow-x-auto border-b border-line">
+        <nav className="mb-6 flex gap-5 overflow-x-auto overflow-y-hidden border-b border-line [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map((tab) => {
             const active = tab.href === "/panel/analytics" ? pathname === tab.href : pathname.startsWith(tab.href);
             return (

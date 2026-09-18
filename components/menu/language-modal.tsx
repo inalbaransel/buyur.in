@@ -2,11 +2,14 @@
 
 import { localeCodes, localeLabels, type Locale } from "@/lib/i18n";
 import { useMenu } from "@/components/menu/menu-provider";
+import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 
 // İlk ziyarette gösterilen dil seçim modalı — kampanya popup'ından önce gelir.
 // Ziyaretçi bir dil seçince kapanır ve seçim hatırlanır.
 export function LanguageModal({ onPick }: { onPick: (locale: Locale) => void }) {
   const { business, locales, tf, t } = useMenu();
+  // Açıkken arkadaki menü kaymasın.
+  useBodyScrollLock(true);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-5">

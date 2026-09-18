@@ -3,7 +3,7 @@ import { Logo } from "@/components/chrome";
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-5 text-center">
+    <div className="flex min-h-dvh flex-col items-center justify-center px-5 text-center">
       <Logo />
       <p className="mt-10 font-display text-[7rem] font-extrabold leading-none tracking-tight text-paprika">
         404

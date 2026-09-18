@@ -40,6 +40,13 @@ html {
   label:has(input[type="file"]:not(:disabled)) {
     cursor: pointer;
   }
+
+  /* Grid öğeleri varsayılan olarak min-width:auto taşır: `grid gap-4 sm:grid-cols-2`
+     gibi mobilde sütunsuz kalan ızgaralarda uzun bir URL/isim sütunu genişletip
+     sayfayı yatayda taşırıyordu. Öğelerin daralabilmesi için sıfırlanır. */
+  .grid > * {
+    min-width: 0;
+  }
 }
 
 body {

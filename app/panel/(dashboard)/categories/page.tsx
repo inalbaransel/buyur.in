@@ -119,7 +119,7 @@ export default function CategoriesPage() {
         title="Kategoriler"
         description="Menünü kategorilere ayır."
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Link href="/panel/products/import">
               <AiButton />
             </Link>
@@ -135,7 +135,7 @@ export default function CategoriesPage() {
           title="Henüz kategori yok"
           description="İlk kategorini oluşturarak menünü kurmaya başla."
           action={
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Link href="/panel/products/import">
                 <AiButton />
               </Link>

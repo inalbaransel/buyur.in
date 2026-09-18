@@ -99,7 +99,7 @@ export default function ProductsPage() {
           title="Önce bir kategori oluştur"
           description="Ürün eklemeden önce en az bir kategori gerekiyor."
           action={
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Link href="/panel/products/import">
                 <AiButton />
               </Link>
@@ -122,7 +122,7 @@ export default function ProductsPage() {
         title="Ürünler"
         description="Fiyat, görsel, rozet ve daha fazlasını yönet."
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Link href="/panel/products/import">
               <AiButton />
             </Link>
@@ -138,7 +138,7 @@ export default function ProductsPage() {
           title="Henüz ürün yok"
           description="İlk ürününü ekleyerek menünü canlandır."
           action={
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Link href="/panel/products/import">
                 <AiButton />
               </Link>
@@ -159,7 +159,7 @@ export default function ProductsPage() {
               <h2 className="mb-3 font-mono text-[13px] uppercase tracking-wider text-ink-soft">{cat.name}</h2>
               <div className="space-y-3">
                 {items.map((product) => (
-                  <Card key={product.id} className="flex items-center gap-4">
+                  <Card key={product.id} className="flex flex-wrap items-center gap-x-4 gap-y-3">
                     <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-crema">
                       {product.images?.[0] && (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -175,17 +175,20 @@ export default function ProductsPage() {
                         )}
                       </p>
                     </div>
-                    <label className="flex shrink-0 items-center gap-2 text-xs text-ink-soft">
-                      <input type="checkbox" checked={product.is_available} onChange={() => toggleAvailable(product)} />
-                      Satışta
-                    </label>
-                    <div className="flex shrink-0 gap-2">
-                      <Link href={`/panel/product/${product.id}`}>
-                        <Button variant="outline">Düzenle</Button>
-                      </Link>
-                      <Button variant="danger" onClick={() => handleDelete(product)}>
-                        Sil
-                      </Button>
+                    {/* Mobilde ikinci satıra iner; masaüstünde satırın sağında durur. */}
+                    <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:shrink-0 sm:justify-end sm:gap-4">
+                      <label className="flex shrink-0 items-center gap-2 text-xs text-ink-soft">
+                        <input type="checkbox" checked={product.is_available} onChange={() => toggleAvailable(product)} />
+                        Satışta
+                      </label>
+                      <div className="flex shrink-0 gap-2">
+                        <Link href={`/panel/product/${product.id}`}>
+                          <Button variant="outline">Düzenle</Button>
+                        </Link>
+                        <Button variant="danger" onClick={() => handleDelete(product)}>
+                          Sil
+                        </Button>
+                      </div>
                     </div>
                   </Card>
                 ))}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/chrome";
+import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 
 // Kök önekli çapalar.
 const links = [
@@ -53,18 +54,15 @@ export function Navbar() {
   }, []);
 
   // Çekmece açıkken arka plan kaymasın; Esc ile kapansın.
+  useBodyScrollLock(open);
+
   useEffect(() => {
     if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
     window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
-    };
+    return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
   return (
