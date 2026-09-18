@@ -73,7 +73,7 @@ export default function ReviewPage() {
             href={business.google_review_url}
             target="_blank"
             rel="noreferrer"
-            className="mt-8 flex w-full max-w-xs items-center justify-center gap-2 rounded-xl py-3.5 font-display font-bold shadow-lg transition-opacity hover:opacity-90"
+            className="mt-8 flex w-full max-w-xs items-center justify-center gap-2 rounded-md py-3.5 font-display font-bold shadow-lg transition-opacity hover:opacity-90"
             style={{ background: "var(--brand)", color: "var(--brand-on)" }}
           >
             <StarIcon size={18} filled />
@@ -83,7 +83,7 @@ export default function ReviewPage() {
         <Link
           href={`${base}/menu`}
           className={`font-mono text-[13px] uppercase tracking-wider ${
-            business.google_review_url ? "mt-4 text-ink-soft underline underline-offset-4" : "mt-8 rounded-full px-8 py-3"
+            business.google_review_url ? "mt-4 text-ink-soft underline underline-offset-4" : "mt-8 rounded-md px-8 py-3"
           }`}
           style={
             business.google_review_url ? undefined : { background: "var(--brand)", color: "var(--brand-on)" }
@@ -162,7 +162,7 @@ export default function ReviewPage() {
       <button
         type="submit"
         disabled={saving}
-        className="w-full rounded-xl py-4 font-display text-lg font-bold shadow-lg transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="w-full rounded-md py-4 font-display text-lg font-bold shadow-lg transition-opacity hover:opacity-90 disabled:opacity-50"
         style={{ background: "var(--brand)", color: "var(--brand-on)" }}
       >
         {saving ? t("sending") : t("send")}

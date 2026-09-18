@@ -2,14 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { uploadFile } from "@/lib/upload";
-import { Button, Spinner } from "@/components/panel/ui";
+import { Button, Modal, Spinner } from "@/components/panel/ui";
 import { ImageIcon, SearchIcon, TrashIcon } from "@/components/icons";
 import { searchImageCandidates } from "@/lib/ai/find-image";
-import { needsImageCredit, PROVIDER_LABELS, toStoredImage } from "@/lib/ai/image-source";
+import { PROVIDER_LABELS, toStoredImage } from "@/lib/ai/image-source";
 import type { ImageCandidate, ProductImageSource } from "@/lib/ai/image-source";
 
 // Ürün görseli seçici: açık lisanslı kaynaklardan arar, kullanıcı değiştirebilir,
 // yeniden aratabilir veya kendi görselini yükleyebilir.
+//
+// Sonuçlar modalda gösterilir: satır arasına sıkışmış küçük ızgarada görselin
+// neye benzediği anlaşılmıyordu — seçim görsele bakarak yapılan bir karar.
 //
 // Seçilen görsel sağlayıcının kendi adresiyle kaydedilir; kaynak ve lisans
 // künyesi `onChange`'in ikinci parametresiyle çağırana geçer.
@@ -87,8 +90,47 @@ export function ImagePicker({
   }
 
   return (
-    <div className="rounded-2xl border border-line bg-crema/40 p-4">
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+    <Modal
+      open
+      onClose={onClose}
+      size="lg"
+      title={productName.trim() === "" ? "Görsel seç" : `Görsel seç · ${productName}`}
+      description="Yalnızca ticari kullanıma açık, lisansı belirtilmiş görseller listelenir."
+      footer={
+        <>
+          <label className="mr-auto inline-flex cursor-pointer items-center gap-2 rounded-md border border-line bg-paper px-4 py-2 font-mono text-[12px] uppercase tracking-wider transition-colors hover:border-paprika hover:text-paprika">
+            <ImageIcon size={15} />
+            {uploading ? "Yükleniyor…" : "Kendi görselim"}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              disabled={uploading}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleUpload(file);
+              }}
+            />
+          </label>
+          {value && (
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => {
+                onChange("", null);
+                onClose();
+              }}
+            >
+              <TrashIcon size={15} /> Görseli kaldır
+            </Button>
+          )}
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Kapat
+          </Button>
+        </>
+      }
+    >
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -99,104 +141,92 @@ export function ImagePicker({
             }
           }}
           placeholder="Görsel ara"
-          className="min-w-0 flex-1 rounded-2xl border border-line bg-paper px-4 py-2 text-sm outline-none focus:border-paprika"
+          className="min-w-0 flex-1 rounded-2xl border border-line bg-paper px-4 py-2.5 text-sm outline-none focus:border-paprika"
         />
         <Button type="button" variant="outline" onClick={() => search(query)} disabled={loading}>
           <SearchIcon size={15} /> Ara
         </Button>
-        <Button type="button" variant="ghost" onClick={onClose}>
-          Kapat
-        </Button>
       </div>
 
       {loading && (
-        <div className="flex items-center justify-center gap-2 py-8 text-sm text-ink-soft">
-          <Spinner className="h-4 w-4" /> Görseller aranıyor…
+        <div className="flex flex-col items-center justify-center gap-3 py-16 text-sm text-ink-soft">
+          <Spinner className="h-6 w-6 text-paprika" />
+          Görseller aranıyor…
         </div>
       )}
 
       {!loading && !configured && (
-        <p className="py-3 text-sm text-ink-soft">
+        <p className="rounded-2xl border border-dashed border-line px-4 py-8 text-center text-sm text-ink-soft">
           Otomatik görsel arama yapılandırılmamış. Kendi görselinizi yükleyebilirsiniz.
         </p>
       )}
 
       {!loading && configured && searched && images.length === 0 && (
-        <p className="py-3 text-sm text-ink-soft">
+        <p className="rounded-2xl border border-dashed border-line px-4 py-8 text-center text-sm text-ink-soft">
           Bu ürün için ticari kullanıma açık görsel bulunamadı. Aramayı değiştirin veya kendi görselinizi
           yükleyin.
         </p>
       )}
 
       {!loading && images.length > 0 && (
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-          {images.map((image) => (
-            <button
-              key={`${image.provider}-${image.id}`}
-              type="button"
-              onClick={() => handlePick(image)}
-              title={`${PROVIDER_LABELS[image.provider]}${image.authorName ? ` · ${image.authorName}` : ""} · ${image.license.name}`}
-              className={`group relative aspect-square overflow-hidden rounded-lg border-2 transition-colors ${
-                value === image.url ? "border-paprika" : "border-line hover:border-paprika"
-              }`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={image.thumbUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
-              {image.license.attributionRequired && (
-                <span className="absolute left-1 top-1 rounded bg-ink/75 px-1.5 py-0.5 text-[9px] font-semibold text-paper">
-                  Lisans gerekli
-                </span>
-              )}
-              <span className="absolute inset-x-0 bottom-0 truncate bg-ink/60 px-1 py-0.5 text-[9px] text-paper">
-                {image.authorName ? `${image.authorName} · ` : ""}
-                {image.license.name}
-              </span>
-            </button>
-          ))}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {images.map((image) => {
+            const selected = value === image.url;
+            return (
+              <button
+                key={`${image.provider}-${image.id}`}
+                type="button"
+                onClick={() => handlePick(image)}
+                title={`${PROVIDER_LABELS[image.provider]}${image.authorName ? ` · ${image.authorName}` : ""} · ${image.license.name}`}
+                className={`group relative overflow-hidden rounded-xl border-2 text-left transition-all ${
+                  selected
+                    ? "border-paprika shadow-[0_0_0_3px_rgba(232,73,31,0.15)]"
+                    : "border-line hover:border-paprika"
+                }`}
+              >
+                <div className="relative aspect-square bg-crema">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={image.thumbUrl}
+                    alt=""
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  {image.license.attributionRequired && (
+                    <span className="absolute left-1.5 top-1.5 rounded bg-ink/75 px-1.5 py-0.5 text-[9px] font-semibold text-paper">
+                      Lisans gerekli
+                    </span>
+                  )}
+                  {selected && (
+                    <span className="absolute right-1.5 top-1.5 rounded-full bg-paprika px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-paper">
+                      Seçili
+                    </span>
+                  )}
+                  <span className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-center bg-ink/70 py-1.5 font-mono text-[11px] uppercase tracking-wider text-paper opacity-0 transition-opacity group-hover:opacity-100">
+                    Bu görseli seç
+                  </span>
+                </div>
+                <div className="truncate px-2 py-1.5 text-[10px] leading-tight text-ink-soft">
+                  {image.authorName ? `${image.authorName} · ` : ""}
+                  {image.license.name}
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
 
       {failed && (
-        <p className="mt-3 text-sm text-paprika-deep">
+        <p className="mt-4 text-sm text-paprika-deep">
           Görsel eklenemedi. Başka bir görsel seçin veya kendi görselinizi yükleyin.
         </p>
       )}
 
-      <p className="mt-3 text-[11px] leading-relaxed text-ink-soft">
-        Yalnızca ticari kullanıma açık, lisansı belirtilmiş görseller listelenir.{" "}
+      <p className="mt-5 border-t border-line pt-4 text-[11px] leading-relaxed text-ink-soft">
         <strong className="font-semibold">Lisans gerekli</strong> işaretli görsellerde fotoğrafçı ve lisans
         bilgisi menünüzde otomatik gösterilir; sizin yapmanız gereken bir şey yok.
       </p>
-
-      <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-3">
-        <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-line px-4 py-2 font-mono text-[12px] uppercase tracking-wider transition-colors hover:border-paprika hover:text-paprika">
-          <ImageIcon size={15} />
-          {uploading ? "Yükleniyor…" : "Kendi görselim"}
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="hidden"
-            disabled={uploading}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleUpload(file);
-            }}
-          />
-        </label>
-        {value && (
-          <button
-            type="button"
-            onClick={() => {
-              onChange("", null);
-              onClose();
-            }}
-            className="inline-flex items-center gap-1.5 text-sm text-ink-soft transition-colors hover:text-paprika"
-          >
-            <TrashIcon size={15} /> Görseli kaldır
-          </button>
-        )}
-      </div>
-    </div>
+    </Modal>
   );
 }
 

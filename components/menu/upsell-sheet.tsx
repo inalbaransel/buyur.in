@@ -87,7 +87,7 @@ export function UpsellSheet({
           <button
             type="button"
             onClick={onClose}
-            className="mt-3 w-full rounded-full py-2 text-center font-mono text-[11px] uppercase tracking-wider text-ink-soft transition-colors hover:text-ink"
+            className="mt-3 w-full rounded-md py-2 text-center font-mono text-[11px] uppercase tracking-wider text-ink-soft transition-colors hover:text-ink"
           >
             {t("noThanks")}
           </button>

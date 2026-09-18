@@ -34,7 +34,7 @@ export function CartBar({ lines, base }: { lines: CartLine[]; base: string }) {
         <Link
           href={`${base}/cart`}
           style={{ background: "var(--brand)", color: "var(--brand-on)" }}
-          className={`pointer-events-auto flex w-full items-center justify-between rounded-xl px-5 py-4 shadow-[0_20px_40px_-12px_rgba(35,24,18,0.5)] sm:w-96 ${bump ? "cart-pop" : ""}`}
+          className={`pointer-events-auto flex w-full items-center justify-between rounded-md px-5 py-4 shadow-[0_20px_40px_-12px_rgba(35,24,18,0.5)] sm:w-96 ${bump ? "cart-pop" : ""}`}
         >
           <span className="font-mono text-[13px] uppercase tracking-wider">{t("cartBarLabel", { count })}</span>
           <span className="font-mono text-base font-bold">{formatPrice(cartTotal(lines))}</span>

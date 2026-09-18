@@ -18,6 +18,29 @@ const PDF_PREFIX = /^data:application\/pdf;base64,/;
 
 type Page = { kind: "image"; data: string } | { kind: "pdf"; data: string };
 
+// ── Çift tarama koruması ────────────────────────────────────────────────
+//
+// İşletme "Tara" düğmesine iki kez bastığında ya da ikinci sekmeyi açtığında
+// aynı menü iki kez okunur: kotadan iki hak gider ve panelde iki ayrı sonuç
+// seti belirir — kullanıcı ikisini de aktarırsa menü çift kayıtla dolar.
+//
+// Bellekteki kilit sunucu örneğine özeldir (ölçekte kusursuz değil); asıl
+// tekrar koruması aktarım tarafındaki idempotent plandır (lib/ai/import-plan).
+// Burası kullanıcıyı boşa harcanan kotadan korur.
+const inFlight = new Set<string>();
+const recentScans = new Map<string, number>();
+
+/** Aynı dosyaların yeniden taranmasının "kaza" sayıldığı süre. */
+const REPEAT_WINDOW_MS = 15 * 60 * 1000;
+
+function rememberScan(key: string, now: number) {
+  recentScans.set(key, now);
+  // Pencereden düşenleri temizle — harita süresiz büyümesin.
+  for (const [entry, at] of recentScans) {
+    if (now - at > REPEAT_WINDOW_MS) recentScans.delete(entry);
+  }
+}
+
 /** Girdiyi doğrular: yalnızca beklenen veri URI biçimleri ve boyut sınırı. */
 function parsePages(value: unknown, maxPages: number): { pages: Page[] } | { error: string } {
   if (!Array.isArray(value) || value.length === 0) {
@@ -71,9 +94,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
+  // Sürmekte olan bir tarama varken ikincisi başlatılmaz.
+  if (inFlight.has(business.id)) {
+    return NextResponse.json(
+      { error: "Bu işletme için bir menü taraması zaten sürüyor. Bitmesini bekleyin." },
+      { status: 409, headers: { "x-buyur-scan": "in-flight" } }
+    );
+  }
+
+  // Aynı dosyalar kısa süre içinde yeniden gönderildiyse kullanıcı onaylamadan
+  // kota harcanmaz; panel "yine de tara" derse `force` ile geri gelir.
+  const fingerprint = typeof body.fingerprint === "string" ? body.fingerprint.slice(0, 128) : "";
+  const repeatKey = fingerprint ? `${business.id}:${fingerprint}` : "";
+  const now = Date.now();
+  if (repeatKey && body.force !== true) {
+    const lastAt = recentScans.get(repeatKey);
+    if (lastAt !== undefined && now - lastAt < REPEAT_WINDOW_MS) {
+      return NextResponse.json(
+        {
+          error: "Bu menü sayfalarını az önce taradınız. Sonucu panelde kontrol edin.",
+          duplicate: true,
+        },
+        { status: 409, headers: { "x-buyur-scan": "duplicate" } }
+      );
+    }
+  }
+
   const openai = openaiClient();
   if (isGuardFailure(openai)) return openai.response;
 
+  inFlight.add(business.id);
   try {
     // Responses API görsel ve PDF'i aynı içerik dizisinde kabul eder; PDF'i
     // istemcide sayfa sayfa görsele çevirmeye gerek kalmıyor.
@@ -124,8 +174,12 @@ export async function POST(req: NextRequest) {
       console.error("Yapay zekâ kota sayacı güncellenemedi:", error);
     }
 
+    // Sonuç üreten tarama hatırlanır: aynı dosyalar yeniden gelirse uyarılır.
+    if (repeatKey) rememberScan(repeatKey, Date.now());
+
     return NextResponse.json({
       ...result,
+      fingerprint,
       usage: {
         used: usage.used + 1,
         limit: usage.limit,
@@ -135,5 +189,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Yapay zekâ menü tarama hatası:", error);
     return NextResponse.json({ error: "Yapay zekâ tarama yaparken bir hata oluştu." }, { status: 500 });
+  } finally {
+    inFlight.delete(business.id);
   }
 }

@@ -322,7 +322,7 @@ export function HowItWorks() {
               data-track="cta_click"
               data-track-location="how_it_works"
               data-track-cta="create_free"
-              className="shine-on-hover relative block overflow-hidden rounded-full bg-paprika px-8 py-3.5 text-center font-mono text-[13px] uppercase tracking-wider text-paper transition-all duration-300 hover:-translate-y-0.5 hover:bg-paprika-deep"
+              className="shine-on-hover relative block overflow-hidden rounded-md bg-paprika px-8 py-3.5 text-center font-mono text-[13px] uppercase tracking-wider text-paper transition-all duration-300 hover:-translate-y-0.5 hover:bg-paprika-deep"
             >
               Ücretsiz menünü oluştur
             </Link>
@@ -335,7 +335,7 @@ export function HowItWorks() {
               rel="noopener noreferrer"
               data-track="whatsapp_lead"
               data-track-location="how_it_works"
-              className="flex items-center justify-center gap-2 rounded-full border border-paper/40 px-8 py-3.5 text-center font-mono text-[13px] uppercase tracking-wider text-paper transition-all duration-300 hover:-translate-y-0.5 hover:border-paper hover:bg-paper hover:text-ink"
+              className="flex items-center justify-center gap-2 rounded-md border border-paper/40 px-8 py-3.5 text-center font-mono text-[13px] uppercase tracking-wider text-paper transition-all duration-300 hover:-translate-y-0.5 hover:border-paper hover:bg-paper hover:text-ink"
             >
               <WhatsappIcon size={15} />
               Menümü WhatsApp&apos;tan gönder

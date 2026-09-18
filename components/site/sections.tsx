@@ -71,7 +71,7 @@ export function SiteHero({ content, rich, menuHref }: { content: SiteContent; ri
         <div className="mt-2 flex flex-col gap-3 sm:flex-row">
           <Link
             href={menuHref}
-            className="rounded-full bg-[var(--brand)] px-8 py-3.5 font-mono text-[13px] uppercase tracking-wider text-[var(--brand-on)] transition-transform duration-300 hover:-translate-y-0.5"
+            className="rounded-md bg-[var(--brand)] px-8 py-3.5 font-mono text-[13px] uppercase tracking-wider text-[var(--brand-on)] transition-transform duration-300 hover:-translate-y-0.5"
           >
             {t("viewMenu")}
           </Link>
@@ -80,7 +80,7 @@ export function SiteHero({ content, rich, menuHref }: { content: SiteContent; ri
               href={reservation.href}
               target={reservation.kind === "url" || reservation.kind === "whatsapp" ? "_blank" : undefined}
               rel="noopener noreferrer"
-              className={`rounded-full border px-8 py-3.5 font-mono text-[13px] uppercase tracking-wider transition-colors ${
+              className={`rounded-md border px-8 py-3.5 font-mono text-[13px] uppercase tracking-wider transition-colors ${
                 hero.image
                   ? "border-paper/50 text-paper hover:bg-paper hover:text-ink"
                   : "border-ink text-ink hover:bg-ink hover:text-paper"
@@ -278,7 +278,7 @@ export function SiteLocation({ content }: { content: SiteContent }) {
           href={mapsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-full border border-ink px-6 py-3 font-mono text-[12px] uppercase tracking-wider transition-colors hover:bg-ink hover:text-paper"
+          className="rounded-md border border-ink px-6 py-3 font-mono text-[12px] uppercase tracking-wider transition-colors hover:bg-ink hover:text-paper"
         >
           {t("directionsLabel")}
         </a>
@@ -322,7 +322,7 @@ export function SiteContact({ content }: { content: SiteContent }) {
           href={link.href}
           target={link.kind === "phone" || link.kind === "email" ? undefined : "_blank"}
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm transition-colors hover:border-paprika hover:text-paprika"
+          className="inline-flex items-center gap-2 rounded-md border border-line px-5 py-2.5 text-sm transition-colors hover:border-paprika hover:text-paprika"
         >
           {link.kind === "phone" && <PhoneIcon size={14} />}
           {link.kind === "whatsapp" && <WhatsappIcon size={14} />}
@@ -354,7 +354,7 @@ export function SiteReservationCta({ content }: { content: SiteContent }) {
         href={reservation.href}
         target={reservation.kind === "phone" ? undefined : "_blank"}
         rel="noopener noreferrer"
-        className="rounded-full bg-paper px-8 py-3.5 font-mono text-[13px] uppercase tracking-wider text-ink transition-transform duration-300 hover:-translate-y-0.5"
+        className="rounded-md bg-paper px-8 py-3.5 font-mono text-[13px] uppercase tracking-wider text-ink transition-transform duration-300 hover:-translate-y-0.5"
       >
         {reservationLabel(t, reservation.kind)}
       </a>

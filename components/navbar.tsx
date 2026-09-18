@@ -4,13 +4,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/chrome";
 
-// Kök önekli çapalar: navbar blog sayfalarında da kullanılıyor.
+// Kök önekli çapalar.
 const links = [
   { href: "/#neden", label: "Neden buyur" },
   { href: "/#canli-menu", label: "Canlı demo" },
   { href: "/#nasil", label: "Nasıl çalışır" },
   { href: "/#fiyat", label: "Fiyatlar" },
-  { href: "/blog", label: "Blog" },
 ];
 
 // Hamburger — açıkken çizgiler çarpıya dönüşür (tek SVG, animasyonlu).
@@ -102,7 +101,7 @@ export function Navbar() {
         <div className="hidden items-center gap-2 md:flex">
           <Link
             href="/panel/login"
-            className="rounded-full px-4 py-2.5 font-mono text-[13px] uppercase tracking-wider text-ink-soft transition-colors hover:bg-crema hover:text-ink"
+            className="rounded-md px-4 py-2.5 font-mono text-[13px] uppercase tracking-wider text-ink-soft transition-colors hover:bg-crema hover:text-ink"
           >
             Giriş yap
           </Link>
@@ -111,7 +110,7 @@ export function Navbar() {
             data-track="cta_click"
             data-track-location="nav"
             data-track-cta="create_free"
-            className="shine-on-hover relative overflow-hidden rounded-full bg-ink px-5 py-2.5 font-mono text-[13px] uppercase tracking-wider text-paper transition-all duration-300 hover:bg-paprika hover:shadow-[0_10px_24px_-10px_rgba(232,73,31,0.9)]"
+            className="shine-on-hover relative overflow-hidden rounded-md bg-ink px-5 py-2.5 font-mono text-[13px] uppercase tracking-wider text-paper transition-all duration-300 hover:bg-paprika hover:shadow-[0_10px_24px_-10px_rgba(232,73,31,0.9)]"
           >
             Ücretsiz başla
           </Link>

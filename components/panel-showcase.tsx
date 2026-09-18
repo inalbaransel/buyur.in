@@ -307,7 +307,7 @@ export function PanelShowcase() {
             data-track="cta_click"
             data-track-location="panel_showcase"
             data-track-cta="create_free"
-            className="mt-9 inline-flex rounded-full bg-ink px-7 py-3.5 font-mono text-[13px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
+            className="mt-9 inline-flex rounded-md bg-ink px-7 py-3.5 font-mono text-[13px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
           >
             Paneli ücretsiz dene
           </Link>

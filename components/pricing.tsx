@@ -167,7 +167,7 @@ export function FAQ() {
             rel="noopener noreferrer"
             data-track="whatsapp_lead"
             data-track-location="faq"
-            className="inline-flex items-center gap-2 rounded-full border border-ink px-6 py-3 font-mono text-[13px] uppercase tracking-wider transition-colors hover:bg-ink hover:text-paper"
+            className="inline-flex items-center gap-2 rounded-md border border-ink px-6 py-3 font-mono text-[13px] uppercase tracking-wider transition-colors hover:bg-ink hover:text-paper"
           >
             <WhatsappIcon size={15} />
             WhatsApp&apos;tan sorun
@@ -220,7 +220,7 @@ export function ClosingCTA() {
             data-track="cta_click"
             data-track-location="final"
             data-track-cta="create_free"
-            className="shine-on-hover relative overflow-hidden rounded-full bg-ink px-9 py-4 text-center font-mono text-sm uppercase tracking-wider text-paper transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-12px_rgba(35,24,18,0.7)]"
+            className="shine-on-hover relative overflow-hidden rounded-md bg-ink px-9 py-4 text-center font-mono text-sm uppercase tracking-wider text-paper transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-12px_rgba(35,24,18,0.7)]"
           >
             Ücretsiz menünü oluştur
           </Link>
@@ -230,7 +230,7 @@ export function ClosingCTA() {
             rel="noopener noreferrer"
             data-track="whatsapp_lead"
             data-track-location="final"
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-paper/40 px-9 py-4 text-center font-mono text-sm uppercase tracking-wider text-paper transition-all duration-300 hover:-translate-y-0.5 hover:border-paper hover:bg-paper hover:text-paprika"
+            className="inline-flex items-center justify-center gap-2 rounded-md border border-paper/40 px-9 py-4 text-center font-mono text-sm uppercase tracking-wider text-paper transition-all duration-300 hover:-translate-y-0.5 hover:border-paper hover:bg-paper hover:text-paprika"
           >
             <WhatsappIcon size={15} />
             Menümü gönder

@@ -37,7 +37,6 @@ const footerNav = [
       { label: "Canlı demo", href: "/#canli-menu" },
       { label: "Nasıl çalışır", href: "/#nasil" },
       { label: "Fiyatlar", href: "/#fiyat" },
-      { label: "Blog", href: "/blog" },
     ],
   },
   {
@@ -108,7 +107,7 @@ export function Footer() {
               href={whatsappLink("Merhaba, buyur hakkında bilgi almak istiyorum.")}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-paper/20 px-4 py-2.5 font-mono text-[12px] uppercase tracking-wider text-paper/80 transition-colors hover:border-paprika hover:bg-paprika hover:text-paper"
+              className="inline-flex items-center gap-2 rounded-md border border-paper/20 px-4 py-2.5 font-mono text-[12px] uppercase tracking-wider text-paper/80 transition-colors hover:border-paprika hover:bg-paprika hover:text-paper"
             >
               <WhatsappIcon size={15} />
               Bize yazın

@@ -74,7 +74,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
                 href={menuUrl(business.slug)}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-herb px-3.5 py-2 font-mono text-[12px] uppercase tracking-wider text-paper shadow-sm transition-colors hover:bg-herb/90"
+                className="inline-flex items-center gap-2 rounded-md bg-herb px-3.5 py-2 font-mono text-[12px] uppercase tracking-wider text-paper shadow-sm transition-colors hover:bg-herb/90"
               >
                 <ExternalLinkIcon size={15} strokeWidth={2} />
                 <span className="hidden sm:inline">Menüyü gör</span>
@@ -82,7 +82,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
             )}
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-2 font-mono text-[12px] uppercase tracking-wider text-ink transition-colors hover:border-paprika hover:text-paprika"
+              className="inline-flex items-center gap-2 rounded-md border border-line px-3.5 py-2 font-mono text-[12px] uppercase tracking-wider text-ink transition-colors hover:border-paprika hover:text-paprika"
             >
               <LogoutIcon size={15} strokeWidth={2} />
               <span className="hidden sm:inline">Çıkış</span>

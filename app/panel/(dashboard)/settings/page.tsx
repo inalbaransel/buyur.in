@@ -601,7 +601,7 @@ function SettingsForm({ business, onSaved }: { business: Business; onSaved: (b: 
                   </div>
                   <button
                     type="button"
-                    className="mt-1 w-full rounded-full py-2.5 text-center font-mono text-[12px] uppercase tracking-wider"
+                    className="mt-1 w-full rounded-md py-2.5 text-center font-mono text-[12px] uppercase tracking-wider"
                     style={{ background: brandPreview, color: "#fff" }}
                   >
                     + Sepete ekle

@@ -317,7 +317,7 @@ export function buildDailyRows(events: MenuEvent[], sessions: MenuSession[], tim
 }
 
 async function fetchDayEvents(pb: PocketBase, businessId: string, from: Date, to: Date): Promise<MenuEvent[]> {
-  return pb.collection("menuva_events").getFullList<MenuEvent>({
+  return pb.collection("buyur_events").getFullList<MenuEvent>({
     filter: pb.filter("business = {:business} && occurred_at >= {:from} && occurred_at < {:to}", {
       business: businessId,
       from,
@@ -330,7 +330,7 @@ async function fetchDayEvents(pb: PocketBase, businessId: string, from: Date, to
 }
 
 async function fetchDaySessions(pb: PocketBase, businessId: string, from: Date, to: Date): Promise<MenuSession[]> {
-  return pb.collection("menuva_sessions").getFullList<MenuSession>({
+  return pb.collection("buyur_sessions").getFullList<MenuSession>({
     filter: pb.filter("business = {:business} && started_at >= {:from} && started_at < {:to}", {
       business: businessId,
       from,
@@ -504,13 +504,13 @@ async function businessDataWindow(pb: PocketBase, business: Business): Promise<D
   let window: DataWindow = null;
   try {
     const [oldest, newest] = await Promise.all([
-      pb.collection("menuva_events").getList<{ occurred_at: string }>(1, 1, {
+      pb.collection("buyur_events").getList<{ occurred_at: string }>(1, 1, {
         filter: pb.filter("business = {:business} && occurred_at != ''", { business: business.id }),
         fields: "occurred_at",
         sort: "occurred_at",
         requestKey: null,
       }),
-      pb.collection("menuva_events").getList<{ occurred_at: string }>(1, 1, {
+      pb.collection("buyur_events").getList<{ occurred_at: string }>(1, 1, {
         filter: pb.filter("business = {:business} && occurred_at != ''", { business: business.id }),
         fields: "occurred_at",
         sort: "-occurred_at",

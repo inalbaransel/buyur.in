@@ -100,7 +100,7 @@ export function Showcase({ items }: { items: ShowcaseItem[] }) {
               rel="noopener noreferrer"
               data-track="whatsapp_lead"
               data-track-location="showcase"
-              className="mt-auto inline-flex items-center justify-center gap-2 rounded-full bg-ink px-6 py-3 font-mono text-[12px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
+              className="mt-auto inline-flex items-center justify-center gap-2 rounded-md bg-ink px-6 py-3 font-mono text-[12px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika"
               style={{ marginTop: "1.5rem" }}
             >
               <WhatsappIcon size={14} />

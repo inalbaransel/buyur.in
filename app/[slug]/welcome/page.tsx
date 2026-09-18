@@ -102,7 +102,7 @@ export default function WelcomePage() {
       {/* Menü butonu */}
       <Link
         href={`${base}/menu`}
-        className="mt-8 w-full max-w-sm rounded-xl py-4 text-center font-display text-lg font-bold shadow-lg transition-opacity hover:opacity-90"
+        className="mt-8 w-full max-w-sm rounded-md py-4 text-center font-display text-lg font-bold shadow-lg transition-opacity hover:opacity-90"
         style={{ background: "var(--brand)", color: "var(--brand-on)" }}
       >
         {t("menuButton")}

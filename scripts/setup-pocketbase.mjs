@@ -190,7 +190,7 @@ async function main() {
   // 2) admins (auth) — buyur yönetim paneli hesapları (işletme sahiplerinden
   // ayrı bir auth koleksiyonu; role diğer koleksiyonların kurallarında
   // `@request.auth.collectionName = "buyur_admins"` ile ayırt edilir).
-  const admins = await getOrCreate({
+  await getOrCreate({
     name: "buyur_admins",
     type: "auth",
     // Bir admin sadece kendini görebilir; super_admin herkesi.
@@ -607,7 +607,7 @@ async function main() {
       text("description", { max: 300 }),
       // Fiyatlandırma aylık kurgulanıyor: aylık ödemede aylık ücret ve yıllık
       // ödemedeki aylık eşdeğer (yıllık toplam = 12 katı). Eski price_6m/price_12m
-      // alanları scripts/migrate-plan-pricing.mjs ile bu ikiliye taşındı.
+      // alanları scripts/migrate-remove-legacy-plan-price.mjs ile kaldırıldı.
       num("price_monthly", { min: 0 }),
       num("price_yearly_monthly", { min: 0 }),
       // Süreli (deneme) planın kaç ay sürdüğü; ücretli planlarda 0.
@@ -622,34 +622,7 @@ async function main() {
     indexes: ["CREATE UNIQUE INDEX `idx_plans_key` ON `buyur_plans` (`key`)"],
   });
 
-  // 11) admin_logs — admin hareketleri + login geçmişi (action ~ "login" ile filtrelenir).
-  // create herkese açık: login route'u başarısız girişimi (login_failed) admin token'ı
-  // olmadan da kaydedebilsin diye. Kabul edilen risk: düşük değerli spam yazımı;
-  // list/view sadece super_admin'e açık, satırlar hiçbir zaman API'den değiştirilemez/silinemez.
-  await getOrCreate({
-    name: "buyur_admin_logs",
-    type: "base",
-    listRule: `${adminBypass} && @request.auth.role = "super_admin"`,
-    viewRule: `${adminBypass} && @request.auth.role = "super_admin"`,
-    createRule: "",
-    updateRule: null,
-    deleteRule: null,
-    fields: [
-      relation("admin", admins.id, { maxSelect: 1 }),
-      text("action", { required: true, max: 60 }),
-      text("target", { max: 150 }),
-      json("meta"),
-      text("ip", { max: 64 }),
-      text("user_agent", { max: 300 }),
-      ...stamps(),
-    ],
-    indexes: [
-      "CREATE INDEX `idx_admin_logs_admin` ON `buyur_admin_logs` (`admin`)",
-      "CREATE INDEX `idx_admin_logs_action` ON `buyur_admin_logs` (`action`)",
-    ],
-  });
-
-  // 12) otps — kayıt sırasında e-posta doğrulama kodları. Yalnızca servis
+  // 11) otps — kayıt sırasında e-posta doğrulama kodları. Yalnızca servis
   // hesabı okur/yazar; kod düz metin değil sha256 özeti olarak durur, böylece
   // tablo sızsa bile bekleyen kayıtlar ele geçirilemez.
   await getOrCreate({

@@ -22,7 +22,7 @@ export function MenuUnavailable({ business }: { business: Business }) {
       {business.phone && (
         <a
           href={`tel:${business.phone.replace(/\s/g, "")}`}
-          className="rounded-full border border-ink px-6 py-3 font-mono text-[13px] uppercase tracking-wider transition-colors hover:bg-ink hover:text-paper"
+          className="rounded-md border border-ink px-6 py-3 font-mono text-[13px] uppercase tracking-wider transition-colors hover:bg-ink hover:text-paper"
         >
           {business.phone}
         </a>

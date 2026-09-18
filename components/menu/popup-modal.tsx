@@ -24,7 +24,7 @@ export function PopupModal({ popup, onClose }: { popup: Popup; onClose: () => vo
           <button
             onClick={onClose}
             style={{ background: "var(--brand)", color: "var(--brand-on)" }}
-            className="mt-5 rounded-full px-6 py-2.5 font-mono text-[13px] uppercase tracking-wider transition-opacity hover:opacity-90"
+            className="mt-5 rounded-md px-6 py-2.5 font-mono text-[13px] uppercase tracking-wider transition-opacity hover:opacity-90"
           >
             {t("viewMenu")}
           </button>

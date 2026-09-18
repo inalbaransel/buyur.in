@@ -89,7 +89,7 @@ export function LiveMenu({
               rel="noopener noreferrer"
               data-track="live_demo_open"
               data-track-location="live_section"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-paprika px-7 py-3.5 font-mono text-[13px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika-deep"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-paprika px-7 py-3.5 font-mono text-[13px] uppercase tracking-wider text-paper transition-colors hover:bg-paprika-deep"
             >
               <ExternalLinkIcon size={15} strokeWidth={2} />
               Menüyü yeni sekmede aç

@@ -156,7 +156,7 @@ export function ProductCard({
 
         <button
           onClick={handleAdd}
-          className={`mt-3 flex items-center gap-1.5 self-start rounded-full border px-4 py-1.5 font-mono text-[12px] uppercase tracking-wider transition-colors ${
+          className={`mt-3 flex items-center gap-1.5 self-start rounded-md border px-4 py-1.5 font-mono text-[12px] uppercase tracking-wider transition-colors ${
             added
               ? "cart-pop border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-on)]"
               : "border-[var(--brand)] text-[var(--brand-text)] hover:bg-[var(--brand)] hover:text-[var(--brand-on)]"

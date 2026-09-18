@@ -116,25 +116,6 @@ export interface BusinessActivation {
   checklist_completed_at?: string;
 }
 
-/** buyur blog yazısı — içerik PocketBase yönetim ekranından girilir. */
-export interface BlogPost {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  cover_url: string;
-  /** PocketBase "editor" alanı: HTML. Yalnızca yöneticiler yazar. */
-  content: string;
-  author: string;
-  tags: string[];
-  is_published: boolean;
-  published_at: string;
-  seo_title: string;
-  seo_description: string;
-  created: string;
-  updated: string;
-}
-
 /** @deprecated Sözlük lib/analytics/events.ts'e taşındı; eski adı kırmamak için alias. */
 export type MenuEventType = AnalyticsEventType;
 
@@ -375,17 +356,3 @@ export interface PlanRecord {
   updated: string;
 }
 
-export interface AdminLog {
-  id: string;
-  admin?: string;
-  action: string;
-  target: string;
-  meta: Record<string, unknown>;
-  ip: string;
-  user_agent: string;
-  created: string;
-  updated: string;
-  expand?: {
-    admin?: { id: string; name: string; email: string };
-  };
-}

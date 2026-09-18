@@ -22,7 +22,7 @@ export default function CartPage() {
           <Link
             href={`${base}/menu`}
             style={{ background: "var(--brand)", color: "var(--brand-on)" }}
-            className="rounded-full px-6 py-3 font-mono text-[13px] uppercase tracking-wider transition-opacity hover:opacity-90"
+            className="rounded-md px-6 py-3 font-mono text-[13px] uppercase tracking-wider transition-opacity hover:opacity-90"
           >
             {t("viewMenu")}
           </Link>

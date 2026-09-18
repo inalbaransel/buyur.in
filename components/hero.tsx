@@ -240,7 +240,7 @@ export async function Hero({ proof }: { proof: ShowcaseItem | null }) {
                 data-track="cta_click"
                 data-track-location="hero"
                 data-track-cta="create_free"
-                className="shine-on-hover relative overflow-hidden rounded-full bg-paprika px-8 py-4 text-center font-mono text-sm uppercase tracking-wider text-paper transition-all duration-300 hover:-translate-y-0.5 hover:bg-paprika-deep hover:shadow-[0_16px_34px_-12px_rgba(232,73,31,0.85)]"
+                className="shine-on-hover relative overflow-hidden rounded-md bg-paprika px-8 py-4 text-center font-mono text-sm uppercase tracking-wider text-paper transition-all duration-300 hover:-translate-y-0.5 hover:bg-paprika-deep hover:shadow-[0_16px_34px_-12px_rgba(232,73,31,0.85)]"
               >
                 Ücretsiz menünü oluştur
               </Link>
@@ -250,7 +250,7 @@ export async function Hero({ proof }: { proof: ShowcaseItem | null }) {
                 rel="noopener noreferrer"
                 data-track="live_demo_open"
                 data-track-location="hero"
-                className="rounded-full border border-ink/20 px-8 py-4 text-center font-mono text-sm uppercase tracking-wider text-ink transition-all duration-300 hover:-translate-y-0.5 hover:border-ink hover:bg-ink hover:text-paper"
+                className="rounded-md border border-ink/20 px-8 py-4 text-center font-mono text-sm uppercase tracking-wider text-ink transition-all duration-300 hover:-translate-y-0.5 hover:border-ink hover:bg-ink hover:text-paper"
               >
                 Canlı örneği incele
               </a>
