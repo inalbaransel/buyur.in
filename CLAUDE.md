@@ -79,7 +79,7 @@ Yeni bir üst düzey rota eklerken slug çakışmasını `RESERVED_SLUGS`'a ekle
 
 **Koleksiyonlar** (hepsi `buyur_` önekli): `businesses`, `categories`, `products`,
 `product_options`, `popups`, `users`, `admins`, `plans`, `events`, `sessions`,
-`stats_daily`, `qr_codes`, `reviews`, `admin_logs`.
+`stats_daily`, `qr_codes`, `reviews`, `admin_logs`, `otps`.
 
 Üç farklı PocketBase istemcisi vardır — **doğru olanı seçmek kritiktir**:
 
@@ -95,7 +95,8 @@ Kurallar:
 2. Route handler'da kimlik: `Authorization` başlığı → `authRefresh()` → `business.owner === userId` sahiplik kontrolü. (`app/api/upload/route.ts` referans akıştır.)
 3. Menü ziyaretçisi PocketBase'e **doğrudan yazmaz**; `buyur_events` yazımı `/api/track` üzerinden servis hesabıyla yapılır.
 4. Şema değişikliği = `scripts/setup-pocketbase.mjs` güncellemesi + gerekiyorsa **idempotent** bir göç scripti. `getOrCreate` var olan alanın `select` seçeneklerini güncellemez — bunun için ayrı göç adımı gerekir.
-5. Altyapı hatasında **kısıtlama değil, serbestlik** varsayılır (`lib/plan-limits.ts`): ödeme yapan işletme geçici bir ağ hatası yüzünden panelini kaybetmemeli.
+5. Kayıt tarayıcıdan yapılmaz: `buyur_users.createRule` servis hesabına kilitlidir, hesap `/api/auth/register` üzerinden OTP doğrulandıktan sonra açılır (`buyur_otps` yalnızca kodun sha256 özetini tutar).
+6. Altyapı hatasında **kısıtlama değil, serbestlik** varsayılır (`lib/plan-limits.ts`): ödeme yapan işletme geçici bir ağ hatası yüzünden panelini kaybetmemeli.
 
 ---
 
@@ -176,7 +177,7 @@ Token'lar `app/globals.css` içindeki `@theme` bloğunda:
 
 ## 10. Güvenlik Sınırları
 
-- API anahtarları (`OPENAI_API_KEY`, MinIO, servis hesabı) **asla** `NEXT_PUBLIC_` önekiyle tanımlanmaz
+- API anahtarları (`OPENAI_API_KEY`, `BREVO_API_KEY`, MinIO, servis hesabı) **asla** `NEXT_PUBLIC_` önekiyle tanımlanmaz
 - AI çağrıları yalnızca route handler içinde
 - Yükleme: 5MB sınırı, izinli MIME listesi, `kind` doğrulaması, sahiplik kontrolü
 - AI ile üretilen içerik **varsayılan olarak taslaktır**; kullanıcı onayı olmadan yayına alınmaz

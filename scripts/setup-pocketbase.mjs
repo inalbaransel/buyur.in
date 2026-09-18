@@ -175,7 +175,9 @@ async function main() {
     type: "auth",
     listRule: `id = @request.auth.id || ${adminBypass}`,
     viewRule: `id = @request.auth.id || ${adminBypass}`,
-    createRule: "",
+    // Kayıt tarayıcıdan değil, /api/auth/register üzerinden servis hesabıyla
+    // yapılır — aksi halde e-posta doğrulaması (OTP) atlanabilir bir süs olurdu.
+    createRule: adminBypass,
     updateRule: `id = @request.auth.id || ${adminBypass}`,
     deleteRule: `id = @request.auth.id || ${adminBypass}`,
     // Auth koleksiyonlarında email gibi hassas alanlar viewRule'u karşılasa bile
@@ -645,6 +647,27 @@ async function main() {
       "CREATE INDEX `idx_admin_logs_admin` ON `buyur_admin_logs` (`admin`)",
       "CREATE INDEX `idx_admin_logs_action` ON `buyur_admin_logs` (`action`)",
     ],
+  });
+
+  // 12) otps — kayıt sırasında e-posta doğrulama kodları. Yalnızca servis
+  // hesabı okur/yazar; kod düz metin değil sha256 özeti olarak durur, böylece
+  // tablo sızsa bile bekleyen kayıtlar ele geçirilemez.
+  await getOrCreate({
+    name: "buyur_otps",
+    type: "base",
+    listRule: adminBypass,
+    viewRule: adminBypass,
+    createRule: adminBypass,
+    updateRule: adminBypass,
+    deleteRule: adminBypass,
+    fields: [
+      emailField("email", { required: true }),
+      text("code_hash", { required: true, max: 64 }),
+      dateField("expires_at", { required: true }),
+      num("attempts", { min: 0, onlyInt: true }),
+      ...stamps(),
+    ],
+    indexes: ["CREATE INDEX `idx_otps_email` ON `buyur_otps` (`email`)"],
   });
 
   console.log("\nŞema kurulumu tamamlandı.");

@@ -21,6 +21,17 @@ import { trackMarketingEvent } from "@/lib/marketing-events";
 import { readPlanIntent, type PlanIntent } from "@/lib/plan-intent";
 import type { Business, Plan, PlanRecord } from "@/lib/types";
 
+/** Karşılama maili kurulumun bir parçası değil, sonrası. Bilerek beklenmiyor
+ *  ve hatası yutuluyor: Brevo'ya gidilemediği için kullanıcı menüsünün
+ *  açıldığı ekranı görememezlik etmesin. */
+function sendWelcomeEmail(businessId: string) {
+  void fetch("/api/emails/welcome", {
+    method: "POST",
+    headers: { "content-type": "application/json", Authorization: pb.authStore.token },
+    body: JSON.stringify({ businessId }),
+  }).catch(() => undefined);
+}
+
 function Onboarding() {
   const { user } = useAuth();
   const { setBusiness } = useBusiness();
@@ -118,6 +129,7 @@ function Onboarding() {
 
       const withSector = await saveActivation(business, { sector });
       trackMarketingEvent("business_created", { sector });
+      sendWelcomeEmail(business.id);
       setBusiness(withSector ?? business);
     } catch (err) {
       if (err instanceof ClientResponseError && err.response?.data?.slug) {
