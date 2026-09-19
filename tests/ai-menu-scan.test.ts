@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildScanPrompt,
   MAX_CATEGORIES,
   normalizeCurrency,
   normalizeScanResult,
@@ -179,5 +180,19 @@ describe("buildImageQuery", () => {
   it("hiçbir ipucu yoksa boş döner — arama yapılmaz", () => {
     expect(buildImageQuery("", "")).toBe("");
     expect(buildImageQuery("123 ₺", "")).toBe("");
+  });
+});
+
+describe("buildScanPrompt", () => {
+  it("işletmenin ana dil adını prompta yazar", () => {
+    const prompt = buildScanPrompt("Русский");
+    expect(prompt).toContain("Русский");
+    expect(prompt).not.toContain("${localeName}");
+  });
+
+  it("açıklama yoksa boş bırakmayı ve çeviri yapmamayı ister", () => {
+    const prompt = buildScanPrompt("Türkçe");
+    expect(prompt).toContain("description alanını boş bırak");
+    expect(prompt).toContain("çevirme");
   });
 });

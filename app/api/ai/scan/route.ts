@@ -7,7 +7,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { guardAiRequest, openaiClient, isGuardFailure, MENU_MODEL } from "@/lib/ai/guard";
-import { normalizeScanResult, SCAN_SYSTEM_PROMPT } from "@/lib/ai/menu-scan";
+import { localeLabels, mainLocale } from "@/lib/i18n";
+import { buildScanPrompt, normalizeScanResult } from "@/lib/ai/menu-scan";
 import { aiUsage, aiPeriodKey } from "@/lib/entitlements";
 
 /** Tek bir sayfanın veri URI üst sınırı (~8MB base64 ≈ 6MB dosya). */
@@ -127,7 +128,7 @@ export async function POST(req: NextRequest) {
   try {
     // Responses API görsel ve PDF'i aynı içerik dizisinde kabul eder; PDF'i
     // istemcide sayfa sayfa görsele çevirmeye gerek kalmıyor.
-    const content: Record<string, unknown>[] = [{ type: "input_text", text: SCAN_SYSTEM_PROMPT }];
+    const content: Record<string, unknown>[] = [{ type: "input_text", text: buildScanPrompt(localeLabels[mainLocale(business)]) }];
     parsed.pages.forEach((page, index) => {
       if (page.kind === "image") {
         content.push({ type: "input_image", image_url: page.data, detail: "high" });

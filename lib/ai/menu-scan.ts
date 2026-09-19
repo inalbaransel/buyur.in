@@ -210,7 +210,8 @@ export function normalizeScanResult(raw: unknown): ScanResult {
 
 /** Modele verilen görev tanımı. Şema burada açıkça yazılır; "bilmiyorsan boş
  *  bırak" talimatı promptun en kritik cümlesidir. */
-export const SCAN_SYSTEM_PROMPT = `Sen bir menü veri çıkarma asistanısın. Sana verilen fiziksel menü sayfalarını (fotoğraf veya PDF) inceleyip kategorileri ve her kategorinin altındaki ürünleri çıkaracaksın.
+export function buildScanPrompt(localeName: string): string {
+  return `Sen bir menü veri çıkarma asistanısın. Sana verilen fiziksel menü sayfalarını (fotoğraf veya PDF) inceleyip kategorileri ve her kategorinin altındaki ürünleri çıkaracaksın.
 
 KURALLAR:
 1. ASLA TAHMİN ETME. Bir bilgiyi net okuyamıyorsan boş bırak ve o alanı "uncertain" listesine ekle. Yanlış bir fiyat, eksik fiyattan çok daha kötüdür.
@@ -220,6 +221,8 @@ KURALLAR:
 5. Kategori başlığı okunamıyorsa o kategoriyi atla; ürünleri uydurma bir başlığa toplama.
 6. Açıklamada alerjen, kalori veya hazırlanma süresi yazıyorsa bunları açıklama metni içinde bırak.
 7. Aynı ürün birden fazla sayfada görünüyorsa bir kez ekle.
+8. Kategori adı, ürün adı ve açıklamayı menüde yazdığı gibi bırak; çevirme. Menü ${localeName} dışında bir dilde yazılmış olsa bile olduğu gibi aktar.
+9. Menüde bir ürünün açıklaması YAZMIYORSA description alanını boş bırak. Ürün adından açıklama türetme, kendi cümleni yazma. Açıklama yazman gerekirse bile yalnızca ${localeName} dilinde yaz, asla başka dilde yazma.
 
 Yanıtı MUTLAKA şu JSON şemasında ver:
 {
@@ -239,3 +242,4 @@ Yanıtı MUTLAKA şu JSON şemasında ver:
     }
   ]
 }`;
+}
