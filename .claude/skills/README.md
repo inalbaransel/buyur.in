@@ -6,6 +6,7 @@ tutar. Claude ilgili iş geldiğinde bunları kendisi yükler; `/skill-adi` ile 
 
 | Skill | Ne zaman devreye girer |
 |---|---|
+| **buyur-musteri-menusu** | Müşteri QR menüsünde ekran, sepet, dil veya hız işi |
 | **buyur-panel-sayfasi** | Panele yeni ekran, form veya liste eklenirken |
 | **buyur-veri-modeli** | Yeni alan/koleksiyon, şema göçü, yeni API ucu |
 | **buyur-analitik-event** | Yeni event, metrik, rapor veya huni analizi |
@@ -15,4 +16,5 @@ tutar. Claude ilgili iş geldiğinde bunları kendisi yükler; `/skill-adi` ile 
 | **buyur-yayin-oncesi** | Commit / PR / deploy öncesi doğrulama turu |
 
 Proje geneli kurallar: [`../../CLAUDE.md`](../../CLAUDE.md)
+Analitik mimarisi: [`../../docs/analytics-architecture.md`](../../docs/analytics-architecture.md)
 Uzman ajanlar: [`../agents/`](../agents/)

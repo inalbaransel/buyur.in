@@ -59,6 +59,7 @@ lib/
   types.ts           → tüm veri modelleri
 scripts/             → PocketBase şema kurulumu, göçler, seed verileri
 tests/               → Vitest — iş kurallarının yazılı sözleşmesi
+docs/                → mimari ve ürün notları (analytics-architecture.md = koddaki §N atıfları)
 ```
 
 ### Çok kiracılı (multi-tenant) yönlendirme
@@ -136,6 +137,7 @@ buradan okur.
 - `qr_scan`, `session_start`, `session_end` yalnızca sunucu üretir; istemciden gelirse reddedilir
 - Akış: istemci → `/api/track` → `buyur_events` → `rollup` → `buyur_stats_daily`
 - Sözlüğe event eklemek PocketBase `select` alanının da güncellenmesini gerektirir (`scripts/migrate-analytics.mjs`)
+- Uçtan uca mimari, gizlilik sınırı ve §N atıfları: [`docs/analytics-architecture.md`](./docs/analytics-architecture.md)
 - Gecikmenin ana kaynağı hesaplama değil, **sıralı PocketBase turlarıdır** (~250ms/tur). `pbRequestCount()` ile ölçün, istekleri `Promise.all` ile paralelleştirin.
 
 ---

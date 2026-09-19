@@ -44,11 +44,12 @@ yorumları **Türkçe**, değişken/fonksiyon adları İngilizce.
 | Analitik | `lib/analytics/**` |
 | Şema, göç, tohum | `scripts/**` (`plan-catalog.mjs` = yeni ortam tohumu, canlıyı ezmez) |
 | İş kuralı sözleşmesi | `tests/**` — kural değişiyorsa **önce test** |
+| Analitik mimarisi (koddaki §N atıfları) | [`docs/analytics-architecture.md`](./docs/analytics-architecture.md) |
 
 ## Ajanlar ve skill'ler (Claude Code)
 
 - `.claude/agents/` — `frontend`, `backend`, `quality` ([kullanım](./.claude/agents/README.md))
-- `.claude/skills/` — panel sayfası, veri modeli, analitik event, plan kilidi, çoklu dil, AI akışı, yayın öncesi ([liste](./.claude/skills/README.md))
+- `.claude/skills/` — müşteri menüsü, panel sayfası, veri modeli, analitik event, plan kilidi, çoklu dil, AI akışı, yayın öncesi ([liste](./.claude/skills/README.md))
 
 Tipik akış: **backend** (veri + kural) → **frontend** (ekran) → **quality** (denetim + test).
 
