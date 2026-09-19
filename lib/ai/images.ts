@@ -503,21 +503,63 @@ export function rankCandidates(candidates: ImageCandidate[], query: string): Ima
   return [...candidates].sort((a, b) => scoreCandidate(b, query) - scoreCandidate(a, query));
 }
 
-/** Ürün adına uygun görsel adayları — tüm sağlayıcılar paralel sorgulanır ve
- *  sonuçlar tek havuzda puanlanır. Hiçbir koşulda hata fırlatmaz. */
+/** Sağlayıcı sırası: kullanıcıya gösterilen çeşitlilik bu sırayla dağıtılır. */
+const PROVIDER_ORDER: ImageProvider[] = ["pexels", "unsplash", "openverse", "pixabay", "wikimedia"];
+
+/** Her sağlayıcının kendi içinde puanlanmış sonuçlarını sırayla birer birer
+ *  dizer (pexels, unsplash, openverse, … sonra tekrar pexels). Tek havuzda
+ *  puanlamak çıktıyı bir-iki sağlayıcıya yığıyordu; kullanıcı seçim yaparken
+ *  farklı kaynaklardan farklı kadrajlar görmeli. Aynı adres iki kez girmez. */
+export function interleaveByProvider(candidates: ImageCandidate[], query: string, limit: number): ImageCandidate[] {
+  const queues = PROVIDER_ORDER.map((provider) =>
+    rankCandidates(
+      candidates.filter((c) => c.provider === provider),
+      query
+    )
+  ).filter((queue) => queue.length > 0);
+
+  const seen = new Set<string>();
+  const out: ImageCandidate[] = [];
+  for (let round = 0; out.length < limit; round++) {
+    let any = false;
+    for (const queue of queues) {
+      const item = queue[round];
+      if (!item) continue;
+      any = true;
+      if (seen.has(item.url)) continue;
+      seen.add(item.url);
+      out.push(item);
+      if (out.length >= limit) break;
+    }
+    if (!any) break;
+  }
+  return out;
+}
+
+/** Ürün adına uygun görsel adayları — tüm sağlayıcılar paralel sorgulanır,
+ *  sonuçlar sağlayıcılar arasında dengeli dağıtılır. Hiçbir koşulda hata
+ *  fırlatmaz. */
 export async function searchProductImages(
   productName: string,
   categoryName = "",
-  limit = 8
+  limit = 8,
+  /** Ürün adının İngilizce karşılığı (varsa). Openverse/Pexels/Unsplash/
+   *  Pixabay indeksleri İngilizce'dir; "Tavuk Şiş food" Openverse'te 0
+   *  sonuç dönerken "chicken shish kebab" onlarca sonuç döner. Wikimedia
+   *  Türkçe başlıklarla da eşleştiği için özgün adla sorgulanmaya devam eder. */
+  englishName = ""
 ): Promise<ImageCandidate[]> {
   const query = buildImageQuery(productName, categoryName);
   if (query === "") return [];
+  const englishQuery = englishName.trim() === "" ? query : buildImageQuery(englishName);
 
   const providers = configuredProviders();
+  // Her sağlayıcıdan, toplam hedefi karşılayacak kadar istenir.
+  const perProvider = Math.max(4, Math.ceil(limit / Math.max(1, providers.length)) + 2);
   // Paralel: gecikmenin kaynağı ağ turu, sıralı denemek boşuna beklemek olur.
-  const settled = await Promise.allSettled(
-    providers.map((provider) => SEARCHERS[provider](query, Math.max(3, Math.ceil(limit / 2))))
-  );
+  const settled = await Promise.allSettled(providers.map((provider) =>
+      SEARCHERS[provider](provider === "wikimedia" ? query : englishQuery, perProvider)
+    ));
 
   const pool: ImageCandidate[] = [];
   settled.forEach((result, index) => {
@@ -526,5 +568,7 @@ export async function searchProductImages(
     else console.error(`Görsel arama hatası (${providers[index]}):`, result.reason);
   });
 
-  return rankCandidates(pool, query).slice(0, limit);
+  // Puanlama iki sorgunun birleşimiyle yapılır: başlığı Türkçe de İngilizce de
+  // eşleşen aday alakalı sayılır.
+  return interleaveByProvider(pool, englishQuery === query ? query : `${query} ${englishQuery}`, limit);
 }

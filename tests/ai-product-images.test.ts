@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildImageQuery,
+  interleaveByProvider,
   isAllowedImageHost,
   needsImageCredit,
   pickAutoImage,
@@ -260,5 +261,26 @@ describe("toImageSource", () => {
     expect(source.attribution_required).toBe(true);
     expect(source.author_name).toBe("Bir Fotoğrafçı");
     expect(Number.isNaN(Date.parse(source.fetched_at))).toBe(false);
+  });
+});
+
+describe("interleaveByProvider", () => {
+  it("sağlayıcıları sırayla (pexels, unsplash, openverse) dağıtır — biri havuzu doldurmaz", () => {
+    const list = [
+      ...[1, 2, 3].map((n) => candidate({ id: `u${n}`, url: `https://images.unsplash.com/u${n}`, provider: "unsplash" })),
+      ...[1, 2].map((n) => candidate({ id: `p${n}`, url: `https://images.pexels.com/p${n}`, provider: "pexels" })),
+      candidate({ id: "o1", url: "https://api.openverse.org/o1", provider: "openverse" }),
+    ];
+    expect(interleaveByProvider(list, "kebap food", 6).map((c) => c.id)).toEqual(["p1", "u1", "o1", "p2", "u2", "u3"]);
+  });
+
+  it("sınırı aşmaz ve aynı adresi iki kez döndürmez", () => {
+    const dup = [
+      candidate({ id: "a", url: "https://images.pexels.com/x", provider: "pexels" }),
+      candidate({ id: "b", url: "https://images.pexels.com/x", provider: "unsplash" }),
+      candidate({ id: "c", url: "https://images.unsplash.com/c", provider: "unsplash" }),
+    ];
+    expect(interleaveByProvider(dup, "x", 10).map((c) => c.id)).toEqual(["a", "c"]);
+    expect(interleaveByProvider(dup, "x", 1)).toHaveLength(1);
   });
 });

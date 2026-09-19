@@ -269,6 +269,15 @@ const UI_STRINGS = {
     ar: "{count} منتج",
     ru: "{count} товаров",
   },
+  menuFeatured: { tr: "Öne çıkanlar", en: "Featured", ar: "الأطباق المميزة", ru: "Рекомендуем" },
+  menuAllCategories: { tr: "Tüm kategoriler", en: "All categories", ar: "كل الفئات", ru: "Все категории" },
+  menuSearchCta: { tr: "Menüde ara", en: "Search the menu", ar: "ابحث في القائمة", ru: "Поиск по меню" },
+  splashMessage: {
+    tr: "Sizin için hazırlıyoruz…",
+    en: "Getting everything ready for you…",
+    ar: "نجهّز كل شيء من أجلك…",
+    ru: "Готовим всё для вас…",
+  },
 
   // Otomatik web sitesi (app/site/[slug]) — sabit bölüm başlıkları ve etiketler.
   siteAbout: { tr: "Hakkımızda", en: "About us", ar: "من نحن", ru: "О нас" },

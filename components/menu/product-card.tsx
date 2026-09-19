@@ -6,6 +6,7 @@ import type { Product, Template } from "@/lib/types";
 import { allergenLabels, badgeLabels } from "@/lib/labels";
 import { formatPrice } from "@/lib/format";
 import { BadgeIcon, CheckCircleIcon, ClockIcon, FlameIcon, ImageIcon } from "@/components/icons";
+import { FadeImg } from "@/components/menu/fade-img";
 import { useMenu } from "@/components/menu/menu-provider";
 
 export function ProductCard({
@@ -86,7 +87,7 @@ export function ProductCard({
       >
         {image && !imageBroken ? (
           <picture>
-            <img
+            <FadeImg
               src={image}
               alt={name}
               loading="lazy"

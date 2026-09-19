@@ -45,6 +45,8 @@ import { LanguageModal } from "@/components/menu/language-modal";
 import { CategoryDrawer } from "@/components/menu/category-drawer";
 import { ImageCreditsLink } from "@/components/menu/image-credit";
 import { UpsellSheet } from "@/components/menu/upsell-sheet";
+import { MenuSplash } from "@/components/menu/menu-splash";
+import { FadeImg } from "@/components/menu/fade-img";
 import { upsellSuggestions } from "@/lib/upsell";
 import { ArrowLeftIcon, MenuIcon, SearchIcon, ShoppingBagIcon } from "@/components/icons";
 
@@ -171,7 +173,7 @@ function MenuHeader({
           {business.logo_url ? (
             <span className="relative block h-9 w-9 overflow-hidden rounded-md border border-line bg-paper">
               <picture>
-                <img src={business.logo_url} alt="" loading="eager" className="absolute inset-0 h-full w-full object-cover" />
+                <FadeImg src={business.logo_url} alt="" loading="eager" className="absolute inset-0 h-full w-full object-cover" />
               </picture>
             </span>
           ) : null}
@@ -570,6 +572,7 @@ export function MenuProvider({
         // listesi…) zemine gömülüyordu.
         className="min-h-dvh bg-paper pb-24 text-ink"
       >
+        <MenuSplash />
         <TrackPageViews business={business} base={basePath} locale={locale} />
         {/* İlk açılışta önce dil seçimi; dil modalı kapanınca kampanya popup'ı gösterilir. */}
         {needsLangChoice && <LanguageModal onPick={chooseLanguage} />}

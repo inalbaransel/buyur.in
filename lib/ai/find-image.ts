@@ -24,13 +24,14 @@ export async function searchImageCandidates(
   businessId: string,
   name: string,
   category: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  limit?: number
 ): Promise<ImageSearchResult> {
   try {
     const res = await fetch("/api/ai/images", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: pb.authStore.token },
-      body: JSON.stringify({ businessId, name, category }),
+      body: JSON.stringify({ businessId, name, category, limit }),
       signal,
     });
     const data = await res.json();

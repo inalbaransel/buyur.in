@@ -5,7 +5,7 @@ import { uploadFile } from "@/lib/upload";
 import { Button, Modal, Spinner } from "@/components/panel/ui";
 import { ImageIcon, SearchIcon, TrashIcon } from "@/components/icons";
 import { searchImageCandidates } from "@/lib/ai/find-image";
-import { PROVIDER_LABELS, toStoredImage } from "@/lib/ai/image-source";
+import { IMAGE_PROVIDERS, PROVIDER_LABELS, toStoredImage } from "@/lib/ai/image-source";
 import type { ImageCandidate, ProductImageSource } from "@/lib/ai/image-source";
 
 // Ürün görseli seçici: açık lisanslı kaynaklardan arar, kullanıcı değiştirebilir,
@@ -17,6 +17,9 @@ import type { ImageCandidate, ProductImageSource } from "@/lib/ai/image-source";
 // Seçilen görsel sağlayıcının kendi adresiyle kaydedilir; kaynak ve lisans
 // künyesi `onChange`'in ikinci parametresiyle çağırana geçer.
 // Arama başarısız olursa hiçbir şey engellenmez — ürün görselsiz oluşur.
+
+// Seçici çeşitlilik göstermeli; otomatik akıştaki 8 aday burada az kalır.
+const PICKER_LIMIT = 24;
 
 export function ImagePicker({
   businessId,
@@ -40,6 +43,7 @@ export function ImagePicker({
   const [failed, setFailed] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [searched, setSearched] = useState(false);
+  const [source, setSource] = useState<"all" | ImageCandidate["provider"]>("all");
   const alive = useRef(true);
 
   useEffect(() => {
@@ -54,9 +58,10 @@ export function ImagePicker({
   async function search(term: string) {
     setLoading(true);
     setFailed(false);
-    const result = await searchImageCandidates(businessId, term, categoryName);
+    const result = await searchImageCandidates(businessId, term, categoryName, undefined, PICKER_LIMIT);
     if (!alive.current) return;
     setImages(result.images);
+    setSource("all");
     setConfigured(result.configured);
     setLoading(false);
     setSearched(true);
@@ -169,8 +174,25 @@ export function ImagePicker({
       )}
 
       {!loading && images.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {(["all", ...IMAGE_PROVIDERS.filter((p) => images.some((i) => i.provider === p))] as const).map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setSource(p)}
+              className={`rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-wider transition-colors ${
+                source === p ? "border-paprika bg-paprika text-paper" : "border-line text-ink-soft hover:border-paprika"
+              }`}
+            >
+              {p === "all" ? `Tümü · ${images.length}` : `${PROVIDER_LABELS[p]} · ${images.filter((i) => i.provider === p).length}`}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {!loading && images.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {images.map((image) => {
+          {images.filter((i) => source === "all" || i.provider === source).map((image) => {
             const selected = value === image.url;
             return (
               <button
@@ -207,8 +229,8 @@ export function ImagePicker({
                   </span>
                 </div>
                 <div className="truncate px-2 py-1.5 text-[10px] leading-tight text-ink-soft">
-                  {image.authorName ? `${image.authorName} · ` : ""}
-                  {image.license.name}
+                  {PROVIDER_LABELS[image.provider]}
+                  {image.authorName ? ` · ${image.authorName}` : ""}
                 </div>
               </button>
             );

@@ -1,6 +1,14 @@
 import Link from "next/link";
 import QRCode from "qrcode";
-import { ArrowLeftIcon, ClockIcon, FlameIcon, QrCodeIcon, TagIcon } from "@/components/icons";
+import {
+  ArrowLeftIcon,
+  ClockIcon,
+  FlameIcon,
+  GlobeIcon,
+  QrCodeIcon,
+  TagIcon,
+  TrendingUpIcon,
+} from "@/components/icons";
 import { DEMO_SLUG, type ShowcaseItem } from "@/lib/showcase";
 import { menuHost } from "@/lib/site";
 
@@ -57,12 +65,12 @@ function PhoneMock() {
   return (
     <div
       aria-hidden
-      className="relative mx-auto w-[250px] rounded-[2.4rem] border-[6px] border-ink bg-[#171310] p-3 shadow-[0_28px_60px_-18px_rgba(35,24,18,0.45)] sm:w-[290px]"
+      className="relative w-[236px] rounded-[2.4rem] border-[6px] border-ink bg-[#171310] p-3 shadow-[0_34px_70px_-22px_rgba(35,24,18,0.55)] sm:w-[272px]"
     >
       {/* çentik */}
       <div className="absolute left-1/2 top-3 h-5 w-24 -translate-x-1/2 rounded-full bg-ink" />
 
-      <div className="h-[480px] overflow-hidden rounded-[1.8rem] bg-[#171310] pt-8 sm:h-[520px]">
+      <div className="h-[440px] overflow-hidden rounded-[1.8rem] bg-[#171310] pt-8 sm:h-[500px]">
         {/* menü başlığı */}
         <div className="px-4 pb-3">
           <p className="font-mono text-[9px] uppercase tracking-widest text-paprika">alpha.buyur.in</p>
@@ -124,6 +132,14 @@ const marqueeItems = [
   "Ürün ve QR analizi",
 ];
 
+// Başlığın hemen altındaki üç satır: uzun özellik listesi değil, kararı
+// etkileyen üç iş. İkonlar mobilde de görünür (kart yerine satır düzeni).
+const heroPoints = [
+  { icon: TagIcon, title: "Fiyatı panelden değiştir", desc: "Tüm masalarda saniyeler içinde günceldir." },
+  { icon: GlobeIcon, title: "Dört dilde aynı menü", desc: "TR · EN · AR · RU — turist masasında çeviri derdi yok." },
+  { icon: TrendingUpIcon, title: "Neyin okunduğunu gör", desc: "Hangi ürün açılıyor, hangi QR taranıyor — ölçülür." },
+];
+
 /** Taranabilir, gerçek demo menü QR'ı — sunucuda üretilir (vektör, net baskı). */
 async function demoQrDataUrl(): Promise<string | null> {
   try {
@@ -139,6 +155,34 @@ async function demoQrDataUrl(): Promise<string | null> {
   }
 }
 
+/** Masa kartı: gerçekten taranabilir QR. Eskiden yalnızca lg'de görünüyordu;
+ *  artık mobilde de sahnenin altında yer alıyor — trafiğin çoğu mobil ve
+ *  ziyaretçi QR'ı tarayamasa bile tıklayarak menüyü açabiliyor. */
+function TableTent({ qr, className = "" }: { qr: string | null; className?: string }) {
+  return (
+    <a
+      href={DEMO_QR_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      data-track="live_demo_open"
+      data-track-location="hero_qr"
+      className={`group items-center gap-3 rounded-2xl border border-line bg-paper p-3 shadow-[0_20px_44px_-22px_rgba(35,24,18,0.45)] transition-colors hover:border-paprika ${className}`}
+    >
+      {qr ? (
+        <picture>
+          <img src={qr} alt="Canlı demo menünün QR kodu" width={76} height={76} className="rounded-lg" />
+        </picture>
+      ) : (
+        <QrCodeIcon size={44} className="text-ink" />
+      )}
+      <p className="max-w-[150px] font-mono text-[10px] leading-snug text-ink-soft">
+        <QrCodeIcon size={12} className="mb-1 text-paprika" />
+        Telefonunla tara ya da tıkla: menü canlı açılır
+      </p>
+    </a>
+  );
+}
+
 /** Uydurma sayı yerine doğrulanabilir kanıt: canlı menüye tek tık. Kart
  *  verisi (kategori/ürün/dil sayısı) o menünün kendisinden okunuyor. */
 function ProofLink({ proof }: { proof: ShowcaseItem | null }) {
@@ -152,7 +196,7 @@ function ProofLink({ proof }: { proof: ShowcaseItem | null }) {
       rel="noopener noreferrer"
       data-track="live_demo_open"
       data-track-location="hero_proof"
-      className="group mt-9 flex w-full items-center gap-4 rounded-2xl border border-line bg-paper/80 p-3 pr-5 backdrop-blur transition-colors hover:border-paprika sm:w-fit"
+      className="group flex w-full items-center gap-4 rounded-2xl border border-line bg-paper/80 p-3 pr-5 backdrop-blur transition-colors hover:border-paprika sm:w-fit"
     >
       <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-line bg-crema font-display text-lg font-extrabold text-paprika">
         {proof?.logoUrl ? (
@@ -206,9 +250,17 @@ export async function Hero({ proof }: { proof: ShowcaseItem | null }) {
           />
         </div>
 
-        <div className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-20 pt-12 md:grid-cols-[1.15fr_0.85fr] md:pt-20">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 pb-16 pt-10 md:grid-cols-[1.05fr_0.95fr] md:gap-10 md:pb-24 md:pt-16">
           <div>
-            <h1 className="rise rise-2 mt-6 font-display text-[2.35rem] font-extrabold leading-[1.05] tracking-tight sm:text-5xl md:text-[3.5rem]">
+            <span className="rise rise-1 inline-flex items-center gap-2 rounded-full border border-line bg-paper/70 py-1.5 pl-2.5 pr-3.5 font-mono text-[10px] uppercase tracking-wider text-ink-soft backdrop-blur">
+              <span className="relative flex h-1.5 w-1.5 text-herb">
+                <span className="pulse-ring absolute inset-0 rounded-full" />
+                <span className="relative h-1.5 w-1.5 rounded-full bg-herb" />
+              </span>
+              QR menü · restoran &amp; kafe
+            </span>
+
+            <h1 className="rise rise-2 mt-5 font-display text-[2.5rem] font-extrabold leading-[1.02] tracking-tight sm:text-[3.25rem] md:text-[3.75rem]">
               Menünüzü{" "}
               <span className="relative inline-block text-paprika">
                 güncel
@@ -230,7 +282,22 @@ export async function Hero({ proof }: { proof: ShowcaseItem | null }) {
               müşterinin seçimlerini garsona eksiksiz göstermesini sağlayın.
             </p>
 
-            <div className="rise rise-4 mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            {/* Üç iş — masaüstünde başlığın altında sıra, mobilde de okunur kalır */}
+            <ul className="rise rise-4 mt-7 space-y-3 border-l-2 border-line pl-4">
+              {heroPoints.map(({ icon: Icon, title, desc }) => (
+                <li key={title} className="flex items-start gap-3">
+                  <span className="mt-0.5 shrink-0 rounded-lg bg-paprika/10 p-1.5 text-paprika">
+                    <Icon size={14} />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block font-display text-sm font-bold leading-tight">{title}</span>
+                    <span className="block text-[13px] leading-snug text-ink-soft">{desc}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="rise rise-5 mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
                 href="/panel/register"
                 data-track="cta_click"
@@ -252,28 +319,28 @@ export async function Hero({ proof }: { proof: ShowcaseItem | null }) {
               </a>
             </div>
 
-            <p className="rise rise-4 mt-4 font-mono text-[11px] uppercase tracking-wider text-ink-soft/80">
+            <p className="rise rise-5 mt-4 font-mono text-[11px] uppercase tracking-wider text-ink-soft/80">
               Kredi kartı yok · 5 dakikada kurulum · İstediğin an bırak
             </p>
 
-            <div className="rise rise-5">
+            <div className="rise rise-6 mt-8">
               <ProofLink proof={proof} />
             </div>
           </div>
 
-          {/* Telefon + etrafında süzülen kartlar.
+          {/* Sahne: telefon + üstüne binen kartlar.
               Kartlar telefonun kendi genişliğine göre konumlanır (kolona göre
               değil), yoksa geniş kolonda ortalanan telefonun başlığını örterler.
-              Yalnızca lg'de görünürler: dar ekranda taşacak kadar yer yok ve
-              telefondaki QR'ı zaten o telefonla taramak mümkün değil. */}
+              Serbest kartlar yalnızca lg'de süzülür; mobilde masa kartı
+              sahnenin altında normal akışta durur. */}
           <div className="rise rise-4">
-            <div className="relative mx-auto w-[250px] sm:w-[290px]">
+            <div className="relative mx-auto w-fit">
               <div className="float-y">
                 <PhoneMock />
               </div>
 
               {/* Anlık güncelleme rozeti — ürünün ne yaptığını gösterir, sonuç iddia etmez */}
-              <div className="float-y-slow absolute left-0 top-40 hidden w-max -translate-x-[55%] items-center gap-2.5 rounded-2xl border border-line bg-paper/95 px-3.5 py-2.5 shadow-[0_18px_40px_-18px_rgba(35,24,18,0.4)] backdrop-blur lg:flex">
+              <div className="float-y-slow absolute left-0 top-36 hidden w-max -translate-x-[55%] items-center gap-2.5 rounded-2xl border border-line bg-paper/95 px-3.5 py-2.5 shadow-[0_18px_40px_-18px_rgba(35,24,18,0.4)] backdrop-blur lg:flex">
                 <span className="rounded-lg bg-herb/12 p-1.5 text-herb">
                   <TagIcon size={16} />
                 </span>
@@ -283,42 +350,27 @@ export async function Hero({ proof }: { proof: ShowcaseItem | null }) {
                 </div>
               </div>
 
-              {/* Gerçekten taranabilir ve tıklanabilir QR — canlı demo menüyü açar */}
-              <a
-                href={DEMO_QR_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-track="live_demo_open"
-                data-track-location="hero_qr"
-                className="float-y-slow absolute bottom-20 right-0 hidden w-max translate-x-[30%] items-center gap-3 rounded-2xl border border-line bg-paper p-3 shadow-[0_18px_40px_-18px_rgba(35,24,18,0.4)] transition-colors hover:border-paprika lg:flex"
-                style={{ animationDelay: "-3s" }}
-              >
-                {qr ? (
-                  <picture>
-                    <img src={qr} alt="Canlı demo menünün QR kodu" width={84} height={84} className="rounded" />
-                  </picture>
-                ) : (
-                  <QrCodeIcon size={44} className="text-ink" />
-                )}
-                <p className="max-w-[112px] font-mono text-[10px] leading-snug text-ink-soft">
-                  <QrCodeIcon size={12} className="mb-1 text-paprika" />
-                  Telefonunla tara ya da tıkla: menü canlı açılır
-                </p>
-              </a>
+              <TableTent
+                qr={qr}
+                className="float-y-slow absolute bottom-16 right-0 hidden w-max translate-x-[32%] lg:flex"
+              />
             </div>
+
+            {/* Mobil/tablet: aynı QR, sahnenin altında ortalanmış */}
+            <TableTent qr={qr} className="mx-auto mt-6 flex w-fit lg:hidden" />
           </div>
         </div>
       </section>
 
-      {/* Kayan değer şeridi */}
-      <div className="marquee-mask overflow-hidden border-y border-line bg-crema/50 py-3.5">
+      {/* Kayan değer şeridi — koyu bant, sayfanın ritmini kırar */}
+      <div className="marquee-mask overflow-hidden border-y border-ink/15 bg-ink py-3.5">
         <div className="marquee-track flex w-max gap-8">
           {[0, 1].map((dup) => (
             <div key={dup} className="flex shrink-0 gap-8" aria-hidden={dup === 1}>
               {marqueeItems.map((item) => (
                 <span
                   key={item}
-                  className="flex items-center gap-8 whitespace-nowrap font-mono text-[11px] uppercase tracking-wider text-ink-soft"
+                  className="flex items-center gap-8 whitespace-nowrap font-mono text-[11px] uppercase tracking-wider text-paper/70"
                 >
                   {item}
                   <span className="text-paprika">✦</span>
