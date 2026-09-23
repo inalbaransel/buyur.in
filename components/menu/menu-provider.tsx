@@ -48,7 +48,7 @@ import { UpsellSheet } from "@/components/menu/upsell-sheet";
 import { MenuSplash } from "@/components/menu/menu-splash";
 import { FadeImg } from "@/components/menu/fade-img";
 import { upsellSuggestions } from "@/lib/upsell";
-import { ArrowLeftIcon, MenuIcon, SearchIcon, ShoppingBagIcon } from "@/components/icons";
+import { ArrowLeftIcon, MenuIcon, SearchIcon, ShoppingBagIcon, StarIcon } from "@/components/icons";
 
 /** Sepete eklemenin nereden geldiği: menüdeki ürün kartı ya da "yanına içecek" önerisi. */
 type AddSource = "menu" | "upsell";
@@ -188,11 +188,25 @@ function MenuHeader({
   );
 }
 
-/** Menü altbilgisi. Şimdilik tek işi künye sayfasına bağlanmak; künye
- *  gerektiren görsel yoksa hiç basılmaz. */
+/** Menü altbilgisi: Alt sayfalarda değerlendirme bağlantısı ve görsel künye linki. */
 function MenuFooter({ base, products, locale }: { base: string; products: Product[]; locale: Locale }) {
+  const pathname = usePathname();
+  const { t } = useMenu();
+  // Ana menü sayfasında zaten zengin değerlendirme banner'ı bulunur; alt sayfalarda hafif bir hap buton sunulur.
+  const isMenuHome = pathname.endsWith("/menu") || pathname.endsWith("/menu/") || pathname === base || pathname === `${base}/`;
+  const isReviewPage = pathname.includes("/review");
+
   return (
-    <div className="mx-auto flex max-w-3xl justify-center px-5 pb-2 pt-6">
+    <div className="mx-auto flex max-w-3xl flex-col items-center justify-center gap-2.5 px-5 pb-6 pt-6">
+      {!isMenuHome && !isReviewPage && (
+        <Link
+          href={`${base}/review`}
+          className="flex items-center gap-2 rounded-full border border-line/60 bg-paper/90 px-4 py-2 font-display text-xs font-semibold text-ink-soft shadow-xs backdrop-blur-sm transition-all hover:border-[var(--brand)]/60 hover:text-ink active:scale-95"
+        >
+          <StarIcon size={14} filled className="text-amber-400" />
+          <span>{t("reviewUsCta")}</span>
+        </Link>
+      )}
       <ImageCreditsLink products={products} base={base} locale={locale} />
     </div>
   );

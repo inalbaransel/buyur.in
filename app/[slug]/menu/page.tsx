@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { useMenu } from "@/components/menu/menu-provider";
 import { CategoryTabs } from "@/components/menu/category-tabs";
 import { FadeImg } from "@/components/menu/fade-img";
-import { BadgeIcon, ChevronRightIcon, SearchIcon } from "@/components/icons";
+import { BadgeIcon, ChevronRightIcon, MessageIcon, SearchIcon, SparklesIcon, StarIcon } from "@/components/icons";
 import { CategoryPlaceholder, ProductPlaceholder } from "@/components/menu/placeholder-art";
 import { formatPrice } from "@/lib/format";
 import { badgeLabels } from "@/lib/labels";
@@ -107,6 +107,67 @@ function FeaturedCard({ product }: { product: Product }) {
   );
 }
 
+/** Bizi Değerlendir / Görüş Bildir Banner Kartı */
+function ReviewBanner() {
+  const { base, locale, t } = useMenu();
+
+  return (
+    <section className="px-4 pt-8">
+      <Link
+        href={`${base}/review`}
+        data-reveal
+        className="group relative flex flex-col items-start gap-3.5 overflow-hidden rounded-3xl border border-line/70 bg-gradient-to-br from-paper via-crema/40 to-crema/80 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--brand)]/60 hover:shadow-[0_12px_28px_rgba(0,0,0,0.07)] active:scale-[0.99]"
+      >
+        {/* Arka plan dekoratif marka parıltısı */}
+        <div
+          className="pointer-events-none absolute -end-6 -top-6 h-28 w-28 rounded-full opacity-15 blur-2xl transition-opacity duration-300 group-hover:opacity-25"
+          style={{ background: "var(--brand)" }}
+        />
+
+        <div className="flex w-full items-center justify-between gap-3">
+          {/* 5 Yıldız Grubu */}
+          <div className="flex items-center gap-1 text-amber-400">
+            {[...Array(5)].map((_, i) => (
+              <StarIcon key={i} size={17} filled className="transition-transform duration-200 group-hover:scale-110" />
+            ))}
+          </div>
+
+          {/* Kısa Rozet */}
+          <span
+            className="flex items-center gap-1 rounded-full px-2.5 py-0.5 font-display text-[11px] font-bold uppercase tracking-wider shadow-2xs"
+            style={{ background: "color-mix(in srgb, var(--brand) 15%, transparent)", color: "var(--brand-text)" }}
+          >
+            <SparklesIcon size={12} strokeWidth={2.5} />
+            {t("reviewUsCta")}
+          </span>
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <h3 className="font-display text-[16px] font-extrabold leading-snug text-ink transition-colors group-hover:text-[var(--brand-text)]">
+            {t("reviewBannerTitle")}
+          </h3>
+          <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+            {t("reviewBannerSubtitle")}
+          </p>
+        </div>
+
+        <div className="mt-1 flex w-full items-center justify-between border-t border-line/40 pt-3">
+          <span className="flex items-center gap-1.5 font-display text-xs font-bold text-ink transition-colors group-hover:text-[var(--brand-text)]">
+            <MessageIcon size={15} className="text-ink-soft group-hover:text-[var(--brand-text)]" />
+            {t("reviewBannerButton")}
+          </span>
+          <span
+            className="flex h-7 w-7 items-center justify-center rounded-full transition-transform duration-200 group-hover:translate-x-1"
+            style={{ background: "var(--brand)", color: "var(--brand-on)" }}
+          >
+            <ChevronRightIcon size={14} className={isRTLLocale(locale) ? "rotate-180" : undefined} />
+          </span>
+        </div>
+      </Link>
+    </section>
+  );
+}
+
 export default function MenuCategoriesPage() {
   const { base, business, categories, products, categoriesLoading, imageByCategory, productCountByCategory, t, tf } =
     useMenu();
@@ -173,6 +234,9 @@ export default function MenuCategoriesPage() {
           ))}
         </div>
       </section>
+
+      {/* Değerlendirme Banner'ı */}
+      <ReviewBanner />
     </div>
   );
 }

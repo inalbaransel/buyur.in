@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMenu } from "@/components/menu/menu-provider";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
-import { ChevronRightIcon } from "@/components/icons";
+import { ChevronRightIcon, StarIcon } from "@/components/icons";
 import { ProductPlaceholder } from "@/components/menu/placeholder-art";
 
 export function CategoryDrawer({ onClose }: { onClose: () => void }) {
@@ -79,6 +79,29 @@ export function CategoryDrawer({ onClose }: { onClose: () => void }) {
             );
           })}
         </nav>
+
+        {/* Değerlendirme bağlantısı */}
+        <div className="mt-auto border-t border-line/40 p-3.5">
+          <Link
+            href={`${base}/review`}
+            onClick={onClose}
+            className="flex items-center justify-between rounded-2xl border border-line/60 bg-crema/40 p-3 transition-all duration-200 hover:border-[var(--brand)]/50 hover:bg-crema/70 active:scale-[0.98]"
+          >
+            <div className="flex items-center gap-2.5">
+              <span
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-2xs"
+                style={{ background: "color-mix(in srgb, var(--brand) 15%, transparent)", color: "var(--brand-text)" }}
+              >
+                <StarIcon size={17} filled />
+              </span>
+              <div className="min-w-0">
+                <p className="truncate font-display text-xs font-bold text-ink">{t("reviewUsCta")}</p>
+                <p className="truncate font-sans text-[11px] text-ink-soft">{t("reviewBannerTitle")}</p>
+              </div>
+            </div>
+            <ChevronRightIcon size={14} className="shrink-0 text-ink-soft/60" />
+          </Link>
+        </div>
       </div>
     </div>
   );
